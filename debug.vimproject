@@ -43,7 +43,7 @@ enable_cscope = false -- { true, false }
 enable_macrohl = false -- { true, false }
 
 -- restore buffers:
-enable_restore_bufs = false -- { true, false }
+enable_restore_bufs = true -- { true, false }
 
 -- Project References:
 -- sub_project_refs += foobar1.exvim -- example
