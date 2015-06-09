@@ -21,8 +21,10 @@ int dbg_bio_out(char * buf, int len);
  * \param       len     希望获取的长度
  * \return      0       Success
  *              -1      Error
+ * \descript    以回车或^D结束，返回结果包含换行符
  */
 int dbg_bio_in(char * buf, int len);
+#ifdef DBG_USE_LOG
 /**
  * \brief       打开日志文件
  * \param       file    文件名
@@ -46,7 +48,7 @@ int dbg_bio_close(void);
  *              -1      Error
  */
 int dbg_bio_write(char * buf, int len);
-
+#endif /* DBG_USE_LOG */
 #ifdef __cplusplus
 }
 #endif
