@@ -1,7 +1,24 @@
 #include <stdio.h>
 #include <stdlib.h> 
+#include <string.h>
 
 #include "debug.h"
+
+int test_output(void *p)
+{
+    /// 输出测试
+    dbg_out(1, "格式化输出测试: %d = %#x = %c\t%s\n",
+            66, 66, 66, "This is a TEST.");
+    dbg_out_I(1, "带标签信息的格式化输出，显示为提示高亮");
+    dbg_out_W(1, "带标签信息的格式化输出，显示为警告高亮");
+    dbg_out_E(1, "带标签信息的格式化输出，显示为错误高亮");
+    dbg_outerr_I(1, "带标签信息的格式化输出，附带错误信息");
+    dbg_out_IT(1, "带标签信息和时间的格式化输出，显示为提示高亮");
+    dbg_out_WT(1, "带标签信息和时间的格式化输出，显示为警告高亮");
+    dbg_out_ET(1, "带标签信息和时间的格式化输出，显示为错误高亮");
+    dbg_outerr_IT(1, "带标签信息和时间的格式化输出，附带错误信息");
+    return 0;
+}
 
 int test_getchar(void * p)
 {
@@ -39,36 +56,72 @@ int test_dbg_in_N(void *p)
     return 0;
 }
 
-int test_output(void *p)
+int test_setlogname(void *p)
 {
-    /// 输出测试
-    dbg_out(1, "格式化输出测试: %d = %#x = %c\t%s\n",
-            66, 66, 66, "This is a TEST.");
-    dbg_out_I(1, "带标签信息的格式化输出，显示为提示高亮");
-    dbg_out_W(1, "带标签信息的格式化输出，显示为警告高亮");
-    dbg_out_E(1, "带标签信息的格式化输出，显示为错误高亮");
-    dbg_outerr_I(1, "带标签信息的格式化输出，附带错误信息");
-    dbg_out_IT(1, "带标签信息和时间的格式化输出，显示为提示高亮");
-    dbg_out_WT(1, "带标签信息和时间的格式化输出，显示为警告高亮");
-    dbg_out_ET(1, "带标签信息和时间的格式化输出，显示为错误高亮");
-    dbg_outerr_IT(1, "带标签信息和时间的格式化输出，附带错误信息");
+    dbg_log_setname("log_test.txt");
     return 0;
 }
 
-int test_setlogname(void *p)
+int test_setlog_off(void *p)
 {
-    
+    dbg_log_off();
     return 0;
 }
+
+int test_setlog_on(void *p)
+{
+    dbg_log_on();
+    return 0;
+}
+
+int test_setlog_on_s(void *p)
+{
+    dbg_log_on_s();
+    return 0;
+}
+
+int test_setlog_only(void *p)
+{
+    dbg_log_only();
+    return 0;
+}
+
+int test_setlog_only_s(void *p)
+{
+    dbg_log_only_s();
+    return 0;
+}
+
+int test_dump(void *p)
+{
+    char buf[1024] = { 0 };
+
+    strcpy(buf, "#### This is a TEST.\r\n ####");
+    dbg_dmp_H(1, buf, strlen(buf));
+    dbg_dmp_HC(1, buf, strlen(buf));
+    dbg_dmp_HCA(1, buf, strlen(buf), (unsigned)*buf);
+    dbg_dmp_C(1, buf, strlen(buf));
+
+    return 0;
+}
+
 
 // 模块测试
 int test_debug(void)
 {
     dbg_test_setlist(
-        { "dbg_out_*",      NULL,       test_output,                },
-        { "test_getchar",   NULL,       test_getchar,               },
-        { "dbg_in_S",       NULL,       test_dbg_in_S,              },
-        { "dbg_in_N",       NULL,       test_dbg_in_N,              },
+        { "dbg_out_*",          NULL,   test_output,            },
+        { "test_getchar",       NULL,   test_getchar,           },
+        { "dbg_in_S",           NULL,   test_dbg_in_S,          },
+        { "dbg_in_N",           NULL,   test_dbg_in_N,          },
+        { "dbg_in_N",           NULL,   test_dbg_in_N,          },
+        { "dbg_log_setname",    NULL,   test_setlogname,        },
+        { "dbg_log_off",        NULL,   test_setlog_off,        },
+        { "dbg_log_on",         NULL,   test_setlog_on,         },
+        { "dbg_log_on_s",       NULL,   test_setlog_on_s,       },
+        { "dbg_log_only",       NULL,   test_setlog_only,       },
+        { "dbg_log_only_s",     NULL,   test_setlog_only_s,     },
+        { "dbg_dmp_*",          NULL,   test_dump,              },
     );
 
     return 0;

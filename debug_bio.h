@@ -48,6 +48,13 @@ int dbg_bio_close(void);
  *              -1      Error
  */
 int dbg_bio_write(char * buf, int len);
+
+/**
+ * \brief       同步数据，将缓存中的数据保存到存储设备
+ * \return      0       Success
+ * \descript    同步数据较慢，影响调试速度
+ */
+int dbg_bio_sync(void);
 #endif /* DBG_USE_LOG */
 #ifdef __cplusplus
 }

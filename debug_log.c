@@ -10,7 +10,7 @@ extern "C" {
 
 #ifdef DBG_USE_LOG
 
-static int gdbg_mode = DBG_P;           //!< 调试模式，默认仅输出
+static int gdbg_mode = DBG_P;           //!< 日志调试模式
 
 /** 打开新日志 */
 int dbg_log_open(char * filename)
@@ -43,7 +43,7 @@ int dbg_log_write(char * buf, int len)
 /** 设置日志记录模式 */
 int dbg_log_setmode(int mode)
 {
-    if(mode < DBG_P || mode > DBG_PW) {
+    if(mode < 0) {
         dbg_out_E(DS_LOG_ERR, "param error.");
         return -1;
     }

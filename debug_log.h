@@ -6,9 +6,10 @@ extern "C" {
 #endif
 #ifdef DBG_USE_LOG
 
-#define DBG_P   ( 1 )                   //!< 1 << 0 print only
-#define DBG_W   ( 2 )                   //!< 1 << 1 write log only
-#define DBG_PW  ( 3 )                   //!< both print and write log
+#define DBG_P       ( 1 << 0 )          //!< 1 << 0 print only
+#define DBG_W       ( 1 << 1 )          //!< 1 << 1 write log only
+#define DBG_PW      ( DBG_P | DBG_W )   //!< both print and write log
+#define DBG_S       ( 1 << 2 )          //!< sync mode
 
 /**
  * \brief       打开新日志

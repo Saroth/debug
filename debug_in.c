@@ -68,30 +68,36 @@ int dbg_stdin_label(const char * func, int line, int mode,
 
     switch(mode) {
         case DBG_STDIN_RETNUM: {
-            dbg_stdout_label(__func__, __LINE__, DBG_COLOR_INPUT,
-                    DBG_LABEL_COLOR | DBG_LABEL_IN_RETN, "");
+            dbg_stdout_label(__func__, __LINE__,
+                    DBG_LABEL_COLOR | DBG_LABEL_COL_INPUT | DBG_LABEL_IN_RETN,
+                    "");
             ret = dbg_stdin_num(&num);
             ret = ret == 0 ? num : -1;
-            dbg_stdout_label(__func__, __LINE__, DBG_COLOR_INPUT,
-                    DBG_LABEL_COLOR | DBG_LABEL_OUT_RETN | DBG_LABEL_NEWLINE,
+            dbg_stdout_label(__func__, __LINE__,
+                    DBG_LABEL_COLOR | DBG_LABEL_COL_INPUT | DBG_LABEL_OUT_RETN
+                    | DBG_LABEL_NEWLINE,
                     "%d\n", ret);
             break;
         }
         case DBG_STDIN_GETNUM: {
-            dbg_stdout_label(__func__, __LINE__, DBG_COLOR_INPUT,
-                    DBG_LABEL_COLOR | DBG_LABEL_IN_GETN, "");
+            dbg_stdout_label(__func__, __LINE__,
+                    DBG_LABEL_COLOR | DBG_LABEL_COL_INPUT | DBG_LABEL_IN_GETN,
+                    "");
             ret = dbg_stdin_num((int *)output);
-            dbg_stdout_label(__func__, __LINE__, DBG_COLOR_INPUT,
-                    DBG_LABEL_COLOR | DBG_LABEL_OUT_GETN | DBG_LABEL_NEWLINE,
+            dbg_stdout_label(__func__, __LINE__,
+                    DBG_LABEL_COLOR | DBG_LABEL_COL_INPUT | DBG_LABEL_OUT_GETN
+                    | DBG_LABEL_NEWLINE,
                     "%d\n", *((int *)output));
             break;
         }
         case DBG_STDIN_GETSTR: {
-            dbg_stdout_label(__func__, __LINE__, DBG_COLOR_INPUT,
-                    DBG_LABEL_COLOR | DBG_LABEL_IN_GETS, "");
+            dbg_stdout_label(__func__, __LINE__,
+                    DBG_LABEL_COLOR | DBG_LABEL_COL_INPUT | DBG_LABEL_IN_GETS,
+                    "");
             ret = dbg_stdin((char *)output, len);
-            dbg_stdout_label(__func__, __LINE__, DBG_COLOR_INPUT,
-                    DBG_LABEL_COLOR | DBG_LABEL_OUT_GETS | DBG_LABEL_NEWLINE,
+            dbg_stdout_label(__func__, __LINE__,
+                    DBG_LABEL_COLOR | DBG_LABEL_COL_INPUT | DBG_LABEL_OUT_GETS
+                    | DBG_LABEL_NEWLINE,
                     "%s\n", (char *)output);
             break;
         }

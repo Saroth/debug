@@ -18,11 +18,14 @@ static int dbg_ioctl(char * buf, int len)
 {
     int mode = dbg_log_getmode();
     int ret = 0;
-    if(mode & DBG_W) {
-        ret = dbg_log_write(buf, len);        //!< 写日志，不检查结果
-    }
     if(mode & DBG_P) {
         ret = dbg_bio_out(buf, len);
+    }
+    if(mode & DBG_W) {
+        dbg_bio_write(buf, len);        //!< 写日志，不检查结果
+    }
+    if(mode & DBG_S) {
+        dbg_bio_sync();
     }
     return ret;
 }
@@ -149,13 +152,36 @@ int dbg_stdout_sign(int opt, int type)
             }
             break;
         }
+#ifdef DBG_USE_COLOR
+        case DBG_STDOUT_COLOR_SET: {
+            if(opt & DBG_LABEL_COL_INFO) {
+                dbg_color_set(DBG_COLOR_INFO);
+            }
+            else if(opt & DBG_LABEL_COL_WARN) {
+                dbg_color_set(DBG_COLOR_WARN);
+            }
+            else if(opt & DBG_LABEL_COL_ERR) {
+                dbg_color_set(DBG_COLOR_ERR);
+            }
+            else if(opt & DBG_LABEL_COL_HL) {
+                dbg_color_set(DBG_COLOR_HL);
+            }
+            else if(opt & DBG_LABEL_COL_INPUT) {
+                dbg_color_set(DBG_COLOR_INPUT);
+            }
+            break;
+        }
+        case DBG_STDOUT_COLOR_RES: {
+            dbg_color_set(DBG_COLOR_RES);
+            break;
+        }
+#endif /* DBG_USE_COLOR */
     }
     return 0;
 }
 
 /** 带调试标签的格式化输出 */
-int dbg_stdout_label(const char * func, int line, char * color,
-        int opt, char * fmt, ...)
+int dbg_stdout_label(const char * func, int line, int opt, char * fmt, ...)
 {
     char buf[BUFFER_SIZE + 4] = { 0 };
     int argc = 0;
@@ -169,18 +195,17 @@ int dbg_stdout_label(const char * func, int line, char * color,
     dbg_stdout_sign(opt, DBG_STDOUT_TIME);
     /// 显示函数名和行号
     dbg_stdout("%s:%5d:\t", func, line);
+    /// 设置标记颜色
+    if((opt & DBG_LABEL_COLOR)) {
+        dbg_stdout_sign(opt, DBG_STDOUT_COLOR_SET);
+    }
     /// 显示标记
-#ifdef DBG_USE_COLOR
-    if((opt & DBG_LABEL_COLOR) && color) {
-        dbg_color_set(color);
-    }
-#endif /* DBG_USE_COLOR */
     dbg_stdout_sign(opt, DBG_STDOUT_SIGN);
-#ifdef DBG_USE_COLOR
-    if(opt & DBG_LABEL_COLOR) {
-        dbg_color_set(DBG_COLOR_RES);
+    dbg_stdout_sign(opt, DBG_STDOUT_COLOR_RES);
+    /// 设置文本颜色
+    if((opt & DBG_LABEL_TEXTCOLOR)) {
+        dbg_stdout_sign(opt, DBG_STDOUT_COLOR_SET);
     }
-#endif /* DBG_USE_COLOR */
     /// 输出内容
     va_start(argv, fmt);
     argc = vsnprintf(buf, BUFFER_SIZE, fmt, argv);
@@ -189,11 +214,12 @@ int dbg_stdout_label(const char * func, int line, char * color,
         if(argc > BUFFER_SIZE) {
             argc = BUFFER_SIZE;
         }
-        dbg_ioctl(buf, argc);
+        argc = dbg_ioctl(buf, argc);
     }
     else if(argc < 0) {
-        /// err
+        dbg_outerr_I(DS_OUT_ERR, "vsnprintf");
     }
+    dbg_stdout_sign(opt, DBG_STDOUT_COLOR_RES);
     /// 显示错误信息
     dbg_stdout_sign(opt, DBG_STDOUT_STDERR);
     /// 输出换行符

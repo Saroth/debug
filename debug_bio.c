@@ -76,7 +76,8 @@ int dbg_bio_open(char * file)
         }
         gdbg_log_fd = -1;
     }
-    if((gdbg_log_fd = open(file, O_RDWR | O_APPEND | O_CREAT | O_SYNC,
+    if((gdbg_log_fd = open(file, O_RDWR | O_APPEND | O_CREAT
+                    /*| O_SYNC*/,           // 速度太慢
             S_IRWXU | S_IRWXG | S_IRWXO)) < 0) {
         sprintf(errmsg, "%s %s: %s(%d).\n", __func__,
                 "open failed: ", strerror(errno), errno);
@@ -123,13 +124,22 @@ int dbg_bio_write(char * buf, int len)
             return -1;
         }
     }
-    else {
-        char errmsg[256] = { 0 };
-        sprintf(errmsg, "%s %s.\n", __func__, "Log file is not open");
-        dbg_bio_out(errmsg, strlen(errmsg));
-    }
+    /*
+     * else {
+     *     char errmsg[256] = { 0 };
+     *     sprintf(errmsg, "%s %s.\n", __func__, "Log file is not open");
+     *     dbg_bio_out(errmsg, strlen(errmsg));
+     * }
+     */
 
     return len;
+}
+
+int dbg_bio_sync(void)
+{
+    fsync(gdbg_log_fd);         // 手动同步，调试速度较慢
+
+    return 0;
 }
 
 #endif /* DBG_USE_LOG */
