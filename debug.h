@@ -44,15 +44,15 @@
 #endif /* BUFFER_SIZE */
 
 /// 模块调试开关
-#define DS_OUT              1           //!< 输出
+#define DS_OUT              0           //!< 输出
 #define DS_OUT_ERR          1           //!< 输出错误
-#define DS_IN               1           //!< 输入
+#define DS_IN               0           //!< 输入
 #define DS_IN_ERR           1           //!< 输入错误
-#define DS_LOG              1           //!< 日志
+#define DS_LOG              0           //!< 日志
 #define DS_LOG_ERR          1           //!< 日志错误
-#define DS_DUMP             1           //!< 数据导出
+#define DS_DUMP             0           //!< 数据导出
 #define DS_DUMP_ERR         1           //!< 数据导出错误
-#define DS_TEST             1           //!< 测试
+#define DS_TEST             0           //!< 测试
 #define DS_TEST_ERR         1           //!< 测试错误
 
 #include "debug_bio.h"
