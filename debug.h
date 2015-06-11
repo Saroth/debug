@@ -34,13 +34,14 @@
 // #define DS_DEBUG_MAIN                   //!< 调试模块总开关
 #endif /* DS_DEBUG_MAIN */
 
+/// 功能配置
+#define DBG_USE_COLOR                   //!< 使用带颜色输出
+#define DBG_USE_LOG                     //!< 使用日志功能
+#define DBG_USE_DUMP                    //!< 使用数据导出
+
 #ifndef BUFFER_SIZE
 #define BUFFER_SIZE         4096        //!< 数据输入输出缓存大小
 #endif /* BUFFER_SIZE */
-
-/// 功能配置
-#define DBG_USE_LOG                     //!< 使用日志功能
-#define DBG_USE_COLOR                   //!< 使用带颜色输出
 
 /// 模块调试开关
 #define DS_OUT              1           //!< 输出
@@ -217,13 +218,9 @@
     dbg_log_setmode(DBG_W | DBG_S); \
 }
 #else
-#ifdef DS_DEBUG_MAIN
-#define dbg_log_setname() { \
-    dbg_out_I(1, "DBG_USE_LOG undefine!"); \
+#define dbg_log_setname(...) { \
+    dbg_out_E(1, "DBG_USE_LOG undefine!"); \
 }
-#else
-#define dbg_log_setname(...)
-#endif /* DS_DEBUG_MAIN */
 #define dbg_log_off(...)
 #define dbg_log_on(...)
 #define dbg_log_only(...)
@@ -234,7 +231,7 @@
 /**
  * \block:      DUMP
  * @{ */
-#ifdef DS_DEBUG_MAIN
+#if defined(DS_DEBUG_MAIN) && defined(DBG_USE_DUMP)
 /** \brief      16进制导出, 带行号, 每行16字节 */
 #define dbg_dmp_H(__debug_switch__, buf, len) { \
     if(__debug_switch__) { \
@@ -269,7 +266,7 @@
 #define dbg_dmp_HC(...)
 #define dbg_dmp_HCA(...)
 #define dbg_dmp_C(...)
-#endif /* DS_DEBUG_MAIN */
+#endif /* defined(DS_DEBUG_MAIN) && defined(DBG_USE_DUMP) */
 /** @} */
 /**
  * \block:      TEST

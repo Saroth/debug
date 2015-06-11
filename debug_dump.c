@@ -2,7 +2,7 @@
 
 #include "debug.h"
 
-#ifdef DS_DEBUG_MAIN
+#if defined(DS_DEBUG_MAIN) && defined(DBG_USE_DUMP)
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -156,5 +156,5 @@ int dbg_dump_label(const char * func, int line, char * buf, unsigned int len,
 #ifdef __cplusplus
 }
 #endif
-#endif /* DS_DEBUG_MAIN */
+#endif /* defined(DS_DEBUG_MAIN) && defined(DBG_USE_DUMP) */
 
