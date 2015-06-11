@@ -1,10 +1,10 @@
 #ifndef __DEBUG_LOG_H__
 #define __DEBUG_LOG_H__
 
+#if defined(DBG_USE_LOG) && defined(DS_DEBUG_MAIN)
 #ifdef __cplusplus
 extern "C" {
 #endif
-#ifdef DBG_USE_LOG
 
 #define DBG_P       ( 1 << 0 )          //!< 1 << 0 print only
 #define DBG_W       ( 1 << 1 )          //!< 1 << 1 write log only
@@ -47,9 +47,9 @@ int dbg_log_setmode(int mode);
  */
 int dbg_log_getmode(void);
 
-#endif /* DBG_USE_LOG */
 #ifdef __cplusplus
 }
 #endif
+#endif /* defined(DBG_USE_LOG) && defined(DS_DEBUG_MAIN) */
 #endif /* __DEBUG_LOG_H__ */
 

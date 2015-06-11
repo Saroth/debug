@@ -1,7 +1,7 @@
 
 OPTS = -Wall -nostartfiles -e __entry_test_debug__
 
-DEFS = -DDBG_MAIN -DDBG_DUMP -DDBG_LOG
+DEFS = # -DDS_DEBUG_MAIN
 
 SRCS = debug_bio.c\
 	   debug_out.c\

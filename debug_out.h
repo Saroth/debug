@@ -1,6 +1,7 @@
 #ifndef __DEBUG_OUT_H__
 #define __DEBUG_OUT_H__
 
+#ifdef DS_DEBUG_MAIN
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -92,6 +93,7 @@ int dbg_stdout_label(const char * func, int line, int opt, char * fmt, ...);
 #ifdef __cplusplus
 }
 #endif
+#endif /* DS_DEBUG_MAIN */
 
 #endif /* __DEBUG_OUT_H__ */
 

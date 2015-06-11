@@ -1,6 +1,11 @@
 #ifndef __DEBUG_TEST_H__
 #define __DEBUG_TEST_H__
 
+#ifdef DS_DEBUG_MAIN
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** \brief 测试列表结构体 */
 typedef struct {
     char * info;                        //!< 列表项信息
@@ -15,5 +20,9 @@ typedef struct {
  */
 int dbg_testlist(DBG_TESTLIST_T * list, int size);
 
+#ifdef __cplusplus
+}
+#endif
+#endif /* DS_DEBUG_MAIN */
 #endif /* __DEBUG_TEST_H__ */
 

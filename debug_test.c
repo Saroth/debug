@@ -1,5 +1,10 @@
 #include "debug.h"
 
+#ifdef DS_DEBUG_MAIN
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** 测试列表控制 */
 int dbg_testlist(DBG_TESTLIST_T * list, int size)
 {
@@ -25,4 +30,9 @@ int dbg_testlist(DBG_TESTLIST_T * list, int size)
 
     return 0;
 }
+
+#ifdef __cplusplus
+}
+#endif
+#endif /* DS_DEBUG_MAIN */
 

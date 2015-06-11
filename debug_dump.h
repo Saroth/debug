@@ -1,6 +1,11 @@
 #ifndef __DEBUG_DUMP_H__
 #define __DEBUG_DUMP_H__
 
+#ifdef DS_DEBUG_MAIN
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define DBG_DMP_SEG_NO      ( 0 )       //!< 无格式纯数据导出
 #define DBG_DMP_SEG_8       ( 1 << 0 )  //!< 8字节分割
 #define DBG_DMP_SEG_16      ( 1 << 1 )  //!< 16字节分割
@@ -39,6 +44,11 @@ int dbg_dump(char * buf, unsigned int len, unsigned long addr, int mode);
  */
 int dbg_dump_label(const char * func, int line, char * buf, unsigned int len,
         unsigned long addr, int mode);
+
+#ifdef __cplusplus
+}
+#endif
+#endif /* DS_DEBUG_MAIN */
 
 #endif /* __DEBUG_DUMP_H__ */
 

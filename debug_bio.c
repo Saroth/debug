@@ -4,8 +4,9 @@
 #include <errno.h>
 #include <string.h>
 
-#include "debug_bio.h"
+#include "debug.h"
 
+#ifdef DS_DEBUG_MAIN
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -146,4 +147,5 @@ int dbg_bio_sync(void)
 #ifdef __cplusplus
 }
 #endif
+#endif /* DS_DEBUG_MAIN */
 

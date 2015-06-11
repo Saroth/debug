@@ -4,11 +4,10 @@
 
 #include "debug.h"
 
+#if defined(DBG_USE_LOG) && defined(DS_DEBUG_MAIN)
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#ifdef DBG_USE_LOG
 
 static int gdbg_mode = DBG_P;           //!< 日志调试模式
 
@@ -57,9 +56,8 @@ int dbg_log_getmode(void)
     return gdbg_mode;
 }
 
-#endif /* DBG_USE_LOG */
-
 #ifdef __cplusplus
 }
 #endif
+#endif /* defined(DBG_USE_LOG) && defined(DS_DEBUG_MAIN) */
 

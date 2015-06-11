@@ -31,7 +31,7 @@
 #define __DEBUG_H__
 
 #ifndef DS_DEBUG_MAIN
-#define DS_DEBUG_MAIN                   //!< 调试模块总开关
+// #define DS_DEBUG_MAIN                   //!< 调试模块总开关
 #endif /* DS_DEBUG_MAIN */
 
 #ifndef BUFFER_SIZE
@@ -64,6 +64,7 @@
 /**
  * \block:      STDOUT
  * @{ */
+#ifdef DS_DEBUG_MAIN
 /** \brief      格式化输出 */
 #define dbg_out(__debug_switch__, ...) { \
     if(__debug_switch__) { \
@@ -151,10 +152,24 @@
                 __VA_ARGS__); \
     } \
 }
+#else
+#define dbg_out(...)
+#define dbg_out_I(...)
+#define dbg_out_W(...)
+#define dbg_out_E(...)
+#define dbg_out_H(...)
+#define dbg_outerr_I(...)
+#define dbg_out_IT(...)
+#define dbg_out_WT(...)
+#define dbg_out_ET(...)
+#define dbg_out_HT(...)
+#define dbg_outerr_IT(...)
+#endif /* DS_DEBUG_MAIN */
 /** @} */
 /**
  * \block:      STDIN
  * @{ */
+#ifdef DS_DEBUG_MAIN
 /** \brief      返回输入的数值，如果输入值不可转换为数字则返回-1 */
 #define dbg_in() ({ \
         dbg_stdin_label(__func__, __LINE__, DBG_STDIN_RETNUM, 0, 0); \
@@ -167,11 +182,16 @@
 #define dbg_in_S(pstr, len) ({ \
         dbg_stdin_label(__func__, __LINE__, DBG_STDIN_GETSTR, pstr, len); \
         })
+#else
+#define dbg_in(...)
+#define dbg_in_N(...)
+#define dbg_in_S(...)
+#endif /* DS_DEBUG_MAIN */
 /** @} */
 /**
  * \block:      LOG
  * @{ */
-#ifdef DBG_USE_LOG
+#if defined(DBG_USE_LOG) && defined(DS_DEBUG_MAIN)
 /** \brief      设置日志文件名 */
 #define dbg_log_setname(filename) { \
     dbg_log_open(filename); \
@@ -197,19 +217,24 @@
     dbg_log_setmode(DBG_W | DBG_S); \
 }
 #else
+#ifdef DS_DEBUG_MAIN
 #define dbg_log_setname() { \
     dbg_out_I(1, "DBG_USE_LOG undefine!"); \
 }
-#define dbg_log_off()
-#define dbg_log_on()
-#define dbg_log_only()
-#define dbg_log_on_s()
-#define dbg_log_only_s()
-#endif /* DBG_USE_LOG */
+#else
+#define dbg_log_setname(...)
+#endif /* DS_DEBUG_MAIN */
+#define dbg_log_off(...)
+#define dbg_log_on(...)
+#define dbg_log_only(...)
+#define dbg_log_on_s(...)
+#define dbg_log_only_s(...)
+#endif /* defined(DBG_USE_LOG) && defined(DS_DEBUG_MAIN) */
 /** @} */
 /**
  * \block:      DUMP
  * @{ */
+#ifdef DS_DEBUG_MAIN
 /** \brief      16进制导出, 带行号, 每行16字节 */
 #define dbg_dmp_H(__debug_switch__, buf, len) { \
     if(__debug_switch__) { \
@@ -239,15 +264,25 @@
         dbg_dump_label(__func__, __LINE__, buf, len, 0, 0); \
     } \
 }
+#else
+#define dbg_dmp_H(...)
+#define dbg_dmp_HC(...)
+#define dbg_dmp_HCA(...)
+#define dbg_dmp_C(...)
+#endif /* DS_DEBUG_MAIN */
 /** @} */
 /**
  * \block:      TEST
  * @{ */
+#ifdef DS_DEBUG_MAIN
 /** \brief      设置测试函数列表并加载 */
 #define dbg_test_setlist(...) { \
     DBG_TESTLIST_T list[] = { __VA_ARGS__ }; \
     dbg_testlist(list, (sizeof(list) / sizeof(DBG_TESTLIST_T))); \
 }
+#else
+#define dbg_test_setlist(...)
+#endif /* DS_DEBUG_MAIN */
 /** @} */
 
 

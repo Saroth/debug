@@ -1,8 +1,7 @@
 #ifndef __DEBUG_BIO_H__
 #define __DEBUG_BIO_H__
 
-#include "debug.h"
-
+#ifdef DS_DEBUG_MAIN
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -59,6 +58,7 @@ int dbg_bio_sync(void);
 #ifdef __cplusplus
 }
 #endif
+#endif /* DS_DEBUG_MAIN */
 
 #endif /* __DEBUG_BIO_H__ */
 
