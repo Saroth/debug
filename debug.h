@@ -184,7 +184,7 @@
         dbg_stdin_label(__func__, __LINE__, DBG_STDIN_GETSTR, pstr, len); \
         })
 #else
-#define dbg_in()
+#define dbg_in() 0
 #define dbg_in_N(...)
 #define dbg_in_S(...)
 #endif /* DS_DEBUG_MAIN */
