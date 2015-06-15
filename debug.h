@@ -184,7 +184,7 @@
         dbg_stdin_label(__func__, __LINE__, DBG_STDIN_GETSTR, pstr, len); \
         })
 #else
-#define dbg_in(...)
+#define dbg_in()
 #define dbg_in_N(...)
 #define dbg_in_S(...)
 #endif /* DS_DEBUG_MAIN */
@@ -221,11 +221,11 @@
 #define dbg_log_setname(...) { \
     dbg_out_E(1, "DBG_USE_LOG undefine!"); \
 }
-#define dbg_log_off(...)
-#define dbg_log_on(...)
-#define dbg_log_only(...)
-#define dbg_log_on_s(...)
-#define dbg_log_only_s(...)
+#define dbg_log_off()
+#define dbg_log_on()
+#define dbg_log_only()
+#define dbg_log_on_s()
+#define dbg_log_only_s()
 #endif /* defined(DBG_USE_LOG) && defined(DS_DEBUG_MAIN) */
 /** @} */
 /**

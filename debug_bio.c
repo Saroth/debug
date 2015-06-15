@@ -6,7 +6,6 @@
 
 #include "debug_bio.h"
 
-#ifdef DS_DEBUG_MAIN
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -142,10 +141,9 @@ int dbg_bio_sync(void)
 
     return 0;
 }
-
 #endif /* DBG_USE_LOG */
+
 #ifdef __cplusplus
 }
 #endif
-#endif /* DS_DEBUG_MAIN */
 

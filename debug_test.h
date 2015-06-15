@@ -3,7 +3,6 @@
 
 #include "debug.h"
 
-#ifdef DS_DEBUG_MAIN
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -25,6 +24,5 @@ int dbg_testlist(DBG_TESTLIST_T * list, int size);
 #ifdef __cplusplus
 }
 #endif
-#endif /* DS_DEBUG_MAIN */
 #endif /* __DEBUG_TEST_H__ */
 

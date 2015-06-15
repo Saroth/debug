@@ -3,7 +3,6 @@
 
 #include "debug.h"
 
-#if defined(DBG_USE_LOG) && defined(DS_DEBUG_MAIN)
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -52,6 +51,5 @@ int dbg_log_getmode(void);
 #ifdef __cplusplus
 }
 #endif
-#endif /* defined(DBG_USE_LOG) && defined(DS_DEBUG_MAIN) */
 #endif /* __DEBUG_LOG_H__ */
 

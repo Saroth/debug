@@ -3,7 +3,6 @@
 
 #include "debug.h"
 
-#ifdef DS_DEBUG_MAIN
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -95,7 +94,6 @@ int dbg_stdout_label(const char * func, int line, int opt, char * fmt, ...);
 #ifdef __cplusplus
 }
 #endif
-#endif /* DS_DEBUG_MAIN */
 
 #endif /* __DEBUG_OUT_H__ */
 

@@ -3,7 +3,6 @@
 
 #include "debug.h"
 
-#ifdef DS_DEBUG_MAIN
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -48,7 +47,6 @@ int dbg_stdin_label(const char * func, int line, int mode,
 #ifdef __cplusplus
 }
 #endif
-#endif /* DS_DEBUG_MAIN */
 
 #endif /* __DEBUG_IN_H__ */
 
