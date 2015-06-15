@@ -1,6 +1,8 @@
 #ifndef __DEBUG_LOG_H__
 #define __DEBUG_LOG_H__
 
+#include "debug.h"
+
 #if defined(DBG_USE_LOG) && defined(DS_DEBUG_MAIN)
 #ifdef __cplusplus
 extern "C" {

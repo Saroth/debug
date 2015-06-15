@@ -1,6 +1,8 @@
 #ifndef __DEBUG_DUMP_H__
 #define __DEBUG_DUMP_H__
 
+#include "debug.h"
+
 #if defined(DS_DEBUG_MAIN) && defined(DBG_USE_DUMP)
 #ifdef __cplusplus
 extern "C" {

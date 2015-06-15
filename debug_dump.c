@@ -1,6 +1,6 @@
 #include <unistd.h>
 
-#include "debug.h"
+#include "debug_dump.h"
 
 #if defined(DS_DEBUG_MAIN) && defined(DBG_USE_DUMP)
 #ifdef __cplusplus

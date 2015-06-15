@@ -4,7 +4,7 @@
 #include <time.h>
 #include <errno.h>
 
-#include "debug.h"
+#include "debug_out.h"
 
 #ifdef DS_DEBUG_MAIN
 #ifdef __cplusplus

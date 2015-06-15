@@ -1,4 +1,4 @@
-#include "debug.h"
+#include "debug_test.h"
 
 #ifdef DS_DEBUG_MAIN
 #ifdef __cplusplus

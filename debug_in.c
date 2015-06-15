@@ -3,7 +3,7 @@
 #include <string.h>
 #include <errno.h>
 
-#include "debug.h"
+#include "debug_in.h"
 
 #ifdef DS_DEBUG_MAIN
 #ifdef __cplusplus

@@ -1,6 +1,8 @@
 #ifndef __DEBUG_OUT_H__
 #define __DEBUG_OUT_H__
 
+#include "debug.h"
+
 #ifdef DS_DEBUG_MAIN
 #ifdef __cplusplus
 extern "C" {

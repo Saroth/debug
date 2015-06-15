@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "debug.h"
+#include "debug_log.h"
 
 #if defined(DBG_USE_LOG) && defined(DS_DEBUG_MAIN)
 #ifdef __cplusplus

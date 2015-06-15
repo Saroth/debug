@@ -4,7 +4,7 @@
 #include <errno.h>
 #include <string.h>
 
-#include "debug.h"
+#include "debug_bio.h"
 
 #ifdef DS_DEBUG_MAIN
 #ifdef __cplusplus
