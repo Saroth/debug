@@ -1,6 +1,6 @@
 #include <unistd.h>
 
-#include "debug_dump.h"
+#include "debug.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -93,15 +93,19 @@ int dbg_dump_line(char * buf, unsigned int len, long addr, int mode)
             }
             else {
                 if(buf[addr_cur - addr] == 0) {
+                    /// 空字符显示为点
                     dbg_out(1, ".");
                 }
-                else if(buf[addr_cur - addr] == 10
-                        || buf[addr_cur - addr] == 13) {
+                else if(buf[addr_cur - addr] >= 10
+                        && buf[addr_cur - addr] <= 13) {
+                    /// 不显示换行符、换页符或制表符
                     dbg_out(1, "~");
                 }
                 /*
+                 * 禁用以显示双字节字符
                 else if(buf[addr_cur - addr] < 32
                         || buf[addr_cur - addr] >= 128) {
+                    /// 不显示非ASCII字符
                     dbg_out(1, "?");
                 }
                 */

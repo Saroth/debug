@@ -1,4 +1,4 @@
-#include "debug_test.h"
+#include "debug.h"
 
 #ifdef __cplusplus
 extern "C" {

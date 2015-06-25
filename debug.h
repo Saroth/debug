@@ -30,9 +30,9 @@
 #ifndef __DEBUG_H__
 #define __DEBUG_H__
 
-#ifndef DS_DEBUG_MAIN
-// #define DS_DEBUG_MAIN                   //!< 调试模块总开关
-#endif /* DS_DEBUG_MAIN */
+// #include "config.h"
+
+#define DS_DEBUG_MAIN                   //!< 调试模块总开关
 
 /// 功能配置
 #define DBG_USE_COLOR                   //!< 使用带颜色输出

@@ -1,8 +1,6 @@
 #ifndef __DEBUG_TEST_H__
 #define __DEBUG_TEST_H__
 
-#include "debug.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif

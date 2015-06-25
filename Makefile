@@ -1,19 +1,14 @@
 
 OPTS = -Wall -nostartfiles -e __entry_test_debug__
 
-DEFS = -DDS_DEBUG_MAIN
+# DEFS = -DDS_DEBUG_MAIN
 
-SRCS = debug_bio.c\
-	   debug_out.c\
-	   debug_in.c\
-	   debug_log.c\
-	   debug_dump.c\
-	   debug_test.c\
-	   test.c
+CFLAGS  = $(OPTS)
 
-all:
-	gcc -o test $(SRCS) $(DEFS) $(OPTS)
+LDFLAGS = $(OPTS) $(DEFS)
+
+test: $(patsubst %.c, %.o, ${wildcard *.c})
 
 clean:
-	rm test
+	-rm test *.o
 

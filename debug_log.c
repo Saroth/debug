@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "debug_log.h"
+#include "debug.h"
 
 #ifdef __cplusplus
 extern "C" {

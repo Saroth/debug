@@ -4,7 +4,7 @@
 #include <time.h>
 #include <errno.h>
 
-#include "debug_out.h"
+#include "debug.h"
 
 #ifdef __cplusplus
 extern "C" {

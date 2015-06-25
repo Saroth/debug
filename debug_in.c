@@ -3,7 +3,7 @@
 #include <string.h>
 #include <errno.h>
 
-#include "debug_in.h"
+#include "debug.h"
 
 #ifdef __cplusplus
 extern "C" {

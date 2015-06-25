@@ -4,7 +4,7 @@
 #include <errno.h>
 #include <string.h>
 
-#include "debug_bio.h"
+#include "debug.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -125,6 +125,7 @@ int dbg_bio_write(char * buf, int len)
         }
     }
     /*
+     * /// 不打印错误信息
      * else {
      *     char errmsg[256] = { 0 };
      *     sprintf(errmsg, "%s %s.\n", __func__, "Log file is not open");
