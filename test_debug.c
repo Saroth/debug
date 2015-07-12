@@ -107,7 +107,7 @@ int test_dump(void *p)
 
 
 // 模块测试
-int test_debug(void)
+int test_debug(void *p)
 {
     dbg_test_setlist(
         { "dbg_out_*",          NULL,   test_output,            },
@@ -130,7 +130,7 @@ int test_debug(void)
 // 模块测试入口
 int __entry_test_debug__(void)
 {
-    test_debug();
+    test_debug(NULL);
     exit(0); 
 }
 
