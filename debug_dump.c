@@ -96,9 +96,11 @@ int dbg_dump_line(char * buf, unsigned int len, long addr, int mode)
                     /// 空字符显示为点
                     dbg_out(1, ".");
                 }
-                else if(buf[addr_cur - addr] >= 10
-                        && buf[addr_cur - addr] <= 13) {
-                    /// 不显示换行符、换页符或制表符
+                else if((buf[addr_cur - addr] >= 10
+                        && buf[addr_cur - addr] <= 14)
+                        ) {
+                    /// 不显示换行符(10, 13)、换页符(12)或垂直制表符(11)
+                    /// 不显示'\xe'(14)，在SSH远程终端会引起乱码
                     dbg_out(1, "~");
                 }
                 /*
