@@ -132,7 +132,7 @@ int dbg_dump_line(char * buf, unsigned int len, long addr, int mode)
 }
 
 /** 数据格式化导出 */
-int dbg_dump(char * buf, unsigned int len, long addr, int mode)
+int dbg_dump(char * buf, unsigned int len, void * addr, int mode)
 {
     int ret = 0;
 
@@ -141,7 +141,7 @@ int dbg_dump(char * buf, unsigned int len, long addr, int mode)
         return -1;
     }
     while(len > 0) {
-        ret = dbg_dump_line(buf, len, addr, mode);
+        ret = dbg_dump_line(buf, len, (long)addr, mode);
         len -= ret;
         addr += ret;
         buf += ret;
@@ -152,7 +152,7 @@ int dbg_dump(char * buf, unsigned int len, long addr, int mode)
 
 /** 带标签的数据格式化导出 */
 int dbg_dump_label(const char * func, int line, char * buf, unsigned int len,
-        long addr, int mode)
+        void * addr, int mode)
 {
     int ret = 0;
     dbg_stdout_label(func, line,
