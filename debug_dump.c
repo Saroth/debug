@@ -13,8 +13,8 @@ int dbg_dump_line(char * buf, unsigned int len, long addr, int mode)
     int chpline = 0;                    //!< 每行输出的字符数
     int outputchar = 0;                 //!< 各模式下的输出计数
     int headspace = 0;                  //!< 对齐后数据首行的行首留空
-    unsigned int addr_int = addr;       //!< 对齐地址
-    unsigned int addr_cur = addr_int;   //!< 偏移地址
+    long addr_int = addr;               //!< 对齐地址
+    long addr_cur = addr_int;           //!< 偏移地址
 
     // 判断分割显示格式
     if(mode & 0xf) {
@@ -46,7 +46,15 @@ int dbg_dump_line(char * buf, unsigned int len, long addr, int mode)
             headspace = addr % chpline;
             addr_int = addr - headspace;
         }
-        dbg_out(1, "%#010x", addr_int);
+        if(sizeof(void *) == 8) {
+            dbg_out(1, "%018llp", addr_int);
+        }
+        else if(sizeof(void *) == 4) {
+            dbg_out(1, "%010llp", addr_int);
+        }
+        else if(sizeof(void *) == 2) {
+            dbg_out(1, "%06llp", addr_int);
+        }
     }
 #ifdef DBG_USE_COLOR
     dbg_color_set(DBG_COLOR_RES);
@@ -124,7 +132,7 @@ int dbg_dump_line(char * buf, unsigned int len, long addr, int mode)
 }
 
 /** 数据格式化导出 */
-int dbg_dump(char * buf, unsigned int len, unsigned long addr, int mode)
+int dbg_dump(char * buf, unsigned int len, long addr, int mode)
 {
     int ret = 0;
 
@@ -144,7 +152,7 @@ int dbg_dump(char * buf, unsigned int len, unsigned long addr, int mode)
 
 /** 带标签的数据格式化导出 */
 int dbg_dump_label(const char * func, int line, char * buf, unsigned int len,
-        unsigned long addr, int mode)
+        long addr, int mode)
 {
     int ret = 0;
     dbg_stdout_label(func, line,

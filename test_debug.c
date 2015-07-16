@@ -99,7 +99,7 @@ int test_dump(void *p)
     strcpy(buf, "#### This is a TEST.\r\n ####");
     dbg_dmp_H(1, buf, strlen(buf));
     dbg_dmp_HC(1, buf, strlen(buf));
-    dbg_dmp_HCA(1, buf, strlen(buf), (unsigned)*buf);
+    dbg_dmp_HCA(1, buf, strlen(buf), (long)&buf);
     dbg_dmp_C(1, buf, strlen(buf));
 
     return 0;

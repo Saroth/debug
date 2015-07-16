@@ -27,7 +27,7 @@ extern "C" {
  * \return      0           Success
  *              <0          Error
  */
-int dbg_dump(char * buf, unsigned int len, unsigned long addr, int mode);
+int dbg_dump(char * buf, unsigned int len, long addr, int mode);
 
 /**
  * \brief       带标签的数据格式化导出
@@ -42,7 +42,7 @@ int dbg_dump(char * buf, unsigned int len, unsigned long addr, int mode);
  *              <0          Error
  */
 int dbg_dump_label(const char * func, int line, char * buf, unsigned int len,
-        unsigned long addr, int mode);
+        long addr, int mode);
 
 #ifdef __cplusplus
 }
