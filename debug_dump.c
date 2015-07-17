@@ -126,7 +126,6 @@ int dbg_dump_line(char * buf, unsigned int len, long addr, int mode)
             }
         }
     }
-    dbg_out(1, "\r\n");
 
     return outputchar;
 }
@@ -141,7 +140,13 @@ int dbg_dump(char * buf, unsigned int len, void * addr, int mode)
         return -1;
     }
     while(len > 0) {
+#ifdef DBG_NL_HEAD
+        dbg_out(1, "\r\n");
+#endif /* DBG_NL_HEAD */
         ret = dbg_dump_line(buf, len, (long)addr, mode);
+#ifndef DBG_NL_HEAD
+        dbg_out(1, "\r\n");
+#endif /* DBG_NL_HEAD */
         len -= ret;
         addr += ret;
         buf += ret;

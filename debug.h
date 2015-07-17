@@ -38,6 +38,7 @@
 #define DBG_USE_COLOR                   //!< 使用带颜色输出
 #define DBG_USE_LOG                     //!< 使用日志功能
 #define DBG_USE_DUMP                    //!< 使用数据导出
+#define DBG_NL_HEAD                     //!< 换行符放在开头
 
 #ifndef BUFFER_SIZE
 #define BUFFER_SIZE         4096        //!< 数据输入输出缓存大小

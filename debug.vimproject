@@ -14,7 +14,7 @@ project_name = 'debug'
 folder_filter_mode = include -- { include, exclude }
 folder_filter +=
 file_filter +=
-file_ignore_pattern +=
+file_ignore_pattern += *.o
 
 -- Editing:
 tabstop = 4

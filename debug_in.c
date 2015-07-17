@@ -12,7 +12,7 @@ extern "C" {
 int dbg_stdin(char * str, int len)
 {
     int ret = 0;
-    char buf[BUFFER_SIZE + 4] = { 0 };
+    char buf[BUFFER_SIZE + 4] = {};
 
     if(str == NULL || len <= 0) {
         dbg_out_E(DS_IN_ERR, "param error.");
@@ -34,7 +34,7 @@ int dbg_stdin(char * str, int len)
 /** 获取输入的数值 */
 int dbg_stdin_num(int * num)
 {
-    char str[BUFFER_SIZE + 4] = { 0 };
+    char str[BUFFER_SIZE + 4] = {};
     int len = 0;
 
     if(num == NULL) {
@@ -65,6 +65,9 @@ int dbg_stdin_label(const char * func, int line, int mode,
     int ret = 0;
     int num = 0;
 
+#ifdef DBG_NL_HEAD
+    dbg_out(1, "\r\n");
+#endif /* DBG_NL_HEAD */
     switch(mode) {
         case DBG_STDIN_RETNUM: {
             dbg_stdout_label(__func__, __LINE__,
@@ -75,7 +78,7 @@ int dbg_stdin_label(const char * func, int line, int mode,
             dbg_stdout_label(__func__, __LINE__,
                     DBG_LABEL_COLOR | DBG_LABEL_COL_INPUT | DBG_LABEL_OUT_RETN
                     | DBG_LABEL_NEWLINE,
-                    "%d\n", ret);
+                    "%d", ret);
             break;
         }
         case DBG_STDIN_GETNUM: {
@@ -86,7 +89,7 @@ int dbg_stdin_label(const char * func, int line, int mode,
             dbg_stdout_label(__func__, __LINE__,
                     DBG_LABEL_COLOR | DBG_LABEL_COL_INPUT | DBG_LABEL_OUT_GETN
                     | DBG_LABEL_NEWLINE,
-                    "%d\n", *((int *)output));
+                    "%d", *((int *)output));
             break;
         }
         case DBG_STDIN_GETSTR: {
@@ -97,7 +100,7 @@ int dbg_stdin_label(const char * func, int line, int mode,
             dbg_stdout_label(__func__, __LINE__,
                     DBG_LABEL_COLOR | DBG_LABEL_COL_INPUT | DBG_LABEL_OUT_GETS
                     | DBG_LABEL_NEWLINE,
-                    "%s\n", (char *)output);
+                    "%s", (char *)output);
             break;
         }
         default: {
@@ -105,6 +108,9 @@ int dbg_stdin_label(const char * func, int line, int mode,
             return -1;
         }
     }
+#ifndef DBG_NL_HEAD
+    dbg_out(1, "\r\n");
+#endif /* DBG_NL_HEAD */
 
     return ret;
 }

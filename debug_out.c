@@ -42,7 +42,7 @@ int dbg_stdout(const char * fmt, ...)
 {
     int count = 0;
     va_list marker;
-    char buf[BUFFER_SIZE + 4] = { 0 };
+    char buf[BUFFER_SIZE + 4] = {};
 
     if(NULL == fmt) {
         dbg_out_E(DS_OUT_ERR, "param error.");
@@ -65,7 +65,7 @@ int dbg_stdout(const char * fmt, ...)
 /** 标准错误信息输出 */
 int dbg_stderr(void)
 {
-    char buf[BUFFER_SIZE + 4] = { 0 };
+    char buf[BUFFER_SIZE + 4] = {};
 
     int ret = sprintf(buf, "%s(%d)", strerror(errno), errno);
     if(ret <= 0) {
@@ -183,7 +183,7 @@ int dbg_stdout_sign(int opt, int type)
 /** 带调试标签的格式化输出 */
 int dbg_stdout_label(const char * func, int line, int opt, char * fmt, ...)
 {
-    char buf[BUFFER_SIZE + 4] = { 0 };
+    char buf[BUFFER_SIZE + 4] = {};
     int argc = 0;
     va_list argv;
 
@@ -191,6 +191,10 @@ int dbg_stdout_label(const char * func, int line, int opt, char * fmt, ...)
         dbg_out_E(DS_OUT_ERR, "param error.");
         return -1;
     }
+#ifdef DBG_NL_HEAD
+    /// 输出换行符
+    dbg_stdout_sign(opt, DBG_STDOUT_NL);
+#endif /* DBG_NL_HEAD */
     /// 显示时间
     dbg_stdout_sign(opt, DBG_STDOUT_TIME);
     /// 显示函数名和行号
@@ -222,8 +226,10 @@ int dbg_stdout_label(const char * func, int line, int opt, char * fmt, ...)
     dbg_stdout_sign(opt, DBG_STDOUT_COLOR_RES);
     /// 显示错误信息
     dbg_stdout_sign(opt, DBG_STDOUT_STDERR);
+#ifndef DBG_NL_HEAD
     /// 输出换行符
     dbg_stdout_sign(opt, DBG_STDOUT_NL);
+#endif /* DBG_NL_HEAD */
 
     return argc;
 }

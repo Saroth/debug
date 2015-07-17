@@ -14,7 +14,7 @@ extern "C" {
 int dbg_bio_out(char * buf, int len)
 {
     if(buf == NULL) {
-        char errmsg[256] = { 0 };
+        char errmsg[256] = {};
         sprintf(errmsg, "%s %s.\n", __func__, "param error");
         dbg_bio_out(errmsg, strlen(errmsg));
         return -1;
@@ -31,7 +31,7 @@ int dbg_bio_in(char * buf, int len)
     char * b = buf;
 
     if(buf == NULL || len < 0) {
-        char errmsg[256] = { 0 };
+        char errmsg[256] = {};
         sprintf(errmsg, "%s %s.\n", __func__, "param error");
         dbg_bio_out(errmsg, strlen(errmsg));
         return -1;
@@ -61,7 +61,7 @@ static int gdbg_log_fd = -1;            //!< 文件描述符存储
 /** 打开日志文件 */
 int dbg_bio_open(char * file)
 {
-    char errmsg[256] = { 0 };
+    char errmsg[256] = {};
     if(NULL == file) {
         sprintf(errmsg, "%s %s.\n", __func__, "param error");
         dbg_bio_out(errmsg, strlen(errmsg));
@@ -94,7 +94,7 @@ int dbg_bio_close(void)
 {
     if(gdbg_log_fd != -1) {
         if(close(gdbg_log_fd) && errno != EBADF) {
-            char errmsg[256] = { 0 };
+            char errmsg[256] = {};
             sprintf(errmsg, "%s %s: %s(%d).\n", __func__,
                     "close failed: ", strerror(errno), errno);
             dbg_bio_out(errmsg, strlen(errmsg));
@@ -110,14 +110,14 @@ int dbg_bio_close(void)
 int dbg_bio_write(char * buf, int len)
 {
     if(buf == NULL || len < 0) {
-        char errmsg[256] = { 0 };
+        char errmsg[256] = {};
         sprintf(errmsg, "%s %s.\n", __func__, "param error");
         dbg_bio_out(errmsg, strlen(errmsg));
         return -1;
     }
     if(gdbg_log_fd != -1) {
         if(write(gdbg_log_fd, buf, len) != len) {
-            char errmsg[256] = { 0 };
+            char errmsg[256] = {};
             sprintf(errmsg, "%s %s: %s(%d).\n", __func__,
                     "write failed: ", strerror(errno), errno);
             dbg_bio_out(errmsg, strlen(errmsg));
@@ -127,7 +127,7 @@ int dbg_bio_write(char * buf, int len)
     /*
      * /// 不打印错误信息
      * else {
-     *     char errmsg[256] = { 0 };
+     *     char errmsg[256] = {};
      *     sprintf(errmsg, "%s %s.\n", __func__, "Log file is not open");
      *     dbg_bio_out(errmsg, strlen(errmsg));
      * }

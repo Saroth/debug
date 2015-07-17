@@ -42,7 +42,7 @@ int test_getchar(void * p)
 
 int test_dbg_in_S(void *p)
 {
-    char buf[256] = { 0 };
+    char buf[256] = {};
     dbg_in_S(buf, sizeof(buf));
     dbg_out_I(1, "Get string: %s", buf);
     return 0;
@@ -94,7 +94,7 @@ int test_setlog_only_s(void *p)
 
 int test_dump(void *p)
 {
-    char buf[1024] = { 0 };
+    char buf[1024] = {};
 
     strcpy(buf, "#### This is a TEST.\r\n ####");
     dbg_out_I(1, "buf address: %p", buf);
