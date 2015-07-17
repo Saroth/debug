@@ -1,4 +1,4 @@
-#include <unistd.h>
+#include <stdio.h>
 
 #include "debug.h"
 
@@ -152,16 +152,25 @@ int dbg_dump(char * buf, unsigned int len, void * addr, int mode)
 
 /** 带标签的数据格式化导出 */
 int dbg_dump_label(const char * func, int line, char * buf, unsigned int len,
-        void * addr, int mode)
+        void * addr, int mode, char * label)
 {
     int ret = 0;
-    dbg_stdout_label(func, line,
-            DBG_LABEL_TEXTCOLOR | DBG_LABEL_COL_HL | DBG_LABEL_INFO
-            | DBG_LABEL_NEWLINE, "________ DATA DUMP ________");
+    if(mode & DBG_DMP_TAG_LABEL) {
+        char label_str[256] = { "________ DATA DUMP ________" };
+
+        if(label) {
+            sprintf(label_str, "________ %s ________", label);
+        }
+        dbg_stdout_label(func, line,
+                DBG_LABEL_TEXTCOLOR | DBG_LABEL_COL_HL | DBG_LABEL_INFO
+                | DBG_LABEL_NEWLINE, "%s", label_str);
+    }
     ret = dbg_dump(buf, len, addr, mode);
-    dbg_stdout_label(func, line,
-            DBG_LABEL_COLOR | DBG_LABEL_COL_HL | DBG_LABEL_INFO
-            | DBG_LABEL_NEWLINE, "#### buffer size: %d", len);
+    if(mode & DBG_DMP_TAG_LABEL) {
+        dbg_stdout_label(func, line,
+                DBG_LABEL_COLOR | DBG_LABEL_COL_HL | DBG_LABEL_INFO
+                | DBG_LABEL_NEWLINE, "#### buffer size: %d", len);
+    }
 
     return ret;
 }

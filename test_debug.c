@@ -97,9 +97,16 @@ int test_dump(void *p)
     char buf[1024] = { 0 };
 
     strcpy(buf, "#### This is a TEST.\r\n ####");
+    dbg_out_I(1, "buf address: %p", buf);
     dbg_dmp_H(1, buf, strlen(buf));
     dbg_dmp_HC(1, buf, strlen(buf));
-    dbg_dmp_HCA(1, buf, strlen(buf), &buf);
+    dbg_dmp_HCA(1, buf, strlen(buf), buf);
+    dbg_dmp_HL(1, buf, strlen(buf), "test1");
+    dbg_dmp_HCL(1, buf, strlen(buf), "test2");
+    dbg_dmp_HCAL(1, buf, strlen(buf), buf, "test3");
+    dbg_dmp_HL(1, buf, strlen(buf), NULL);
+    dbg_dmp_HCL(1, buf, strlen(buf), NULL);
+    dbg_dmp_HCAL(1, buf, strlen(buf), buf, NULL);
     dbg_dmp_C(1, buf, strlen(buf));
 
     return 0;

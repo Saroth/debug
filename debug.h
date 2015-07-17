@@ -236,7 +236,7 @@
 #define dbg_dmp_H(__debug_switch__, buf, len) { \
     if(__debug_switch__) { \
         dbg_dump_label(__func__, __LINE__, buf, len, 0, \
-                DBG_DMP_SEG_16 | DBG_DMP_TAG_LINE | DBG_DMP_DAT_HEX); \
+                DBG_DMP_SEG_16 | DBG_DMP_TAG_LINE | DBG_DMP_DAT_HEX, NULL); \
     } \
 }
 /** \brief      16进制导出, 同时输出字符, 带行号, 每行16字节 */
@@ -244,7 +244,7 @@
     if(__debug_switch__) { \
         dbg_dump_label(__func__, __LINE__, buf, len, 0, \
                 DBG_DMP_SEG_16 | DBG_DMP_TAG_LINE \
-                | DBG_DMP_DAT_HEX | DBG_DMP_DAT_CHAR); \
+                | DBG_DMP_DAT_HEX | DBG_DMP_DAT_CHAR, NULL); \
     } \
 }
 /** \brief      16进制导出, 同时输出字符, 带地址, 每行16字节 */
@@ -252,19 +252,46 @@
     if(__debug_switch__) { \
         dbg_dump_label(__func__, __LINE__, buf, len, addr, \
                 DBG_DMP_SEG_16 | DBG_DMP_TAG_ADDR \
-                | DBG_DMP_DAT_HEX | DBG_DMP_DAT_CHAR); \
+                | DBG_DMP_DAT_HEX | DBG_DMP_DAT_CHAR, NULL); \
+    } \
+}
+/** \brief      16进制导出, 带标签和行号, 每行16字节 */
+#define dbg_dmp_HL(__debug_switch__, buf, len, label) { \
+    if(__debug_switch__) { \
+        dbg_dump_label(__func__, __LINE__, buf, len, 0, \
+                DBG_DMP_SEG_16 | DBG_DMP_TAG_LINE | DBG_DMP_DAT_HEX\
+                | DBG_DMP_TAG_LABEL, label); \
+    } \
+}
+/** \brief      16进制导出, 同时输出字符, 带标签和行号, 每行16字节 */
+#define dbg_dmp_HCL(__debug_switch__, buf, len, label) { \
+    if(__debug_switch__) { \
+        dbg_dump_label(__func__, __LINE__, buf, len, 0, \
+                DBG_DMP_SEG_16 | DBG_DMP_TAG_LINE | DBG_DMP_DAT_HEX\
+                | DBG_DMP_DAT_CHAR | DBG_DMP_TAG_LABEL, label); \
+    } \
+}
+/** \brief      16进制导出, 同时输出字符, 带标签和地址, 每行16字节 */
+#define dbg_dmp_HCAL(__debug_switch__, buf, len, addr, label) { \
+    if(__debug_switch__) { \
+        dbg_dump_label(__func__, __LINE__, buf, len, addr, \
+                DBG_DMP_SEG_16 | DBG_DMP_TAG_ADDR | DBG_DMP_DAT_HEX\
+                | DBG_DMP_DAT_CHAR | DBG_DMP_TAG_LABEL, label); \
     } \
 }
 /** \brief      纯字符导出, 无任何格式(可用于将内存或Flash数据导出到文件) */
 #define dbg_dmp_C(__debug_switch__, buf, len) { \
     if(__debug_switch__) { \
-        dbg_dump_label(__func__, __LINE__, buf, len, 0, 0); \
+        dbg_dump_label(__func__, __LINE__, buf, len, 0, 0, NULL); \
     } \
 }
 #else
 #define dbg_dmp_H(...)
 #define dbg_dmp_HC(...)
 #define dbg_dmp_HCA(...)
+#define dbg_dmp_HL(...)
+#define dbg_dmp_HCL(...)
+#define dbg_dmp_HCAL(...)
 #define dbg_dmp_C(...)
 #endif /* defined(DS_DEBUG_MAIN) && defined(DBG_USE_DUMP) */
 /** @} */
