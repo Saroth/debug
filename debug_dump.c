@@ -169,7 +169,7 @@ int dbg_dump_label(const char * func, int line, char * buf, unsigned int len,
         if(label) {
             sprintf(label_str, "________ %s ________", label);
         }
-        dbg_stdout_label(func, line, (mode & 0xff)
+        dbg_stdout_label(func, line, (mode & 0xff) // 只取通用配置位
                 | DBG_LABEL_TEXTCOLOR | DBG_LABEL_COL_HL | DBG_LABEL_INFO,
                 "%s", label_str);
         dbg_stdout_label(func, line, DBG_LABEL_COLOR | DBG_LABEL_COL_HL

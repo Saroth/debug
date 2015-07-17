@@ -25,10 +25,6 @@ extern "C" {
 #define DBG_SIGN_OUT_GETSTR "[O_s]"             //!< 获取字符串输出标记
 
 // 输入选项定义
-// Utility defines  前8位为通用定义
-#define DBG_LABEL_MESSAGE   ( 1 << 0 )          //!< 显示信息
-#define DBG_LABEL_LABEL     ( 1 << 1 )          //!< 显示标签
-#define DBG_LABEL_TIME      ( 1 << 2 )          //!< 显示时间
 // Debug output defines
 #define DBG_LABEL_COLOR     ( 1 << 8 )          //!< 颜色显示标签，需要DBG_USE_COLOR
 #define DBG_LABEL_TEXTCOLOR ( 1 << 9 )          //!< 颜色显示信息，需要DBG_USE_COLOR

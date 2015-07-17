@@ -63,6 +63,11 @@
 #include "debug_dump.h"
 #include "debug_test.h"
 
+// Utility defines  调试开关选项 - 前8位为通用定义
+#define DBG_INFO            ( 1 << 0 )          //!< 显示信息
+#define DBG_LABEL           ( 1 << 1 )          //!< 显示标签
+#define DBG_TIME            ( 1 << 2 )          //!< 显示时间
+
 /**
  * \block:      STDOUT
  * @{ */
@@ -77,7 +82,7 @@
 #define dbg_out_I(__debug_switch__, ...) { \
     if(__debug_switch__) { \
         dbg_stdout_label(__func__, __LINE__, \
-                (__debug_switch__ & 0xff)\
+                __debug_switch__\
                 | DBG_LABEL_COLOR | DBG_LABEL_COL_INFO | DBG_LABEL_INFO \
                 | DBG_LABEL_NEWLINE, __VA_ARGS__); \
     } \
@@ -86,7 +91,7 @@
 #define dbg_out_W(__debug_switch__, ...) { \
     if(__debug_switch__) { \
         dbg_stdout_label(__func__, __LINE__, \
-                (__debug_switch__ & 0xff)\
+                __debug_switch__\
                 | DBG_LABEL_COLOR | DBG_LABEL_COL_WARN | DBG_LABEL_WARN \
                 | DBG_LABEL_NEWLINE, __VA_ARGS__); \
     } \
@@ -95,7 +100,7 @@
 #define dbg_out_E(__debug_switch__, ...) { \
     if(__debug_switch__) { \
         dbg_stdout_label(__func__, __LINE__, \
-                (__debug_switch__ & 0xff)\
+                __debug_switch__\
                 | DBG_LABEL_COLOR | DBG_LABEL_COL_ERR | DBG_LABEL_ERR \
                 | DBG_LABEL_NEWLINE, __VA_ARGS__); \
     } \
@@ -104,7 +109,7 @@
 #define dbg_out_H(__debug_switch__, ...) { \
     if(__debug_switch__) { \
         dbg_stdout_label(__func__, __LINE__, \
-                (__debug_switch__ & 0xff)\
+                __debug_switch__\
                 | DBG_LABEL_COLOR | DBG_LABEL_COL_HL | DBG_LABEL_INFO \
                 | DBG_LABEL_NEWLINE, __VA_ARGS__); \
     } \
@@ -113,7 +118,7 @@
 #define dbg_outerr_I(__debug_switch__, ...) { \
     if(__debug_switch__) { \
         dbg_stdout_label(__func__, __LINE__, \
-                (__debug_switch__ & 0xff)\
+                __debug_switch__\
                 | DBG_LABEL_COLOR | DBG_LABEL_COL_ERR | DBG_LABEL_ERR \
                 | DBG_LABEL_STDERR | DBG_LABEL_NEWLINE,\
                 __VA_ARGS__); \
@@ -197,7 +202,7 @@
 #define dbg_dmp_H(__debug_switch__, buf, len) { \
     if(__debug_switch__) { \
         dbg_dump_label(__func__, __LINE__, buf, len, 0, \
-                (__debug_switch__ & 0xff)\
+                __debug_switch__\
                 | DBG_DMP_SEG_16 | DBG_DMP_TAG_LINE | DBG_DMP_DAT_HEX, NULL); \
     } \
 }
@@ -205,7 +210,7 @@
 #define dbg_dmp_HC(__debug_switch__, buf, len) { \
     if(__debug_switch__) { \
         dbg_dump_label(__func__, __LINE__, buf, len, 0, \
-                (__debug_switch__ & 0xff)\
+                __debug_switch__\
                 | DBG_DMP_SEG_16 | DBG_DMP_TAG_LINE | DBG_DMP_DAT_HEX\
                 | DBG_DMP_DAT_CHAR, NULL);\
     } \
@@ -214,7 +219,7 @@
 #define dbg_dmp_HCA(__debug_switch__, buf, len, addr) { \
     if(__debug_switch__) { \
         dbg_dump_label(__func__, __LINE__, buf, len, addr, \
-                (__debug_switch__ & 0xff)\
+                __debug_switch__\
                 | DBG_DMP_SEG_16 | DBG_DMP_TAG_ADDR | DBG_DMP_DAT_HEX\
                 | DBG_DMP_DAT_CHAR, NULL);\
     } \
@@ -223,7 +228,7 @@
 #define dbg_dmp_HL(__debug_switch__, buf, len, label) { \
     if(__debug_switch__) { \
         dbg_dump_label(__func__, __LINE__, buf, len, 0, \
-                (__debug_switch__ & 0xff)\
+                __debug_switch__\
                 | DBG_DMP_SEG_16 | DBG_DMP_TAG_LINE | DBG_DMP_DAT_HEX\
                 | DBG_DMP_TAG_LABEL, label); \
     } \
@@ -232,7 +237,7 @@
 #define dbg_dmp_HCL(__debug_switch__, buf, len, label) { \
     if(__debug_switch__) { \
         dbg_dump_label(__func__, __LINE__, buf, len, 0, \
-                (__debug_switch__ & 0xff)\
+                __debug_switch__\
                 | DBG_DMP_SEG_16 | DBG_DMP_TAG_LINE | DBG_DMP_DAT_HEX\
                 | DBG_DMP_DAT_CHAR | DBG_DMP_TAG_LABEL,\
                 label); \
@@ -242,7 +247,7 @@
 #define dbg_dmp_HCAL(__debug_switch__, buf, len, addr, label) { \
     if(__debug_switch__) { \
         dbg_dump_label(__func__, __LINE__, buf, len, addr, \
-                (__debug_switch__ & 0xff)\
+                __debug_switch__\
                 | DBG_DMP_SEG_16 | DBG_DMP_TAG_ADDR | DBG_DMP_DAT_HEX\
                 | DBG_DMP_DAT_CHAR | DBG_DMP_TAG_LABEL,\
                 label); \

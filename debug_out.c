@@ -94,7 +94,7 @@ int dbg_stdout_sign(int opt, int type)
     switch(type) {
         case DBG_STDOUT_TIME: {
             /// 显示时间
-            if(opt & DBG_LABEL_TIME) {
+            if(opt & DBG_TIME) {
                 time_t tim;
                 struct tm * t;
                 time(&tim);
@@ -197,7 +197,7 @@ int dbg_stdout_label(const char * func, int line, int opt, char * fmt, ...)
 #endif /* DBG_NL_HEAD */
     /// 显示时间
     dbg_stdout_sign(opt, DBG_STDOUT_TIME);
-    if(opt & DBG_LABEL_LABEL) {
+    if(opt & DBG_LABEL) {
         /// 显示函数名和行号
         dbg_stdout("%s:%5d:\t", func, line);
     }
