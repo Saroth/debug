@@ -17,8 +17,8 @@ int dbg_dump_line(char * buf, unsigned int len, long addr, int mode)
     long addr_cur = addr_int;           //!< 偏移地址
 
     // 判断分割显示格式
-    if(mode & 0xf) {
-        chpline = 8 * (mode & 0xf);
+    if(mode >> DBG_DMP_SEG_OFS) {
+        chpline = 8 * ((mode >> DBG_DMP_SEG_OFS) & 0xf);
     }
     else {
         // 纯数据导出
@@ -161,21 +161,25 @@ int dbg_dump_label(const char * func, int line, char * buf, unsigned int len,
 {
     int ret = 0;
     if(mode & DBG_DMP_TAG_LABEL) {
+#ifdef DBG_NL_HEAD
+        dbg_out(1, "\r\n");
+#endif /* DBG_NL_HEAD */
         char label_str[256] = { "________ DATA DUMP ________" };
 
         if(label) {
             sprintf(label_str, "________ %s ________", label);
         }
-        dbg_stdout_label(func, line,
-                DBG_LABEL_TEXTCOLOR | DBG_LABEL_COL_HL | DBG_LABEL_INFO
-                | DBG_LABEL_NEWLINE, "%s", label_str);
+        dbg_stdout_label(func, line, (mode & 0xff)
+                | DBG_LABEL_TEXTCOLOR | DBG_LABEL_COL_HL | DBG_LABEL_INFO,
+                "%s", label_str);
+        dbg_stdout_label(func, line, DBG_LABEL_COLOR | DBG_LABEL_COL_HL
+                | DBG_LABEL_INFO,
+                "(%d byte)", len);
+#ifndef DBG_NL_HEAD
+        dbg_out(1, "\r\n");
+#endif /* DBG_NL_HEAD */
     }
     ret = dbg_dump(buf, len, addr, mode);
-    if(mode & DBG_DMP_TAG_LABEL) {
-        dbg_stdout_label(func, line,
-                DBG_LABEL_COLOR | DBG_LABEL_COL_HL | DBG_LABEL_INFO
-                | DBG_LABEL_NEWLINE, "#### buffer size: %d", len);
-    }
 
     return ret;
 }

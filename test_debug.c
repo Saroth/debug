@@ -7,16 +7,19 @@
 int test_output(void *p)
 {
     /// 输出测试
-    dbg_out(1, "格式化输出测试: %d = %#x = %c\t%s\n",
-            66, 66, 66, "This is a TEST.");
-    dbg_out_I(1, "带标签信息的格式化输出，显示为提示高亮");
-    dbg_out_W(1, "带标签信息的格式化输出，显示为警告高亮");
-    dbg_out_E(1, "带标签信息的格式化输出，显示为错误高亮");
-    dbg_outerr_I(1, "带标签信息的格式化输出，附带错误信息");
-    dbg_out_IT(1, "带标签信息和时间的格式化输出，显示为提示高亮");
-    dbg_out_WT(1, "带标签信息和时间的格式化输出，显示为警告高亮");
-    dbg_out_ET(1, "带标签信息和时间的格式化输出，显示为错误高亮");
-    dbg_outerr_IT(1, "带标签信息和时间的格式化输出，附带错误信息");
+    int debug_switch = 1;
+    int i = 0;
+
+    for(i = 0; i <= 2; i++) {
+        debug_switch |= (1 << i);
+        dbg_out(debug_switch, "格式化输出测试: %d = %#x = %c\t%s\n",
+                66, 66, 66, "This is a TEST.");
+        dbg_out_I(debug_switch, "带标签信息的格式化输出，显示为提示高亮");
+        dbg_out_W(debug_switch, "带标签信息的格式化输出，显示为警告高亮");
+        dbg_out_E(debug_switch, "带标签信息的格式化输出，显示为错误高亮");
+        dbg_outerr_I(debug_switch, "带标签信息的格式化输出，附带错误信息");
+    }
+
     return 0;
 }
 
@@ -44,7 +47,7 @@ int test_dbg_in_S(void *p)
 {
     char buf[256] = {};
     dbg_in_S(buf, sizeof(buf));
-    dbg_out_I(1, "Get string: %s", buf);
+    dbg_out_I(3, "Get string: %s", buf);
     return 0;
 }
 
@@ -52,7 +55,7 @@ int test_dbg_in_N(void *p)
 {
     int num = 0;
     dbg_in_N(&num);
-    dbg_out_I(1, "Get number: %d", num);
+    dbg_out_I(3, "Get number: %d", num);
     return 0;
 }
 
@@ -95,19 +98,20 @@ int test_setlog_only_s(void *p)
 int test_dump(void *p)
 {
     char buf[1024] = {};
+    int debug_switch = 1;
 
     strcpy(buf, "#### This is a TEST.\r\n ####");
-    dbg_out_I(1, "buf address: %p", buf);
-    dbg_dmp_H(1, buf, strlen(buf));
-    dbg_dmp_HC(1, buf, strlen(buf));
-    dbg_dmp_HCA(1, buf, strlen(buf), buf);
-    dbg_dmp_HL(1, buf, strlen(buf), "test1");
-    dbg_dmp_HCL(1, buf, strlen(buf), "test2");
-    dbg_dmp_HCAL(1, buf, strlen(buf), buf, "test3");
-    dbg_dmp_HL(1, buf, strlen(buf), NULL);
-    dbg_dmp_HCL(1, buf, strlen(buf), NULL);
-    dbg_dmp_HCAL(1, buf, strlen(buf), buf, NULL);
-    dbg_dmp_C(1, buf, strlen(buf));
+    dbg_out_I(debug_switch, "buf address: %p", buf);
+    dbg_dmp_H(debug_switch, buf, strlen(buf));
+    dbg_dmp_HC(debug_switch, buf, strlen(buf));
+    dbg_dmp_HCA(debug_switch, buf, strlen(buf), buf);
+    dbg_dmp_HL(debug_switch, buf, strlen(buf), "test1");
+    dbg_dmp_HCL(debug_switch, buf, strlen(buf), "test2");
+    dbg_dmp_HCAL(debug_switch, buf, strlen(buf), buf, "test3");
+    dbg_dmp_HL(debug_switch, buf, strlen(buf), NULL);
+    dbg_dmp_HCL(debug_switch, buf, strlen(buf), NULL);
+    dbg_dmp_HCAL(debug_switch, buf, strlen(buf), buf, NULL);
+    dbg_dmp_C(debug_switch, buf, strlen(buf));
 
     return 0;
 }
@@ -120,7 +124,6 @@ int test_debug(void *p)
         { "dbg_out_*",          NULL,   test_output,            },
         { "test_getchar",       NULL,   test_getchar,           },
         { "dbg_in_S",           NULL,   test_dbg_in_S,          },
-        { "dbg_in_N",           NULL,   test_dbg_in_N,          },
         { "dbg_in_N",           NULL,   test_dbg_in_N,          },
         { "dbg_log_setname",    NULL,   test_setlogname,        },
         { "dbg_log_off",        NULL,   test_setlog_off,        },

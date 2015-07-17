@@ -44,7 +44,7 @@
 #define BUFFER_SIZE         4096        //!< 数据输入输出缓存大小
 #endif /* BUFFER_SIZE */
 
-/// 模块调试开关
+/// Debug模块调试开关
 #define DS_OUT              0           //!< 输出
 #define DS_OUT_ERR          1           //!< 输出错误
 #define DS_IN               0           //!< 输入
@@ -77,7 +77,8 @@
 #define dbg_out_I(__debug_switch__, ...) { \
     if(__debug_switch__) { \
         dbg_stdout_label(__func__, __LINE__, \
-                DBG_LABEL_COLOR | DBG_LABEL_COL_INFO | DBG_LABEL_INFO \
+                (__debug_switch__ & 0xff)\
+                | DBG_LABEL_COLOR | DBG_LABEL_COL_INFO | DBG_LABEL_INFO \
                 | DBG_LABEL_NEWLINE, __VA_ARGS__); \
     } \
 }
@@ -85,7 +86,8 @@
 #define dbg_out_W(__debug_switch__, ...) { \
     if(__debug_switch__) { \
         dbg_stdout_label(__func__, __LINE__, \
-                DBG_LABEL_COLOR | DBG_LABEL_COL_WARN | DBG_LABEL_WARN \
+                (__debug_switch__ & 0xff)\
+                | DBG_LABEL_COLOR | DBG_LABEL_COL_WARN | DBG_LABEL_WARN \
                 | DBG_LABEL_NEWLINE, __VA_ARGS__); \
     } \
 }
@@ -93,7 +95,8 @@
 #define dbg_out_E(__debug_switch__, ...) { \
     if(__debug_switch__) { \
         dbg_stdout_label(__func__, __LINE__, \
-                DBG_LABEL_COLOR | DBG_LABEL_COL_ERR | DBG_LABEL_ERR \
+                (__debug_switch__ & 0xff)\
+                | DBG_LABEL_COLOR | DBG_LABEL_COL_ERR | DBG_LABEL_ERR \
                 | DBG_LABEL_NEWLINE, __VA_ARGS__); \
     } \
 }
@@ -101,7 +104,8 @@
 #define dbg_out_H(__debug_switch__, ...) { \
     if(__debug_switch__) { \
         dbg_stdout_label(__func__, __LINE__, \
-                DBG_LABEL_COLOR | DBG_LABEL_COL_HL | DBG_LABEL_INFO \
+                (__debug_switch__ & 0xff)\
+                | DBG_LABEL_COLOR | DBG_LABEL_COL_HL | DBG_LABEL_INFO \
                 | DBG_LABEL_NEWLINE, __VA_ARGS__); \
     } \
 }
@@ -109,48 +113,9 @@
 #define dbg_outerr_I(__debug_switch__, ...) { \
     if(__debug_switch__) { \
         dbg_stdout_label(__func__, __LINE__, \
-                DBG_LABEL_COLOR | DBG_LABEL_COL_ERR | DBG_LABEL_ERR \
-                | DBG_LABEL_STDERR | DBG_LABEL_NEWLINE, __VA_ARGS__); \
-    } \
-}
-/** \brief      带标签信息和时间的格式化输出，显示为提示高亮 */
-#define dbg_out_IT(__debug_switch__, ...) { \
-    if(__debug_switch__) { \
-        dbg_stdout_label(__func__, __LINE__, \
-                DBG_LABEL_TIME | DBG_LABEL_COL_INFO | DBG_LABEL_COLOR \
-                | DBG_LABEL_INFO | DBG_LABEL_NEWLINE, __VA_ARGS__); \
-    }\
-}
-/** \brief      带标签信息和时间的格式化输出，显示为警告高亮 */
-#define dbg_out_WT(__debug_switch__, ...) { \
-    if(__debug_switch__) { \
-        dbg_stdout_label(__func__, __LINE__, \
-                DBG_LABEL_TIME | DBG_LABEL_COL_WARN | DBG_LABEL_COLOR \
-                | DBG_LABEL_WARN | DBG_LABEL_NEWLINE, __VA_ARGS__); \
-    }\
-}
-/** \brief      带标签信息和时间的格式化输出，显示为错误高亮 */
-#define dbg_out_ET(__debug_switch__, ...) { \
-    if(__debug_switch__) { \
-        dbg_stdout_label(__func__, __LINE__, \
-                DBG_LABEL_TIME | DBG_LABEL_COL_ERR | DBG_LABEL_COLOR \
-                | DBG_LABEL_ERR | DBG_LABEL_NEWLINE, __VA_ARGS__); \
-    } \
-}
-/** \brief      带标签信息和时间的格式化输出，显示为高亮 */
-#define dbg_out_HT(__debug_switch__, ...) { \
-    if(__debug_switch__) { \
-        dbg_stdout_label(__func__, __LINE__, \
-                DBG_LABEL_TIME | DBG_LABEL_COL_HL | DBG_LABEL_COLOR \
-                | DBG_LABEL_INFO | DBG_LABEL_NEWLINE, __VA_ARGS__); \
-    } \
-}
-/** \brief      带标签信息和时间的格式化输出, 附带错误信息 */
-#define dbg_outerr_IT(__debug_switch__, ...) { \
-    if(__debug_switch__) { \
-        dbg_stdout_label(__func__, __LINE__, \
-                DBG_LABEL_TIME | DBG_LABEL_COL_ERR | DBG_LABEL_COLOR \
-                | DBG_LABEL_ERR | DBG_LABEL_STDERR | DBG_LABEL_NEWLINE, \
+                (__debug_switch__ & 0xff)\
+                | DBG_LABEL_COLOR | DBG_LABEL_COL_ERR | DBG_LABEL_ERR \
+                | DBG_LABEL_STDERR | DBG_LABEL_NEWLINE,\
                 __VA_ARGS__); \
     } \
 }
@@ -161,11 +126,6 @@
 #define dbg_out_E(...)
 #define dbg_out_H(...)
 #define dbg_outerr_I(...)
-#define dbg_out_IT(...)
-#define dbg_out_WT(...)
-#define dbg_out_ET(...)
-#define dbg_out_HT(...)
-#define dbg_outerr_IT(...)
 #endif /* DS_DEBUG_MAIN */
 /** @} */
 /**
@@ -237,30 +197,34 @@
 #define dbg_dmp_H(__debug_switch__, buf, len) { \
     if(__debug_switch__) { \
         dbg_dump_label(__func__, __LINE__, buf, len, 0, \
-                DBG_DMP_SEG_16 | DBG_DMP_TAG_LINE | DBG_DMP_DAT_HEX, NULL); \
+                (__debug_switch__ & 0xff)\
+                | DBG_DMP_SEG_16 | DBG_DMP_TAG_LINE | DBG_DMP_DAT_HEX, NULL); \
     } \
 }
 /** \brief      16进制导出, 同时输出字符, 带行号, 每行16字节 */
 #define dbg_dmp_HC(__debug_switch__, buf, len) { \
     if(__debug_switch__) { \
         dbg_dump_label(__func__, __LINE__, buf, len, 0, \
-                DBG_DMP_SEG_16 | DBG_DMP_TAG_LINE \
-                | DBG_DMP_DAT_HEX | DBG_DMP_DAT_CHAR, NULL); \
+                (__debug_switch__ & 0xff)\
+                | DBG_DMP_SEG_16 | DBG_DMP_TAG_LINE | DBG_DMP_DAT_HEX\
+                | DBG_DMP_DAT_CHAR, NULL);\
     } \
 }
 /** \brief      16进制导出, 同时输出字符, 带地址, 每行16字节 */
 #define dbg_dmp_HCA(__debug_switch__, buf, len, addr) { \
     if(__debug_switch__) { \
         dbg_dump_label(__func__, __LINE__, buf, len, addr, \
-                DBG_DMP_SEG_16 | DBG_DMP_TAG_ADDR \
-                | DBG_DMP_DAT_HEX | DBG_DMP_DAT_CHAR, NULL); \
+                (__debug_switch__ & 0xff)\
+                | DBG_DMP_SEG_16 | DBG_DMP_TAG_ADDR | DBG_DMP_DAT_HEX\
+                | DBG_DMP_DAT_CHAR, NULL);\
     } \
 }
 /** \brief      16进制导出, 带标签和行号, 每行16字节 */
 #define dbg_dmp_HL(__debug_switch__, buf, len, label) { \
     if(__debug_switch__) { \
         dbg_dump_label(__func__, __LINE__, buf, len, 0, \
-                DBG_DMP_SEG_16 | DBG_DMP_TAG_LINE | DBG_DMP_DAT_HEX\
+                (__debug_switch__ & 0xff)\
+                | DBG_DMP_SEG_16 | DBG_DMP_TAG_LINE | DBG_DMP_DAT_HEX\
                 | DBG_DMP_TAG_LABEL, label); \
     } \
 }
@@ -268,16 +232,20 @@
 #define dbg_dmp_HCL(__debug_switch__, buf, len, label) { \
     if(__debug_switch__) { \
         dbg_dump_label(__func__, __LINE__, buf, len, 0, \
-                DBG_DMP_SEG_16 | DBG_DMP_TAG_LINE | DBG_DMP_DAT_HEX\
-                | DBG_DMP_DAT_CHAR | DBG_DMP_TAG_LABEL, label); \
+                (__debug_switch__ & 0xff)\
+                | DBG_DMP_SEG_16 | DBG_DMP_TAG_LINE | DBG_DMP_DAT_HEX\
+                | DBG_DMP_DAT_CHAR | DBG_DMP_TAG_LABEL,\
+                label); \
     } \
 }
 /** \brief      16进制导出, 同时输出字符, 带标签和地址, 每行16字节 */
 #define dbg_dmp_HCAL(__debug_switch__, buf, len, addr, label) { \
     if(__debug_switch__) { \
         dbg_dump_label(__func__, __LINE__, buf, len, addr, \
-                DBG_DMP_SEG_16 | DBG_DMP_TAG_ADDR | DBG_DMP_DAT_HEX\
-                | DBG_DMP_DAT_CHAR | DBG_DMP_TAG_LABEL, label); \
+                (__debug_switch__ & 0xff)\
+                | DBG_DMP_SEG_16 | DBG_DMP_TAG_ADDR | DBG_DMP_DAT_HEX\
+                | DBG_DMP_DAT_CHAR | DBG_DMP_TAG_LABEL,\
+                label); \
     } \
 }
 /** \brief      纯字符导出, 无任何格式(可用于将内存或Flash数据导出到文件) */

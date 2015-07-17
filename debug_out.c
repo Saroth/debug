@@ -197,8 +197,10 @@ int dbg_stdout_label(const char * func, int line, int opt, char * fmt, ...)
 #endif /* DBG_NL_HEAD */
     /// 显示时间
     dbg_stdout_sign(opt, DBG_STDOUT_TIME);
-    /// 显示函数名和行号
-    dbg_stdout("%s:%5d:\t", func, line);
+    if(opt & DBG_LABEL_LABEL) {
+        /// 显示函数名和行号
+        dbg_stdout("%s:%5d:\t", func, line);
+    }
     /// 设置标记颜色
     if((opt & DBG_LABEL_COLOR)) {
         dbg_stdout_sign(opt, DBG_STDOUT_COLOR_SET);

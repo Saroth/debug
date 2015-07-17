@@ -25,25 +25,30 @@ extern "C" {
 #define DBG_SIGN_OUT_GETSTR "[O_s]"             //!< 获取字符串输出标记
 
 // 输入选项定义
-#define DBG_LABEL_TIME      ( 1 << 0 )          //!< 显示时间
-#define DBG_LABEL_COLOR     ( 1 << 1 )          //!< 颜色显示标签，需要DBG_USE_COLOR
-#define DBG_LABEL_TEXTCOLOR ( 1 << 2 )          //!< 颜色显示信息，需要DBG_USE_COLOR
-#define DBG_LABEL_STDERR    ( 1 << 3 )          //!< 显示错误信息
-#define DBG_LABEL_NEWLINE   ( 1 << 4 )          //!< 添加换行符
-#define DBG_LABEL_COL_INFO  ( 1 << 5 )          //!< 使用提示高亮
-#define DBG_LABEL_COL_WARN  ( 1 << 6 )          //!< 使用警告高亮
-#define DBG_LABEL_COL_ERR   ( 1 << 7 )          //!< 使用错误高亮
-#define DBG_LABEL_COL_HL    ( 1 << 8 )          //!< 使用反白高亮
-#define DBG_LABEL_COL_INPUT ( 1 << 9 )          //!< 使用输入标志高亮
-#define DBG_LABEL_IN_RETN   ( 1 << 15 )         //!< 显示返回数值输入标记
-#define DBG_LABEL_IN_GETN   ( 1 << 16 )         //!< 显示获取数组输入标记
-#define DBG_LABEL_IN_GETS   ( 1 << 17 )         //!< 显示获取字符串输入标记
-#define DBG_LABEL_OUT_RETN  ( 1 << 18 )         //!< 显示返回数值输出标记
-#define DBG_LABEL_OUT_GETN  ( 1 << 19 )         //!< 显示获取数组输出标记
-#define DBG_LABEL_OUT_GETS  ( 1 << 20 )         //!< 显示获取字符串输出标记
-#define DBG_LABEL_INFO      ( 1 << 21 )         //!< 添加提示标记
-#define DBG_LABEL_WARN      ( 1 << 22 )         //!< 添加警告标记
-#define DBG_LABEL_ERR       ( 1 << 23 )         //!< 添加错误标记
+// Utility defines  前8位为通用定义
+#define DBG_LABEL_MESSAGE   ( 1 << 0 )          //!< 显示信息
+#define DBG_LABEL_LABEL     ( 1 << 1 )          //!< 显示标签
+#define DBG_LABEL_TIME      ( 1 << 2 )          //!< 显示时间
+// Debug output defines
+#define DBG_LABEL_COLOR     ( 1 << 8 )          //!< 颜色显示标签，需要DBG_USE_COLOR
+#define DBG_LABEL_TEXTCOLOR ( 1 << 9 )          //!< 颜色显示信息，需要DBG_USE_COLOR
+#define DBG_LABEL_STDERR    ( 1 << 10 )         //!< 显示错误信息
+#define DBG_LABEL_NEWLINE   ( 1 << 11 )         //!< 添加换行符
+#define DBG_LABEL_COL_INFO  ( 1 << 12 )         //!< 使用提示高亮
+#define DBG_LABEL_COL_WARN  ( 1 << 13 )         //!< 使用警告高亮
+#define DBG_LABEL_COL_ERR   ( 1 << 14 )         //!< 使用错误高亮
+#define DBG_LABEL_COL_HL    ( 1 << 15 )         //!< 使用反白高亮
+#define DBG_LABEL_INFO      ( 1 << 16 )         //!< 添加提示标记
+#define DBG_LABEL_WARN      ( 1 << 17 )         //!< 添加警告标记
+#define DBG_LABEL_ERR       ( 1 << 18 )         //!< 添加错误标记
+// Input defines
+#define DBG_LABEL_COL_INPUT ( 1 << 24 )         //!< 使用输入标志高亮
+#define DBG_LABEL_IN_RETN   ( 1 << 25 )         //!< 显示返回数值输入标记
+#define DBG_LABEL_IN_GETN   ( 1 << 26 )         //!< 显示获取数组输入标记
+#define DBG_LABEL_IN_GETS   ( 1 << 27 )         //!< 显示获取字符串输入标记
+#define DBG_LABEL_OUT_RETN  ( 1 << 28 )         //!< 显示返回数值输出标记
+#define DBG_LABEL_OUT_GETN  ( 1 << 29 )         //!< 显示获取数组输出标记
+#define DBG_LABEL_OUT_GETS  ( 1 << 30 )         //!< 显示获取字符串输出标记
 
 enum {
     DBG_STDOUT_TIME,                            //!< 显示时间
