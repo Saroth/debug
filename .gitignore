@@ -1,4 +1,6 @@
 .exvim.*
 test_debug
 *.swp
+*.swo
 *.o
+log_test.txt

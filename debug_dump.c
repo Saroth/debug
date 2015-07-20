@@ -141,11 +141,11 @@ int dbg_dump(char * buf, unsigned int len, void * addr, int mode)
     }
     while(len > 0) {
 #ifdef DBG_NL_HEAD
-        dbg_out(1, "\r\n");
+        dbg_out(1, "%s", DBG_NL_CHAR);
 #endif /* DBG_NL_HEAD */
         ret = dbg_dump_line(buf, len, (long)addr, mode);
 #ifndef DBG_NL_HEAD
-        dbg_out(1, "\r\n");
+        dbg_out(1, "%s", DBG_NL_CHAR);
 #endif /* DBG_NL_HEAD */
         len -= ret;
         addr += ret;
@@ -162,7 +162,7 @@ int dbg_dump_label(const char * func, int line, char * buf, unsigned int len,
     int ret = 0;
     if(mode & DBG_DMP_TAG_LABEL) {
 #ifdef DBG_NL_HEAD
-        dbg_out(1, "\r\n");
+        dbg_out(1, "%s", DBG_NL_CHAR);
 #endif /* DBG_NL_HEAD */
         char label_str[256] = { "________ DATA DUMP ________" };
 
@@ -176,7 +176,7 @@ int dbg_dump_label(const char * func, int line, char * buf, unsigned int len,
                 | DBG_LABEL_INFO,
                 "(%d byte)", len);
 #ifndef DBG_NL_HEAD
-        dbg_out(1, "\r\n");
+        dbg_out(1, "%s", DBG_NL_CHAR);
 #endif /* DBG_NL_HEAD */
     }
     ret = dbg_dump(buf, len, addr, mode);

@@ -66,7 +66,7 @@ int dbg_stdin_label(const char * func, int line, int mode,
     int num = 0;
 
 #ifdef DBG_NL_HEAD
-    dbg_out(1, "\r\n");
+    dbg_out(1, "%s", DBG_NL_CHAR);
 #endif /* DBG_NL_HEAD */
     switch(mode) {
         case DBG_STDIN_RETNUM: {
@@ -109,7 +109,7 @@ int dbg_stdin_label(const char * func, int line, int mode,
         }
     }
 #ifndef DBG_NL_HEAD
-    dbg_out(1, "\r\n");
+    dbg_out(1, "%s", DBG_NL_CHAR);
 #endif /* DBG_NL_HEAD */
 
     return ret;

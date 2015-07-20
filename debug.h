@@ -39,22 +39,28 @@
 #define DBG_USE_LOG                     //!< 使用日志功能
 #define DBG_USE_DUMP                    //!< 使用数据导出
 #define DBG_NL_HEAD                     //!< 换行符放在开头
+#define DBG_NL_CHAR         "\n"        //!< 换行符
 
 #ifndef BUFFER_SIZE
 #define BUFFER_SIZE         4096        //!< 数据输入输出缓存大小
 #endif /* BUFFER_SIZE */
 
+// Utility defines  调试开关选项 - 前8位为通用定义
+#define DBG_INFO            ( 1 << 0 )              //!< 显示信息
+#define DBG_LABEL           ( 1 << 1 )              //!< 显示标签
+#define DBG_TIME            ( 1 << 2 )              //!< 显示时间
+
 /// Debug模块调试开关
-#define DS_OUT              0           //!< 输出
-#define DS_OUT_ERR          1           //!< 输出错误
-#define DS_IN               0           //!< 输入
-#define DS_IN_ERR           1           //!< 输入错误
-#define DS_LOG              0           //!< 日志
-#define DS_LOG_ERR          1           //!< 日志错误
-#define DS_DUMP             0           //!< 数据导出
-#define DS_DUMP_ERR         1           //!< 数据导出错误
-#define DS_TEST             0           //!< 测试
-#define DS_TEST_ERR         1           //!< 测试错误
+#define DS_OUT              0                       //!< 输出
+#define DS_OUT_ERR          (DBG_INFO | DBG_LABEL)  //!< 输出错误
+#define DS_IN               0                       //!< 输入
+#define DS_IN_ERR           (DBG_INFO | DBG_LABEL)  //!< 输入错误
+#define DS_LOG              0                       //!< 日志
+#define DS_LOG_ERR          (DBG_INFO | DBG_LABEL)  //!< 日志错误
+#define DS_DUMP             0                       //!< 数据导出
+#define DS_DUMP_ERR         (DBG_INFO | DBG_LABEL)  //!< 数据导出错误
+#define DS_TEST             0                       //!< 测试
+#define DS_TEST_ERR         (DBG_INFO | DBG_LABEL)  //!< 测试错误
 
 #include "debug_bio.h"
 #include "debug_out.h"
@@ -62,11 +68,6 @@
 #include "debug_log.h"
 #include "debug_dump.h"
 #include "debug_test.h"
-
-// Utility defines  调试开关选项 - 前8位为通用定义
-#define DBG_INFO            ( 1 << 0 )          //!< 显示信息
-#define DBG_LABEL           ( 1 << 1 )          //!< 显示标签
-#define DBG_TIME            ( 1 << 2 )          //!< 显示时间
 
 /**
  * \block:      STDOUT

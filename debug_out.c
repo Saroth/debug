@@ -148,7 +148,7 @@ int dbg_stdout_sign(int opt, int type)
         }
         case DBG_STDOUT_NL: {
             if(opt & DBG_LABEL_NEWLINE) {
-                dbg_stdout("\r\n");
+                dbg_stdout("%s", DBG_NL_CHAR);
             }
             break;
         }
