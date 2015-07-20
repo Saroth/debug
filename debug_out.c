@@ -42,7 +42,7 @@ int dbg_stdout(const char * fmt, ...)
 {
     int count = 0;
     va_list marker;
-    char buf[BUFFER_SIZE + 4] = {};
+    char buf[BUFFER_SIZE + 4];
 
     if(NULL == fmt) {
         dbg_out_E(DS_OUT_ERR, "param error.");
@@ -65,7 +65,7 @@ int dbg_stdout(const char * fmt, ...)
 /** 标准错误信息输出 */
 int dbg_stderr(void)
 {
-    char buf[BUFFER_SIZE + 4] = {};
+    char buf[BUFFER_SIZE + 4];
 
     int ret = sprintf(buf, "%s(%d)", strerror(errno), errno);
     if(ret <= 0) {
@@ -183,7 +183,7 @@ int dbg_stdout_sign(int opt, int type)
 /** 带调试标签的格式化输出 */
 int dbg_stdout_label(const char * func, int line, int opt, char * fmt, ...)
 {
-    char buf[BUFFER_SIZE + 4] = {};
+    char buf[BUFFER_SIZE + 4];
     int argc = 0;
     va_list argv;
 

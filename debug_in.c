@@ -12,8 +12,9 @@ extern "C" {
 int dbg_stdin(char * str, int len)
 {
     int ret = 0;
-    char buf[BUFFER_SIZE + 4] = {};
+    char buf[BUFFER_SIZE + 4];
 
+    memset(buf, 0x00, sizeof(buf));
     if(str == NULL || len <= 0) {
         dbg_out_E(DS_IN_ERR, "param error.");
         return -1;
@@ -34,9 +35,10 @@ int dbg_stdin(char * str, int len)
 /** 获取输入的数值 */
 int dbg_stdin_num(int * num)
 {
-    char str[BUFFER_SIZE + 4] = {};
     int len = 0;
+    char str[BUFFER_SIZE + 4];
 
+    memset(str, 0x00, sizeof(str));
     if(num == NULL) {
         dbg_out_E(DS_IN_ERR, "param error.");
         return -1;
