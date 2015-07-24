@@ -10,7 +10,7 @@
 extern "C" {
 #endif
 
-#ifdef DBG_USE_LOG
+#if(DBG_USE_LOG == 1)
 #include "debug_log.h"
 
 /** 输出控制(如果输出成功写文件失败，将返回成功) */
@@ -35,7 +35,7 @@ static int dbg_ioctl(char * buf, int len)
 {
     return dbg_bio_out(buf, len);
 }
-#endif /* DBG_USE_LOG */
+#endif /* (DBG_USE_LOG == 1) */
 
 /** 格式化输出 */
 int dbg_stdout(const char * fmt, ...)
@@ -75,7 +75,7 @@ int dbg_stderr(void)
     return dbg_ioctl(buf, ret);
 }
 
-#ifdef DBG_USE_COLOR
+#if(DBG_USE_COLOR == 1)
 /** 设置终端输出颜色 */
 int dbg_color_set(char * color)
 {
@@ -86,7 +86,7 @@ int dbg_color_set(char * color)
     dbg_bio_out(color, strlen(color));
     return 0;
 }
-#endif /* DBG_USE_COLOR */
+#endif /* (DBG_USE_COLOR == 1) */
 
 /** 标签符号输出 */
 int dbg_stdout_sign(int opt, int type)
@@ -99,8 +99,8 @@ int dbg_stdout_sign(int opt, int type)
                 struct tm * t;
                 time(&tim);
                 t = localtime(&tim);
-                dbg_stdout("%04d-%02d-%02d %02d:%02d:%02d ",
-                        1900 + t->tm_year, 1 + t->tm_mon, t->tm_mday,
+                dbg_stdout("%02d%02d%02d%02d%02d%02d ",
+                        (1900 + t->tm_year) % 100, 1 + t->tm_mon, t->tm_mday,
                         t->tm_hour, t->tm_min, t->tm_sec);
             }
             break;
@@ -152,7 +152,7 @@ int dbg_stdout_sign(int opt, int type)
             }
             break;
         }
-#ifdef DBG_USE_COLOR
+#if(DBG_USE_COLOR == 1)
         case DBG_STDOUT_COLOR_SET: {
             if(opt & DBG_LABEL_COL_INFO) {
                 dbg_color_set(DBG_COLOR_INFO);
@@ -175,7 +175,7 @@ int dbg_stdout_sign(int opt, int type)
             dbg_color_set(DBG_COLOR_RES);
             break;
         }
-#endif /* DBG_USE_COLOR */
+#endif /* (DBG_USE_COLOR == 1) */
     }
     return 0;
 }
@@ -199,17 +199,18 @@ int dbg_stdout_label(const char * func, int line, int opt, char * fmt, ...)
     dbg_stdout_sign(opt, DBG_STDOUT_TIME);
     if(opt & DBG_LABEL) {
         /// 显示函数名和行号
-        dbg_stdout("%s:%5d:\t", func, line);
+        sprintf(buf, "%s:%d ", func, line);
+        dbg_stdout("%-28s", buf);
     }
-    /// 设置标记颜色
     if((opt & DBG_LABEL_COLOR)) {
+        /// 设置标记颜色
         dbg_stdout_sign(opt, DBG_STDOUT_COLOR_SET);
     }
     /// 显示标记
     dbg_stdout_sign(opt, DBG_STDOUT_SIGN);
     dbg_stdout_sign(opt, DBG_STDOUT_COLOR_RES);
-    /// 设置文本颜色
     if((opt & DBG_LABEL_TEXTCOLOR)) {
+        /// 设置文本颜色
         dbg_stdout_sign(opt, DBG_STDOUT_COLOR_SET);
     }
     /// 输出内容

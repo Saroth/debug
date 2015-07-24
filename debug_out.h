@@ -7,10 +7,10 @@ extern "C" {
 
 /// 输出颜色定义
 #define DBG_COLOR_RES       "\33[0m"            //!< 恢复
-#define DBG_COLOR_INFO      "\33[0m"            //!< 提示高亮
+#define DBG_COLOR_INFO      "\33[1m"            //!< 提示高亮
 #define DBG_COLOR_WARN      "\33[1;31m"         //!< 警告高亮
 #define DBG_COLOR_ERR       "\33[1;91m"         //!< 错误高亮
-#define DBG_COLOR_HL        "\33[1;7m"          //!< 反白高亮
+#define DBG_COLOR_HL        "\33[7m"            //!< 反白高亮
 #define DBG_COLOR_INPUT     "\33[1;96m"         //!< 输入标志高亮
 
 // 标记定义
@@ -26,8 +26,8 @@ extern "C" {
 
 // 输入选项定义
 // Debug output defines
-#define DBG_LABEL_COLOR     ( 1 << 8 )          //!< 颜色显示标签，需要DBG_USE_COLOR
-#define DBG_LABEL_TEXTCOLOR ( 1 << 9 )          //!< 颜色显示信息，需要DBG_USE_COLOR
+#define DBG_LABEL_COLOR     ( 1 << 8 )          //!< 颜色显示标签，需要定义DBG_USE_COLOR=1
+#define DBG_LABEL_TEXTCOLOR ( 1 << 9 )          //!< 颜色显示信息，需要定义DBG_USE_COLOR=1
 #define DBG_LABEL_STDERR    ( 1 << 10 )         //!< 显示错误信息
 #define DBG_LABEL_NEWLINE   ( 1 << 11 )         //!< 添加换行符
 #define DBG_LABEL_COL_INFO  ( 1 << 12 )         //!< 使用提示高亮
@@ -70,14 +70,14 @@ int dbg_stdout(const char * fmt, ...);
  *              <0      Error
  */
 int dbg_stderr(void);
-#ifdef DBG_USE_COLOR
+#if(DBG_USE_COLOR == 1)
 /**
  * \brief       设置终端输出颜色
  * \param       color   颜色标示
  * \return      0       Success
  */
 int dbg_color_set(char * color);
-#endif /* DBG_USE_COLOR */
+#endif /* (DBG_USE_COLOR == 1) */
 /**
  * \brief       带调试标签的格式化输出
  * \param       func        __func__

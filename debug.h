@@ -22,8 +22,8 @@
  * \file        debug.h
  * \brief       调试模块
  * \author      huanglf
- * \version     1.1
- * \date        2015-06-06
+ * \version     1.2
+ * \date        2015-07-25
  */
 
 
@@ -32,18 +32,19 @@
 
 // #include "config.h"
 
-#define DS_DEBUG_MAIN                   //!< 调试模块总开关
-
-/// 功能配置
-#define DBG_USE_COLOR                   //!< 使用带颜色输出
-#define DBG_USE_LOG                     //!< 使用日志功能
-#define DBG_USE_DUMP                    //!< 使用数据导出
-#define DBG_NL_HEAD                     //!< 换行符放在开头
-#define DBG_NL_CHAR         "\n"        //!< 换行符
-
+#ifndef DS_DEBUG_MAIN
+#define DS_DEBUG_MAIN       1           //!< 调试模块总开关
+#endif /* DS_DEBUG_MAIN */
 #ifndef BUFFER_SIZE
 #define BUFFER_SIZE         4096        //!< 数据输入输出缓存大小
 #endif /* BUFFER_SIZE */
+
+/// 功能配置
+#define DBG_USE_COLOR       1           //!< 使用带颜色输出
+#define DBG_USE_LOG         1           //!< 使用日志功能
+#define DBG_USE_DUMP        1           //!< 使用数据导出
+#define DBG_NL_HEAD         1           //!< 换行符放在开头
+#define DBG_NL_CHAR         "\n"        //!< 换行符
 
 // Utility defines  调试开关选项 - 前8位为通用定义
 #define DBG_INFO            ( 1 << 0 )              //!< 显示信息
@@ -72,14 +73,14 @@
 /**
  * \block:      STDOUT
  * @{ */
-#ifdef DS_DEBUG_MAIN
+#if(DS_DEBUG_MAIN == 1)
 /** \brief      格式化输出 */
 #define dbg_out(__debug_switch__, ...) { \
     if(__debug_switch__) { \
         dbg_stdout(__VA_ARGS__); \
     } \
 }
-/** \brief      带标签信息的格式化输出，显示为提示高亮 */
+/** \brief      带提示标签的格式化输出，标签为提示高亮 */
 #define dbg_out_I(__debug_switch__, ...) { \
     if(__debug_switch__) { \
         dbg_stdout_label(__func__, __LINE__, \
@@ -88,7 +89,7 @@
                 | DBG_LABEL_NEWLINE, __VA_ARGS__); \
     } \
 }
-/** \brief      带标签信息的格式化输出，显示为警告高亮 */
+/** \brief      带警告标签的格式化输出，标签为警告高亮 */
 #define dbg_out_W(__debug_switch__, ...) { \
     if(__debug_switch__) { \
         dbg_stdout_label(__func__, __LINE__, \
@@ -97,7 +98,7 @@
                 | DBG_LABEL_NEWLINE, __VA_ARGS__); \
     } \
 }
-/** \brief      带标签信息的格式化输出，显示为错误高亮 */
+/** \brief      带错误标签的格式化输出，标签为错误高亮 */
 #define dbg_out_E(__debug_switch__, ...) { \
     if(__debug_switch__) { \
         dbg_stdout_label(__func__, __LINE__, \
@@ -111,11 +112,11 @@
     if(__debug_switch__) { \
         dbg_stdout_label(__func__, __LINE__, \
                 __debug_switch__\
-                | DBG_LABEL_COLOR | DBG_LABEL_COL_HL | DBG_LABEL_INFO \
+                | DBG_LABEL_TEXTCOLOR | DBG_LABEL_COL_HL | DBG_LABEL_INFO \
                 | DBG_LABEL_NEWLINE, __VA_ARGS__); \
     } \
 }
-/** \brief      带标签信息的格式化输出, 附带错误信息 */
+/** \brief      带错误标签的格式化输出，标签为错误高亮，附带错误信息 */
 #define dbg_outerr_I(__debug_switch__, ...) { \
     if(__debug_switch__) { \
         dbg_stdout_label(__func__, __LINE__, \
@@ -125,6 +126,24 @@
                 __VA_ARGS__); \
     } \
 }
+/** \brief      函数进入标志 */
+#define dbg_out_entry(__debug_switch__) { \
+    if(__debug_switch__) { \
+        dbg_stdout_label(__func__, __LINE__, \
+                __debug_switch__\
+                | DBG_LABEL_TEXTCOLOR | DBG_LABEL_COL_INFO | DBG_LABEL_NEWLINE,\
+                ">>>> %s (...){", __func__); \
+    } \
+}
+/** \brief      函数退出标志 */
+#define dbg_out_exit(__debug_switch__) { \
+    if(__debug_switch__) { \
+        dbg_stdout_label(__func__, __LINE__, \
+                __debug_switch__\
+                | DBG_LABEL_TEXTCOLOR | DBG_LABEL_COL_INFO | DBG_LABEL_NEWLINE,\
+                "<<<< }/* %s */", __func__); \
+    } \
+}
 #else
 #define dbg_out(...)
 #define dbg_out_I(...)
@@ -132,12 +151,14 @@
 #define dbg_out_E(...)
 #define dbg_out_H(...)
 #define dbg_outerr_I(...)
-#endif /* DS_DEBUG_MAIN */
+#define dbg_out_entry(...)
+#define dbg_out_exit(...)
+#endif /* (DS_DEBUG_MAIN == 1) */
 /** @} */
 /**
  * \block:      STDIN
  * @{ */
-#ifdef DS_DEBUG_MAIN
+#if(DS_DEBUG_MAIN == 1)
 /** \brief      返回输入的数值，如果输入值不可转换为数字则返回-1 */
 #define dbg_in() ({ \
         dbg_stdin_label(__func__, __LINE__, DBG_STDIN_RETNUM, 0, 0); \
@@ -154,12 +175,12 @@
 #define dbg_in() 0
 #define dbg_in_N(...)
 #define dbg_in_S(...)
-#endif /* DS_DEBUG_MAIN */
+#endif /* (DS_DEBUG_MAIN == 1) */
 /** @} */
 /**
  * \block:      LOG
  * @{ */
-#if defined(DBG_USE_LOG) && defined(DS_DEBUG_MAIN)
+#if((DBG_USE_LOG == 1) && (DS_DEBUG_MAIN == 1))
 /** \brief      设置日志文件名 */
 #define dbg_log_setname(filename) { \
     dbg_log_open(filename); \
@@ -186,19 +207,19 @@
 }
 #else
 #define dbg_log_setname(...) { \
-    dbg_out_E(1, "DBG_USE_LOG undefine!"); \
+    dbg_out_E(1, "DBG_USE_LOG is OFF!"); \
 }
 #define dbg_log_off()
 #define dbg_log_on()
 #define dbg_log_only()
 #define dbg_log_on_s()
 #define dbg_log_only_s()
-#endif /* defined(DBG_USE_LOG) && defined(DS_DEBUG_MAIN) */
+#endif /* ((DBG_USE_LOG == 1) && (DS_DEBUG_MAIN == 1)) */
 /** @} */
 /**
  * \block:      DUMP
  * @{ */
-#if defined(DS_DEBUG_MAIN) && defined(DBG_USE_DUMP)
+#if((DBG_USE_DUMP == 1) && (DS_DEBUG_MAIN == 1))
 /** \brief      16进制导出, 带行号, 每行16字节 */
 #define dbg_dmp_H(__debug_switch__, buf, len) { \
     if(__debug_switch__) { \
@@ -268,12 +289,12 @@
 #define dbg_dmp_HCL(...)
 #define dbg_dmp_HCAL(...)
 #define dbg_dmp_C(...)
-#endif /* defined(DS_DEBUG_MAIN) && defined(DBG_USE_DUMP) */
+#endif /* ((DBG_USE_DUMP == 1) && (DS_DEBUG_MAIN == 1)) */
 /** @} */
 /**
  * \block:      TEST
  * @{ */
-#ifdef DS_DEBUG_MAIN
+#if(DS_DEBUG_MAIN == 1)
 /** \brief      设置测试函数列表并加载 */
 #define dbg_test_setlist(...) { \
     DBG_TESTLIST_T list[] = { __VA_ARGS__ }; \
@@ -281,7 +302,7 @@
 }
 #else
 #define dbg_test_setlist(...)
-#endif /* DS_DEBUG_MAIN */
+#endif /* (DS_DEBUG_MAIN == 1) */
 /** @} */
 
 

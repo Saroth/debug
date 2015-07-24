@@ -53,7 +53,7 @@ int dbg_bio_in(char * buf, int len)
     return strlen(buf);
 }
 
-#ifdef DBG_USE_LOG
+#if(DBG_USE_LOG == 1)
 static FILE * gdbg_log_fp = NULL;       //!< 文件指针存储
 
 /** 打开日志文件 */
@@ -135,13 +135,15 @@ int dbg_bio_write(char * buf, int len)
 
 int dbg_bio_sync(void)
 {
-#include <unistd.h>
     fflush(gdbg_log_fp);                //!< 将数据从C库缓存写到内核缓存
+#if defined(__unix__) || defined(__linux__)
+#include <unistd.h>
     fsync(fileno(gdbg_log_fp));         //!< 将数据从内核缓存写到磁盘
+#endif
 
     return 0;
 }
-#endif /* DBG_USE_LOG */
+#endif /* (DBG_USE_LOG == 1) */
 
 #ifdef __cplusplus
 }

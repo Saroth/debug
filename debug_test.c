@@ -26,6 +26,7 @@ int dbg_testlist(DBG_TESTLIST_T * list, int size)
             }
         }
     }
+    dbg_out(1, "%s", DBG_NL_CHAR);
 
     return 0;
 }

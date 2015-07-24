@@ -22,7 +22,7 @@ int dbg_bio_out(char * buf, int len);
  * \descript    以回车或^D结束，返回结果包含换行符
  */
 int dbg_bio_in(char * buf, int len);
-#ifdef DBG_USE_LOG
+#if(DBG_USE_LOG == 1)
 /**
  * \brief       打开日志文件
  * \param       file    文件名
@@ -53,7 +53,7 @@ int dbg_bio_write(char * buf, int len);
  * \descript    同步数据较慢，影响调试速度
  */
 int dbg_bio_sync(void);
-#endif /* DBG_USE_LOG */
+#endif /* (DBG_USE_LOG == 1) */
 #ifdef __cplusplus
 }
 #endif
