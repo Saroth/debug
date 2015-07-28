@@ -8,6 +8,7 @@
 extern "C" {
 #endif
 
+#if(DBG_USE_LOG == 1)
 static int gdbg_mode = DBG_P;           //!< 日志调试模式
 
 /** 打开新日志 */
@@ -55,6 +56,7 @@ int dbg_log_getmode(void)
     return gdbg_mode;
 }
 
+#endif /* (DBG_USE_LOG == 1) */
 #ifdef __cplusplus
 }
 #endif

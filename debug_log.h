@@ -5,6 +5,7 @@
 extern "C" {
 #endif
 
+#if(DBG_USE_LOG == 1)
 #define DBG_P       ( 1 << 0 )          //!< 1 << 0 print only
 #define DBG_W       ( 1 << 1 )          //!< 1 << 1 write log only
 #define DBG_PW      ( DBG_P | DBG_W )   //!< both print and write log
@@ -45,6 +46,7 @@ int dbg_log_setmode(int mode);
  *              -1      Error
  */
 int dbg_log_getmode(void);
+#endif /* (DBG_USE_LOG == 1) */
 
 #ifdef __cplusplus
 }

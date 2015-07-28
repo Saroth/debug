@@ -132,7 +132,7 @@
         dbg_stdout_label(__func__, __LINE__, \
                 __debug_switch__\
                 | DBG_LABEL_TEXTCOLOR | DBG_LABEL_COL_INFO | DBG_LABEL_NEWLINE,\
-                ">>>> %s (...){", __func__); \
+                ">>> %s {", __func__); \
     } \
 }
 /** \brief      函数退出标志 */
@@ -141,7 +141,7 @@
         dbg_stdout_label(__func__, __LINE__, \
                 __debug_switch__\
                 | DBG_LABEL_TEXTCOLOR | DBG_LABEL_COL_INFO | DBG_LABEL_NEWLINE,\
-                "<<<< }/* %s */", __func__); \
+                "<<< %s }", __func__); \
     } \
 }
 #else
