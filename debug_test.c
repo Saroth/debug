@@ -1,8 +1,6 @@
 #include "debug.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#if ((DBG_USE_INPUT == 1) && (DS_DEBUG_MAIN == 1))
 
 /** 测试列表控制 */
 int dbg_testlist(DBG_TESTLIST_T * list, int size)
@@ -28,10 +26,8 @@ int dbg_testlist(DBG_TESTLIST_T * list, int size)
     }
     dbg_out(1, "%s", DBG_NL_CHAR);
 
-    return 0;
+    return DBG_RET_OK;
 }
 
-#ifdef __cplusplus
-}
-#endif
+#endif /* ((DBG_USE_INPUT == 1) && (DS_DEBUG_MAIN == 1)) */
 

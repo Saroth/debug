@@ -1,15 +1,10 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "debug.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#if ((DBG_USE_LOG == 1) && (DS_DEBUG_MAIN == 1))
 
-#if(DBG_USE_LOG == 1)
-static int gdbg_mode = DBG_P;           //!< 日志调试模式
+static int gdbg_mode = DBG_MODE_P;      //!< 默认调试模式
 
 /** 打开新日志 */
 int dbg_log_open(char * filename)
@@ -56,8 +51,5 @@ int dbg_log_getmode(void)
     return gdbg_mode;
 }
 
-#endif /* (DBG_USE_LOG == 1) */
-#ifdef __cplusplus
-}
-#endif
+#endif /* ((DBG_USE_LOG == 1) && (DS_DEBUG_MAIN == 1)) */
 

@@ -2,9 +2,7 @@
 
 #include "debug.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#if ((DBG_USE_DUMP == 1) && (DS_DEBUG_MAIN == 1))
 
 /** 每行数据输出控制 */
 int dbg_dump_line(char * buf, unsigned int len, long addr, int mode)
@@ -156,10 +154,13 @@ int dbg_dump(char * buf, unsigned int len, void * addr, int mode)
 }
 
 /** 带标签的数据格式化导出 */
-int dbg_dump_label(const char * func, int line, char * buf, unsigned int len,
-        void * addr, int mode, char * label)
+int dbg_dump_label(const char * file, const char * func, int line,
+        char * buf, unsigned int len, void * addr, int mode, char * label)
 {
     int ret = 0;
+    if(mode & DBG_NO_DUMP) {
+        return 0;
+    }
     if(mode & DBG_DMP_TAG_LABEL) {
 #ifdef DBG_NL_HEAD
         dbg_out(1, "%s", DBG_NL_CHAR);
@@ -169,11 +170,9 @@ int dbg_dump_label(const char * func, int line, char * buf, unsigned int len,
         if(label) {
             sprintf(label_str, "________ %s ________", label);
         }
-        dbg_stdout_label(func, line, (mode & 0xff) // 只取通用配置位
-                | DBG_LABEL_TEXTCOLOR | DBG_LABEL_COL_HL | DBG_LABEL_INFO,
-                "%s", label_str);
-        dbg_stdout_label(func, line, DBG_LABEL_COLOR | DBG_LABEL_COL_HL
-                | DBG_LABEL_INFO,
+        dbg_stdout_label(file, func, line, (mode & 0xff) // 只取通用配置位
+                 | DBG_LABEL_COL_HL | DBG_LABEL_INFO, "%s", label_str);
+        dbg_stdout_label(file, func, line, DBG_LABEL_COL_HL | DBG_LABEL_INFO,
                 "(%d byte)", len);
 #ifndef DBG_NL_HEAD
         dbg_out(1, "%s", DBG_NL_CHAR);
@@ -184,7 +183,5 @@ int dbg_dump_label(const char * func, int line, char * buf, unsigned int len,
     return ret;
 }
 
-#ifdef __cplusplus
-}
-#endif
+#endif /* ((DBG_USE_DUMP == 1) && (DS_DEBUG_MAIN == 1)) */
 

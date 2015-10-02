@@ -4,13 +4,17 @@
 
 #include "debug.h"
 
+#if (DBG_MODULE_TEST == 1)
+
+#define DS_DEBUG_MODULE (DBG_INFO | DBG_LABEL_FUNC | DBG_LABEL_LINE)
+
 int test_output(void *p)
 {
     /// 输出测试
     int debug_switch = 1;
     int i = 0;
 
-    for(i = 0; i <= 2; i++) {
+    for(i = 0; i <= 4; i++) {
         debug_switch |= (1 << i);
         dbg_out_entry(debug_switch);
         dbg_out(debug_switch, "\n格式化输出测试: %d = %#x = %c\t%s\n",
@@ -52,7 +56,7 @@ int test_dbg_in_S(void *p)
     char buf[256];
     memset(buf, 0x00, sizeof(buf));
     dbg_in_S(buf, sizeof(buf));
-    dbg_out_I(3, "Get string: %s", buf);
+    dbg_out_I(DS_DEBUG_MODULE, "Get string: %s", buf);
     return 0;
 }
 
@@ -60,7 +64,7 @@ int test_dbg_in_N(void *p)
 {
     int num = 0;
     dbg_in_N(&num);
-    dbg_out_I(3, "Get number: %d", num);
+    dbg_out_I(DS_DEBUG_MODULE, "Get number: %d", num);
     return num;
 }
 
@@ -106,7 +110,7 @@ int test_dump(void *p)
     int debug_switch = 1;
     int i = 0;
 
-    for(i = 0; i <= 2; i++) {
+    for(i = 0; i <= 4; i++) {
         debug_switch |= (1 << i);
         strcpy(buf, "#### This is a TEST.\r\n ####");
         dbg_out_I(debug_switch, "buf address: %p", buf);
@@ -145,6 +149,9 @@ int test_debug(void *p)
 
     return 0;
 }
+#else
+int test_debug(void *p) { return 0; }
+#endif /* (DBG_MODULE_TEST == 1) */
 
 // 模块测试入口
 int __entry_test_debug__(void)
