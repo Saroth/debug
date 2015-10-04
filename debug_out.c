@@ -201,6 +201,7 @@ int dbg_stdout_label(const char * file, const char * func, int line,
         int opt, char * fmt, ...)
 {
     char buf[BUFFER_SIZE + 4];
+    int ret;
     int argc;
     va_list argv;
 
@@ -208,25 +209,40 @@ int dbg_stdout_label(const char * file, const char * func, int line,
         dbg_out_E(DS_OUT_ERR, "Param error.");
         return DBG_RET_PARAM_ERR;
     }
-#if defined(DBG_NL_HEAD)
+#if (DBG_NL_HEAD == 1)
     /// 输出换行符
     dbg_stdout_sign(opt, DBG_MODE_STDOUT_NL);
-#endif /* defined(DBG_NL_HEAD) */
+#endif /* (DBG_NL_HEAD == 1) */
     /// 显示时间
     dbg_stdout_sign(opt, DBG_MODE_STDOUT_TIME);
     /// 显示标签
     argc = 0;
     if(opt & DBG_LABEL_FILE) {
         /// 显示文件名
-        argc += sprintf(buf + argc, "%-16s|", file);
+        ret = sprintf(buf + argc, "%s:", file);
+        if(ret < 20) {
+            memset(buf + argc + ret, ' ', 20 - ret);
+            ret = 20;
+        }
+        argc += ret;
     }
     if(opt & DBG_LABEL_FUNC) {
         /// 显示函数名
-        argc += sprintf(buf + argc, "%-20s|", func);
+        ret = sprintf(buf + argc, "%s:", func);
+        if(ret < 26) {
+            memset(buf + argc + ret, ' ', 26 - ret);
+            ret = 26;
+        }
+        argc += ret;
     }
     if(opt & DBG_LABEL_LINE) {
         /// 显示行号
-        argc += sprintf(buf + argc, "%-4d|", line);
+        ret = sprintf(buf + argc, "%d:", line);
+        if(ret < 6) {
+            memset(buf + argc + ret, ' ', 6 - ret);
+            ret = 6;
+        }
+        argc += ret;
     }
     buf[argc] = 0;
     dbg_ioctl(buf, argc, opt);
@@ -251,10 +267,10 @@ int dbg_stdout_label(const char * file, const char * func, int line,
     dbg_stdout_sign(opt, DBG_MODE_STDOUT_STDERR);
     /// 恢复颜色
     dbg_stdout_sign(opt, DBG_MODE_STDOUT_RESCOL);
-#if !defined(DBG_NL_HEAD)
+#if !(DBG_NL_HEAD == 1)
     /// 输出换行符
     dbg_stdout_sign(opt, DBG_MODE_STDOUT_NL);
-#endif /* !defined(DBG_NL_HEAD) */
+#endif /* !(DBG_NL_HEAD == 1) */
 
     return argc;
 }

@@ -138,13 +138,13 @@ int dbg_dump(char * buf, unsigned int len, void * addr, int mode)
         return -1;
     }
     while(len > 0) {
-#ifdef DBG_NL_HEAD
+#if (DBG_NL_HEAD == 1)
         dbg_out(1, "%s", DBG_NL_CHAR);
-#endif /* DBG_NL_HEAD */
+#endif /* (DBG_NL_HEAD == 1) */
         ret = dbg_dump_line(buf, len, (long)addr, mode);
-#ifndef DBG_NL_HEAD
+#if !(DBG_NL_HEAD == 1)
         dbg_out(1, "%s", DBG_NL_CHAR);
-#endif /* DBG_NL_HEAD */
+#endif /* !(DBG_NL_HEAD == 1) */
         len -= ret;
         addr += ret;
         buf += ret;
@@ -162,9 +162,9 @@ int dbg_dump_label(const char * file, const char * func, int line,
         return 0;
     }
     if(mode & DBG_DMP_TAG_LABEL) {
-#ifdef DBG_NL_HEAD
+#if (DBG_NL_HEAD == 1)
         dbg_out(1, "%s", DBG_NL_CHAR);
-#endif /* DBG_NL_HEAD */
+#endif /* (DBG_NL_HEAD == 1) */
         char label_str[256] = { "________ DATA DUMP ________" };
 
         if(label) {
@@ -174,9 +174,9 @@ int dbg_dump_label(const char * file, const char * func, int line,
                  | DBG_LABEL_COL_HL | DBG_LABEL_INFO, "%s", label_str);
         dbg_stdout_label(file, func, line, DBG_LABEL_COL_HL | DBG_LABEL_INFO,
                 "(%d byte)", len);
-#ifndef DBG_NL_HEAD
+#if !(DBG_NL_HEAD == 1)
         dbg_out(1, "%s", DBG_NL_CHAR);
-#endif /* DBG_NL_HEAD */
+#endif /* !(DBG_NL_HEAD == 1) */
     }
     ret = dbg_dump(buf, len, addr, mode);
 

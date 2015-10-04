@@ -63,9 +63,9 @@ int dbg_stdin_label(const char * file, const char * func, int line,
     int ret = 0;
     int num = 0;
 
-#if defined(DBG_NL_HEAD)
+#if (DBG_NL_HEAD == 1)
     dbg_out(1, "%s", DBG_NL_CHAR);
-#endif /* defined(DBG_NL_HEAD) */
+#endif /* (DBG_NL_HEAD == 1) */
     switch(mode) {
         case DBG_MODE_STDIN_RETNUM: {
             dbg_stdout_label(file, func, line, DBG_LABEL_IN_RETN, "");
@@ -93,9 +93,9 @@ int dbg_stdin_label(const char * file, const char * func, int line,
             return -1;
         }
     }
-#if !defined(DBG_NL_HEAD)
+#if !(DBG_NL_HEAD == 1)
     dbg_out(1, "%s", DBG_NL_CHAR);
-#endif /* !defined(DBG_NL_HEAD) */
+#endif /* !(DBG_NL_HEAD == 1) */
 
     return ret;
 }

@@ -24,11 +24,11 @@
 /// debug模块功能配置
 #define DBG_USE_COLOR       1           //!< 使用带颜色输出
 #define DBG_USE_INPUT       1           //!< 使用输入功能
+#define DBG_USE_DUMP        1           //!< 使用数据导出功能
 #define DBG_USE_LOG         1           //!< 使用日志功能
-#define DBG_USE_DUMP        1           //!< 使用数据导出
 #define DBG_NL_HEAD         0           //!< 换行符放在开头
 #define DBG_NL_CHAR         "\n"        //!< 换行符
-#define DBG_MODULE_TEST     1           //!< 模块测试
+#define DBG_MODULE_TEST     0           //!< 模块测试
 
 typedef enum {                          //!< 显示模式选项 - 前8位为通用定义
     DBG_INFO                = 1 << 0,   //!< 显示输出信息
@@ -48,13 +48,13 @@ typedef enum {                          //!< 返回值
     DBG_RET_NO_INPUT        = -1005,    //!< 无输入
     DBG_RET_UNKNOWN_INPUT   = -1006,    //!< 未知输入
 }DBG_RET_t;
-
-/// Debug模块调试开关
-#define DS_OUT_ERR  (DBG_INFO | DBG_LABEL_FUNC | DBG_LABEL_LINE) //!< 输出错误
-#define DS_IN_ERR   (DBG_INFO | DBG_LABEL_FUNC | DBG_LABEL_LINE) //!< 输入错误
-#define DS_LOG_ERR  (DBG_INFO | DBG_LABEL_FUNC | DBG_LABEL_LINE) //!< 日志错误
-#define DS_DUMP_ERR (DBG_INFO | DBG_LABEL_FUNC | DBG_LABEL_LINE) //!< 数据导出错误
-#define DS_TEST_ERR (DBG_INFO | DBG_LABEL_FUNC | DBG_LABEL_LINE) //!< 测试错误
+typedef enum {                          //!< Debug模块调试开关
+    DS_OUT_ERR  = (DBG_INFO | DBG_LABEL_FUNC | DBG_LABEL_LINE), //!< 输出错误
+    DS_IN_ERR   = (DBG_INFO | DBG_LABEL_FUNC | DBG_LABEL_LINE), //!< 输入错误
+    DS_LOG_ERR  = (DBG_INFO | DBG_LABEL_FUNC | DBG_LABEL_LINE), //!< 日志错误
+    DS_DUMP_ERR = (DBG_INFO | DBG_LABEL_FUNC | DBG_LABEL_LINE), //!< 数据导出错误
+    DS_TEST_ERR = (DBG_INFO | DBG_LABEL_FUNC | DBG_LABEL_LINE), //!< 测试错误
+}DS_DEBUG_MODULE_t;
 
 /**
  * \block:      Base Input/Output Interface
@@ -118,10 +118,10 @@ int dbg_bio_sync(void);
 /// 输出颜色定义
 #define DBG_COLOR_RES   "\33[0m"        //!< 恢复
 #define DBG_COLOR_INFO  "\33[1m"        //!< 提示高亮
-#define DBG_COLOR_WARN  "\33[1;33m"     //!< 警告高亮
+#define DBG_COLOR_WARN  "\33[1;36m"     //!< 警告高亮
 #define DBG_COLOR_ERR   "\33[1;91m"     //!< 错误高亮
 #define DBG_COLOR_HL    "\33[7m"        //!< 反白高亮
-#define DBG_COLOR_INPUT "\33[1;96m"     //!< 输入标志高亮
+#define DBG_COLOR_INPUT "\33[1;92m"     //!< 输入标志高亮
 // 标记定义
 #define DBG_MODE_SIGN_INFO      ""      //!< 提示标记
 #define DBG_MODE_SIGN_WARN      "[Warning]" //!< 警告标记
@@ -225,7 +225,7 @@ int dbg_stdout_label(const char * file, const char * func, int line,
 #define dbg_out_H(__debug_switch__, ...) { \
     if(__debug_switch__) { \
         dbg_stdout_label(__FILE__, __func__, __LINE__, \
-                __debug_switch__ | DBG_LABEL_INFO | DBG_LABEL_NEWLINE,\
+                __debug_switch__ | DBG_LABEL_COL_HL | DBG_LABEL_NEWLINE,\
                 __VA_ARGS__); \
     } \
 }
@@ -594,8 +594,7 @@ int dbg_testlist(DBG_TESTLIST_T * list, int size);
 #endif /* ((DBG_USE_INPUT == 1) && (DS_DEBUG_MAIN == 1)) */
 /** @} */
 
-/** {
- * Code is far away from bug with the animal protecting.
+/** { Code is far away from bug with the animal protecting.
  *     ┏┓     ┏┓
  *    ┏┛┻━━━━━┛┻┓
  *    ┃         ┃
