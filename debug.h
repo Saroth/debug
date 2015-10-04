@@ -4,7 +4,7 @@
  * \file        debug.h
  * \brief       调试模块
  * \author      huanglf
- * \version     1.2
+ * \version     1.3
  * \date        2015-10-01
  */
 
@@ -12,10 +12,10 @@
 #ifndef __DEBUG_MODULE_H__
 #define __DEBUG_MODULE_H__
 
-// #include "config.h"
+// #include <config.h>                     //!< 工程配置头文件，含调试开关定义
 
 #ifndef DS_DEBUG_MAIN
-#define DS_DEBUG_MAIN       1           //!< 调试模块总开关
+#define DS_DEBUG_MAIN       0           //!< 调试模块总开关，默认关闭
 #endif /* DS_DEBUG_MAIN */
 #ifndef BUFFER_SIZE
 #define BUFFER_SIZE         4096        //!< 数据输入输出缓存大小
