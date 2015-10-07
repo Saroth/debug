@@ -198,7 +198,7 @@ int dbg_stdout_sign(int opt, int type)
 
 /** 带调试标签的格式化输出 */
 int dbg_stdout_label(const char * file, const char * func, int line,
-        int opt, char * fmt, ...)
+        int opt, const char * fmt, ...)
 {
     char buf[BUFFER_SIZE + 4];
     int ret;

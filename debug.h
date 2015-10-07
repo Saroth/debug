@@ -186,7 +186,7 @@ int dbg_color_set(char * color);
  * \return      >0: 输出长度        <0: DBG_RET_t
  */
 int dbg_stdout_label(const char * file, const char * func, int line,
-        int opt, char * fmt, ...);
+        int opt, const char * fmt, ...);
 #ifdef __cplusplus
 }
 #endif
