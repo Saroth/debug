@@ -2,7 +2,7 @@
 
 #include "debug.h"
 
-#if ((DBG_USE_LOG == 1) && (DS_DEBUG_MAIN == 1))
+#if ((DBG_LOG_EN == 1) && (DS_DEBUG_MAIN == 1))
 
 static int gdbg_mode = DBG_MODE_P;      //!< 默认调试模式
 
@@ -51,5 +51,5 @@ int dbg_log_getmode(void)
     return gdbg_mode;
 }
 
-#endif /* ((DBG_USE_LOG == 1) && (DS_DEBUG_MAIN == 1)) */
+#endif /* ((DBG_LOG_EN == 1) && (DS_DEBUG_MAIN == 1)) */
 

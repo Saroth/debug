@@ -4,7 +4,7 @@
 
 #include "debug.h"
 
-#if ((DBG_USE_INPUT == 1) && (DS_DEBUG_MAIN == 1))
+#if ((DBG_INPUT_EN == 1) && (DS_DEBUG_MAIN == 1))
 
 /** 获取标准输入 */
 int dbg_stdin(char * str, int len)
@@ -100,5 +100,5 @@ int dbg_stdin_label(const char * file, const char * func, int line,
     return ret;
 }
 
-#endif /* ((DBG_USE_INPUT == 1) && (DS_DEBUG_MAIN == 1)) */
+#endif /* ((DBG_INPUT_EN == 1) && (DS_DEBUG_MAIN == 1)) */
 

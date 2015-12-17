@@ -16,7 +16,7 @@ typedef enum {
 }DBG_MODE_STDOUT_OPT_t;
 
 #if (DS_DEBUG_MAIN == 1)
-#if (DBG_USE_LOG == 1)
+#if (DBG_LOG_EN == 1)
 
 /** 输出控制(如果输出成功写文件失败，将返回成功) */
 static int dbg_ioctl(char * buf, int len, int opt)
@@ -41,7 +41,7 @@ static int dbg_ioctl(char * buf, int len, int opt)
 {
     return dbg_bio_out(buf, len);
 }
-#endif /* (DBG_USE_LOG == 1) */
+#endif /* (DBG_LOG_EN == 1) */
 
 /** 格式化输出 */
 int dbg_stdout(int opt, const char * fmt, ...)
@@ -83,7 +83,7 @@ int dbg_stderr(int opt)
     return dbg_ioctl(buf, ret, opt);
 }
 
-#if (DBG_USE_COLOR == 1)
+#if (DBG_COLOR_EN == 1)
 /** 设置终端输出颜色 */
 int dbg_color_set(char * color)
 {
@@ -93,7 +93,9 @@ int dbg_color_set(char * color)
 
     return DBG_RET_OK;
 }
-#endif /* (DBG_USE_COLOR == 1) */
+#else
+inline int dbg_color_set(char * color) { return 0; }
+#endif /* (DBG_COLOR_EN == 1) */
 
 /** 标签符号输出 */
 int dbg_stdout_sign(int opt, int type)
@@ -143,13 +145,9 @@ int dbg_stdout_sign(int opt, int type)
                 col = DBG_COLOR_INPUT;
                 sign = DBG_MODE_SIGN_IN_ECHO;
             }
-#if (DBG_USE_COLOR == 1)
             dbg_color_set(col);
-#endif /* (DBG_USE_COLOR == 1) */
             dbg_stdout(opt, "%s", sign);
-#if (DBG_USE_COLOR == 1)
             dbg_color_set(DBG_COLOR_RES);
-#endif /* (DBG_USE_COLOR == 1) */
             break;
         }
         case DBG_MODE_STDOUT_STDERR: {
@@ -174,15 +172,11 @@ int dbg_stdout_sign(int opt, int type)
             else if(opt & DBG_LABEL_COL_HL) {
                 col = DBG_COLOR_HL;
             }
-#if (DBG_USE_COLOR == 1)
             dbg_color_set(col);
-#endif /* (DBG_USE_COLOR == 1) */
             break;
         }
         case DBG_MODE_STDOUT_RESCOL: {
-#if (DBG_USE_COLOR == 1)
             dbg_color_set(DBG_COLOR_RES);
-#endif /* (DBG_USE_COLOR == 1) */
             break;
         }
         case DBG_MODE_STDOUT_NL: {

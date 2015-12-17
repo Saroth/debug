@@ -2,7 +2,7 @@
 
 #include "debug.h"
 
-#if ((DBG_USE_DUMP == 1) && (DS_DEBUG_MAIN == 1))
+#if ((DBG_DUMP_EN == 1) && (DS_DEBUG_MAIN == 1))
 
 /** 每行数据输出控制 */
 int dbg_dump_line(char * buf, unsigned int len, long addr, int mode)
@@ -29,9 +29,9 @@ int dbg_dump_line(char * buf, unsigned int len, long addr, int mode)
         return outputchar;
     }
 
-#if(DBG_USE_COLOR == 1)
+#if(DBG_COLOR_EN == 1)
     dbg_color_set(DBG_COLOR_WARN);
-#endif /* (DBG_USE_COLOR == 1) */
+#endif /* (DBG_COLOR_EN == 1) */
     // 显示行号
     if((mode & DBG_DMP_TAG_LINE) && chpline) {
         dbg_out(1, "|");
@@ -54,9 +54,9 @@ int dbg_dump_line(char * buf, unsigned int len, long addr, int mode)
             dbg_out(1, "%06llp", addr_int);
         }
     }
-#if(DBG_USE_COLOR == 1)
+#if(DBG_COLOR_EN == 1)
     dbg_color_set(DBG_COLOR_RES);
-#endif /* (DBG_USE_COLOR == 1) */
+#endif /* (DBG_COLOR_EN == 1) */
 
     // 数据数值16进制格式显示
     if((mode & DBG_DMP_DAT_HEX) && chpline) {
@@ -183,5 +183,5 @@ int dbg_dump_label(const char * file, const char * func, int line,
     return ret;
 }
 
-#endif /* ((DBG_USE_DUMP == 1) && (DS_DEBUG_MAIN == 1)) */
+#endif /* ((DBG_DUMP_EN == 1) && (DS_DEBUG_MAIN == 1)) */
 

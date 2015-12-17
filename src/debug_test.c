@@ -1,6 +1,6 @@
 #include "debug.h"
 
-#if ((DBG_USE_INPUT == 1) && (DS_DEBUG_MAIN == 1))
+#if ((DBG_INPUT_EN == 1) && (DS_DEBUG_MAIN == 1))
 
 /** 测试列表控制 */
 int dbg_testlist(DBG_TESTLIST_T * list, int size)
@@ -29,5 +29,5 @@ int dbg_testlist(DBG_TESTLIST_T * list, int size)
     return DBG_RET_OK;
 }
 
-#endif /* ((DBG_USE_INPUT == 1) && (DS_DEBUG_MAIN == 1)) */
+#endif /* ((DBG_INPUT_EN == 1) && (DS_DEBUG_MAIN == 1)) */
 

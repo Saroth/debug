@@ -1,7 +1,7 @@
 
 OPTS = -Wall -nostartfiles -e __entry_test_debug__
 
-# DEFS = -DDS_DEBUG_MAIN
+DEFS = -DDS_DEBUG_MAIN=1
 
 CFLAGS  = $(OPTS) $(DEFS)
 

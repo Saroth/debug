@@ -12,8 +12,6 @@
 #ifndef __DEBUG_MODULE_H__
 #define __DEBUG_MODULE_H__
 
-// #include <config.h>                     //!< 工程配置头文件，含调试开关定义
-
 #ifndef DS_DEBUG_MAIN
 #define DS_DEBUG_MAIN       0           //!< 调试模块总开关，默认关闭
 #endif /* DS_DEBUG_MAIN */
@@ -22,10 +20,10 @@
 #endif /* BUFFER_SIZE */
 
 /// debug模块功能配置
-#define DBG_USE_COLOR       1           //!< 使用带颜色输出
-#define DBG_USE_INPUT       1           //!< 使用输入功能
-#define DBG_USE_DUMP        1           //!< 使用数据导出功能
-#define DBG_USE_LOG         1           //!< 使用日志功能
+#define DBG_COLOR_EN        1           //!< 使能带颜色输出
+#define DBG_INPUT_EN        1           //!< 使能输入功能
+#define DBG_DUMP_EN         1           //!< 使能数据导出功能
+#define DBG_LOG_EN          1           //!< 使能日志功能
 #define DBG_NL_HEAD         0           //!< 换行符放在开头
 #define DBG_NL_CHAR         "\n"        //!< 换行符
 #define DBG_MODULE_TEST     0           //!< 模块测试
@@ -74,12 +72,33 @@ int dbg_bio_out(char * buf, int len);
 /**
  * \brief       输入接口
  * \param       buf         获取输入数据的缓存
- * \param       len         希望获取的长度
+ * \param       len         缓存大小
  * \return      >=0: len        <0: DBG_RET_t
  * \detail      以回车或^D结束，返回结果包含换行符
  */
 int dbg_bio_in(char * buf, int len);
-#if (DBG_USE_LOG == 1)
+/**
+ * \brief       输出接口函数类型
+ * \param       buf         输出数据的缓存
+ * \param       len         输出长度
+ * \return      >=0: Success    <0: Error
+ */
+typedef int (* DBG_FUNC_OUTPUT_T)(char * buf, int len);
+/**
+ * \brief       输入接口函数类型
+ * \param       buf         获取输入数据的缓存
+ * \param       len         缓存大小
+ * \return      >=0: Success    <0: Error
+ */
+typedef int (* DBG_FUNC_INPUT_T)(char * buf, int len);
+/**
+ * \brief       设置输入输出函数
+ * \param       f_output:   输出函数接口;   NULL:默认(printf)
+ * \param       f_input:    输入函数接口;   NULL:默认(getchar)
+ * \return      0: Success      <0: DBG_RET_t
+ */
+int dbg_set_console_bio(DBG_FUNC_OUTPUT_T f_output, DBG_FUNC_INPUT_T f_input);
+#if (DBG_LOG_EN == 1)
 /**
  * \brief       打开日志文件
  * \param       file        文件名
@@ -106,7 +125,51 @@ int dbg_bio_write(char * buf, int len);
  * \detail      同步数据较慢，可能影响调试输出速度
  */
 int dbg_bio_sync(void);
-#endif /* (DBG_USE_LOG == 1) */
+/**
+ * \brief       打开文件接口函数类型
+ * \param       filename    文件名
+ * \return      指针类型或整形，用于传入f_close/f_write/f_sync
+ * \descript    必须以可写、追加模式打开文件。
+ *              或者打开后必须将读写指针移到文件末尾。
+ */
+typedef void * (* DBG_FUNC_FOPEN_T)(char * filename);
+/**
+ * \brief       关闭文件接口函数类型
+ * \param       fp          f_open的返回值
+ * \return      0: Success      <0: Error
+ */
+typedef int (* DBG_FUNC_FCLOSE_T)(void * fp);
+/**
+ * \brief       写文件接口函数类型
+ * \param       fp          f_open的返回值
+ * \param       buf         写入的数据
+ * \param       len         写入数据的长度
+ * \return      >=0: len        <0: Error
+ */
+typedef int (* DBG_FUNC_FWRITE_T)(void * fp, char * buf, int len);
+/**
+ * \brief       同步文件接口函数类型
+ * \param       fp          f_open的返回值
+ * \return      0: Success      <0: Error
+ */
+typedef int (* DBG_FUNC_FSYNC_T)(void * fp);
+typedef enum {                          //!< f_open的返回值类型
+    DBG_FOPEN_RET_POINT = 0,            //!< 返回指针, NULL:失败
+    DBG_FOPEN_RET_FD,                   //!< 返回句柄, <0:失败
+}DBG_FOPEN_RET_TYPES_E;
+/**
+ * \brief       设置文件操作函数接口
+ * \param       open_ret_type   f_open返回值类型, DBG_FOPEN_RET_TYPES_E
+ * \param       f_open      打开文件接口函数;   NULL:默认(fopen("ab+"))
+ * \param       f_close     关闭文件接口函数;   NULL:默认(fclose)
+ * \param       f_write     写文件接口函数;     NULL:默认(fwrite)
+ * \param       f_sync      同步文件接口函数;   NULL:默认(fflush;fsync)
+ * \return      0: Success      <0: DBG_RET_t
+ */
+int dbg_set_file_bio(int open_ret_type,
+        DBG_FUNC_FOPEN_T f_open, DBG_FUNC_FCLOSE_T f_close,
+        DBG_FUNC_FWRITE_T f_write, DBG_FUNC_FSYNC_T f_sync);
+#endif /* (DBG_LOG_EN == 1) */
 #endif /* (DS_DEBUG_MAIN == 1) */
 #ifdef __cplusplus
 }
@@ -167,14 +230,14 @@ int dbg_stdout(int opt, const char * fmt, ...);
  * \return      >=0: 输出长度       <0: DBG_RET_t
  */
 int dbg_stderr(int opt);
-#if (DBG_USE_COLOR == 1)
+#if (DBG_COLOR_EN == 1)
 /**
  * \brief       设置终端输出颜色
  * \param       color       颜色标示
  * \return      0: Success          <0: DBG_RET_t
  */
 int dbg_color_set(char * color);
-#endif /* (DBG_USE_COLOR == 1) */
+#endif /* (DBG_COLOR_EN == 1) */
 /**
  * \brief       带调试标签的格式化输出
  * \param       file        __FILE__
@@ -278,7 +341,7 @@ typedef enum {                          //!< 输入模式
     DBG_MODE_STDIN_GETSTR,              //!< 获取输入的字符串
 }DBG_MODE_STDIN_MODE_t;
 
-#if ((DBG_USE_INPUT == 1) && (DS_DEBUG_MAIN == 1))
+#if ((DBG_INPUT_EN == 1) && (DS_DEBUG_MAIN == 1))
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -340,7 +403,7 @@ int dbg_stdin_label(const char * file, const char * func, int line,
 #define dbg_in() 0
 #define dbg_in_N(...)
 #define dbg_in_S(...)
-#endif /* ((DBG_USE_INPUT == 1) && (DS_DEBUG_MAIN == 1)) */
+#endif /* ((DBG_INPUT_EN == 1) && (DS_DEBUG_MAIN == 1)) */
 /** @} */
 /**
  * \block:      LOG
@@ -352,7 +415,7 @@ typedef enum {                          //!< Output mode
     DBG_MODE_S  = 1 << 2,               //!< Write log by sync mode
 }DBG_MODE_t;
 
-#if ((DBG_USE_LOG == 1) && (DS_DEBUG_MAIN == 1))
+#if ((DBG_LOG_EN == 1) && (DS_DEBUG_MAIN == 1))
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -422,14 +485,14 @@ int dbg_log_getmode(void);
 #define dbg_log_getmode()
 
 #define dbg_log_setname(...) { \
-    dbg_out_E(1, "DBG_USE_LOG is OFF!"); \
+    dbg_out_E(1, "DBG_LOG_EN is OFF!"); \
 }
 #define dbg_log_off()
 #define dbg_log_on()
 #define dbg_log_only()
 #define dbg_log_on_s()
 #define dbg_log_only_s()
-#endif /* ((DBG_USE_LOG == 1) && (DS_DEBUG_MAIN == 1)) */
+#endif /* ((DBG_LOG_EN == 1) && (DS_DEBUG_MAIN == 1)) */
 /** @} */
 /**
  * \block:      DUMP
@@ -452,7 +515,7 @@ extern "C" {
 #define DBG_DMP_SEG_32      ( 1 << 26 ) //!< 32字节分割
 #define DBG_DMP_SEG_64      ( 1 << 27 ) //!< 64字节分割
 
-#if ((DBG_USE_DUMP == 1) && (DS_DEBUG_MAIN == 1))
+#if ((DBG_DUMP_EN == 1) && (DS_DEBUG_MAIN == 1))
 /**
  * \brief       数据格式化导出
  * \param       buf         数据缓存
@@ -556,7 +619,7 @@ int dbg_dump_label(const char * file, const char * func, int line,
 #define dbg_dmp_HCL(...)
 #define dbg_dmp_HCAL(...)
 #define dbg_dmp_C(...)
-#endif /* ((DBG_USE_DUMP == 1) && (DS_DEBUG_MAIN == 1)) */
+#endif /* ((DBG_DUMP_EN == 1) && (DS_DEBUG_MAIN == 1)) */
 /** @} */
 /**
  * \block:      TEST
@@ -571,7 +634,7 @@ typedef struct {
     int (*func)(void *);                //!< 测试函数
 }DBG_TESTLIST_T;
 
-#if ((DBG_USE_INPUT == 1) && (DS_DEBUG_MAIN == 1))
+#if ((DBG_INPUT_EN == 1) && (DS_DEBUG_MAIN == 1))
 /**
  * \brief       测试列表控制
  * \param       list            列表数组
@@ -591,26 +654,70 @@ int dbg_testlist(DBG_TESTLIST_T * list, int size);
 #define dbg_testlist(...)
 
 #define dbg_test_setlist(...)
-#endif /* ((DBG_USE_INPUT == 1) && (DS_DEBUG_MAIN == 1)) */
+#endif /* ((DBG_INPUT_EN == 1) && (DS_DEBUG_MAIN == 1)) */
 /** @} */
 
-/** { Code is far away from bug with the animal protecting.
- *     ┏┓     ┏┓
- *    ┏┛┻━━━━━┛┻┓
- *    ┃         ┃
- *    ┃    ━    ┃
- *    ┃ ┳┛   ┗┳ ┃
- *    ┃         ┃
- *    ┃    ┻    ┃
- *    ┗━┓     ┏━┛
- *      ┃     ┃神兽保佑, 远离BUG!
- *      ┃     ┗━━━┓
- *      ┃         ┣┓
- *      ┃         ┏┛
- *      ┗┓┓┏━━━┳┓┏┛
- *       ┃┫┫   ┃┫┫
- *       ┗┻┛   ┗┻┛
+/**
+ * \block:      Code is far away from bug with the animal protecting
+ * @{ */
+/** normal {
+ *     ┏━┓       ┏━┓
+ *   ┏━┛ ┻━━━━━━━┛ ┻━┓
+ *   ┃               ┃
+ *   ┃      ━        ┃
+ *   ┃ ┳━┛     ┗━┳   ┃
+ *   ┃               ┃
+ *   ┃     ┻         ┃
+ *   ┃               ┃
+ *   ┗━━━┳━      ┏━━━┛
+ *       ┃       ┃
+ *       ┃       ┃    神兽护体, 代码永无bug
+ *       ┃       ┗━━━━━━━┓
+ *       ┃               ┣━┓
+ *       ┃               ┏━┛
+ *       ┗━┓ ┓ ┏━━━┳━┓ ┏━┛
+ *         ┃ ┫ ┫   ┃ ┫ ┫
+ *         ┗━┻━┛   ┗━┻━┛
 }*/
+/** happy {
+ *     ┏━┓       ┏━┓
+ *   ┏━┛ ┻━━━━━━━┛ ┻━┓
+ *   ┃               ┃
+ *   ┃      ━        ┃
+ *   ┃  >       <    ┃
+ *   ┃               ┃
+ *   ///   w   ///   ┃
+ *   ┃               ┃
+ *   ┗━━━┳━      ┏━━━┛
+ *       ┃       ┃
+ *       ┃       ┃    神兽护体, 代码永无bug
+ *       ┃       ┗━━━━━━━┓
+ *       ┃               ┣━┓
+ *       ┃               ┏━┛
+ *       ┗━┓ ┓ ┏━━━┳━┓ ┏━┛
+ *         ┃ ┫ ┫   ┃ ┫ ┫
+ *         ┗━┻━┛   ┗━┻━┛
+}*/
+/** cool {
+ *     ┏━┓       ┏━┓  + +
+ *   ┏━┛ ┻━━━━━━━┛ ┻━┓  + +
+ *   ┃               ┃
+ *   ┃      ━        ┃  + + + + +
+ *   #####--#####    ┃  +
+ *   ┃               ┃  +
+ *   ┃     ┻         ┃
+ *   ┃               ┃  + +
+ *   ┗━━━┳━      ┏━━━┛
+ *       ┃       ┃  + + + +
+ *       ┃       ┃  + 神兽护体, 代码永无bug
+ *       ┃       ┗━━━━━━━┓  + +
+ *       ┃               ┣━┓
+ *       ┃               ┏━┛
+ *       ┗━┓ ┓ ┏━━━┳━┓ ┏━┛  + + + +
+ *         ┃ ┫ ┫   ┃ ┫ ┫
+ *         ┗━┻━┛   ┗━┻━┛  + + + +
+}*/
+/** @} */
 
 #endif /* __DEBUG_MODULE_H__ */
 
