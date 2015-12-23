@@ -29,6 +29,26 @@ int test_output(void *p)
     return 0;
 }
 
+int test_dump(void *p)
+{
+    char buf[1024];
+
+    strcpy(buf, "#### This is a TEST.\r\n ####");
+    dbg_out_I(DS_DEBUG_MODULE, "buf address: %p", buf);
+    dbg_dmp_H(DS_DEBUG_MODULE, buf, strlen(buf));
+    dbg_dmp_HC(DS_DEBUG_MODULE, buf, strlen(buf));
+    dbg_dmp_HCA(DS_DEBUG_MODULE, buf, strlen(buf), buf);
+    dbg_dmp_HL(DS_DEBUG_MODULE, buf, strlen(buf), "test1");
+    dbg_dmp_HCL(DS_DEBUG_MODULE, buf, strlen(buf), "test2");
+    dbg_dmp_HCAL(DS_DEBUG_MODULE, buf, strlen(buf), buf, "test3");
+    dbg_dmp_HL(DS_DEBUG_MODULE, buf, strlen(buf), NULL);
+    dbg_dmp_HCL(DS_DEBUG_MODULE, buf, strlen(buf), NULL);
+    dbg_dmp_HCAL(DS_DEBUG_MODULE, buf, strlen(buf), buf, NULL);
+    dbg_dmp_C(DS_DEBUG_MODULE, buf, strlen(buf));
+
+    return 0;
+}
+
 int test_getchar(void * p)
 {
     char ch = 0;
@@ -102,42 +122,123 @@ int test_setlog_only_s(void *p)
     return 0;
 }
 
-int test_dump(void *p)
+#include <errno.h>
+static int test_std_out(char * buf, int len)
 {
-    char buf[1024];
-
-    strcpy(buf, "#### This is a TEST.\r\n ####");
-    dbg_out_I(DS_DEBUG_MODULE, "buf address: %p", buf);
-    dbg_dmp_H(DS_DEBUG_MODULE, buf, strlen(buf));
-    dbg_dmp_HC(DS_DEBUG_MODULE, buf, strlen(buf));
-    dbg_dmp_HCA(DS_DEBUG_MODULE, buf, strlen(buf), buf);
-    dbg_dmp_HL(DS_DEBUG_MODULE, buf, strlen(buf), "test1");
-    dbg_dmp_HCL(DS_DEBUG_MODULE, buf, strlen(buf), "test2");
-    dbg_dmp_HCAL(DS_DEBUG_MODULE, buf, strlen(buf), buf, "test3");
-    dbg_dmp_HL(DS_DEBUG_MODULE, buf, strlen(buf), NULL);
-    dbg_dmp_HCL(DS_DEBUG_MODULE, buf, strlen(buf), NULL);
-    dbg_dmp_HCAL(DS_DEBUG_MODULE, buf, strlen(buf), buf, NULL);
-    dbg_dmp_C(DS_DEBUG_MODULE, buf, strlen(buf));
-
+    printf("<so>");
+    printf(buf);
+    fflush(stdout);
+    return 0;
+}
+static int test_std_in(char * buf, int len)
+{
+    printf("<si>");
+    int ch = 0;
+    char * b = buf;
+    while(1) {
+        ch = getchar();
+        if(ch == EOF) {
+            break;
+        }
+        else {
+            *b = ch;
+            if(*b == '\n' || (++b - buf) >= len) {
+                break;
+            }
+        }
+    }
+    return 0;
+}
+static void * s_log_fp;                 //!< 日志文件指针
+static int test_f_open(char * filename)
+{
+    printf("<fo>");
+    s_log_fp = fopen(filename, "ab+");
+    if(NULL == s_log_fp) {
+        return -1;
+    }
+    return 0;
+}
+static int test_f_close(void)
+{
+    printf("<fc>");
+    if(NULL == s_log_fp) {
+        return 0;
+    }
+    if(fclose(s_log_fp) && errno != EBADF) {
+        return -1;
+    }
+    return 0;
+}
+static int test_f_write(char * buf, int len)
+{
+    printf("<fw>");
+    if(NULL == s_log_fp) {
+        return 0;
+    }
+    if(fwrite(buf, 1, len, s_log_fp) != len) {
+        return -1;
+    }
+    return 0;
+}
+static int test_f_sync(void)
+{
+    if(NULL == s_log_fp) {
+        return 0;
+    }
+    printf("<fs>");
+    fflush(s_log_fp);                   //!< 将数据从C库缓存写到内核缓存
+#if defined(__unix__) || defined(__linux__)
+#include <unistd.h>
+    fsync(fileno(s_log_fp));            //!< 将数据从内核缓存写到磁盘
+#endif
+    return 0;
+}
+static DBG_BIO_T g_dbg_bio_test = {
+    .f_output   = test_std_out,
+    .f_input    = test_std_in,
+    .f_open     = test_f_open,
+    .f_close    = test_f_close,
+    .f_write    = test_f_write,
+    .f_sync     = test_f_sync,
+};
+int test_set_custom_func(void *p)
+{
+    dbg_bio_conf(&g_dbg_bio_test);
     return 0;
 }
 
+int test_set_default_func(void *p)
+{
+    dbg_bio_conf(NULL);
+    return 0;
+}
 
 // 模块测试
 int test_debug(void *p)
 {
     dbg_test_setlist(
         { "dbg_out_*",          NULL,   test_output,            },
+        { "dbg_dmp_*",          NULL,   test_dump,              },
         { "test_getchar",       NULL,   test_getchar,           },
+#if (DBG_INPUT_EN == 1)
         { "dbg_in_S",           NULL,   test_dbg_in_S,          },
         { "dbg_in_N",           NULL,   test_dbg_in_N,          },
+#else
+        { "---- DBG_INPUT_EN disabled", NULL,   NULL,           },
+#endif /* (DBG_INPUT_EN == 1) */
+#if (DBG_LOG_EN == 1)
         { "dbg_log_setname",    NULL,   test_setlogname,        },
         { "dbg_log_off",        NULL,   test_setlog_off,        },
         { "dbg_log_on",         NULL,   test_setlog_on,         },
         { "dbg_log_on_s",       NULL,   test_setlog_on_s,       },
         { "dbg_log_only",       NULL,   test_setlog_only,       },
         { "dbg_log_only_s",     NULL,   test_setlog_only_s,     },
-        { "dbg_dmp_*",          NULL,   test_dump,              },
+#else
+        { "---- DBG_LOG_EN disabled",   NULL,   NULL,           },
+#endif /* (DBG_LOG_EN == 1) */
+        { "set custom func",    NULL,   test_set_custom_func,   },
+        { "set default func",   NULL,   test_set_default_func,  },
     );
 
     return 0;

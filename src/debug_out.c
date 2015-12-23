@@ -48,18 +48,18 @@ int dbg_stdout(int opt, const char * fmt, ...)
 {
     int count = 0;
     va_list marker;
-    char buf[BUFFER_SIZE + 4];
+    char buf[DBG_BUFFER_SIZE + 4];
 
     if(NULL == fmt) {
         dbg_out_E(DS_OUT_ERR, "Param error.");
         return DBG_RET_PARAM_ERR;
     }
     va_start(marker, fmt);
-    count = vsnprintf(buf, BUFFER_SIZE, fmt, marker);
+    count = vsnprintf(buf, DBG_BUFFER_SIZE, fmt, marker);
     va_end(marker);
-    if(count > BUFFER_SIZE) {
+    if(count > DBG_BUFFER_SIZE) {
         dbg_out_W(DS_OUT_ERR, "Output string too long.");
-        count = BUFFER_SIZE;
+        count = DBG_BUFFER_SIZE;
     }
     else if(count < 0) {
         dbg_outerr_I(DS_OUT_ERR, "vsnprintf");
@@ -72,7 +72,7 @@ int dbg_stdout(int opt, const char * fmt, ...)
 /** 标准错误信息输出 */
 int dbg_stderr(int opt)
 {
-    char buf[BUFFER_SIZE + 4];
+    char buf[DBG_BUFFER_SIZE + 4];
 
     int ret = sprintf(buf, "%s(%d)", strerror(errno), errno);
     if(ret <= 0) {
@@ -194,7 +194,7 @@ int dbg_stdout_sign(int opt, int type)
 int dbg_stdout_label(const char * file, const char * func, int line,
         int opt, const char * fmt, ...)
 {
-    char buf[BUFFER_SIZE + 4];
+    char buf[DBG_BUFFER_SIZE + 4];
     int ret;
     int argc;
     va_list argv;
@@ -246,11 +246,11 @@ int dbg_stdout_label(const char * file, const char * func, int line,
     dbg_stdout_sign(opt, DBG_MODE_STDOUT_SETCOL);
     /// 输出内容
     va_start(argv, fmt);
-    argc = vsnprintf(buf, BUFFER_SIZE, fmt, argv);
+    argc = vsnprintf(buf, DBG_BUFFER_SIZE, fmt, argv);
     va_end(argv);
     if(argc > 0) {
-        if(argc > BUFFER_SIZE) {
-            argc = BUFFER_SIZE;
+        if(argc > DBG_BUFFER_SIZE) {
+            argc = DBG_BUFFER_SIZE;
         }
         argc = dbg_ioctl(buf, argc, opt);
     }

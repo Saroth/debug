@@ -10,7 +10,7 @@
 int dbg_stdin(char * str, int len)
 {
     int ret = 0;
-    char buf[BUFFER_SIZE + 4];
+    char buf[DBG_BUFFER_SIZE + 4];
 
     memset(buf, 0x00, sizeof(buf));
     if(str == NULL || len <= 0) {
@@ -32,7 +32,7 @@ int dbg_stdin(char * str, int len)
 int dbg_stdin_num(int * num)
 {
     int len = 0;
-    char str[BUFFER_SIZE + 4];
+    char str[DBG_BUFFER_SIZE + 4];
 
     memset(str, 0x00, sizeof(str));
     if(num == NULL) {
@@ -90,7 +90,7 @@ int dbg_stdin_label(const char * file, const char * func, int line,
         }
         default: {
             dbg_out_W(DS_IN_ERR, "Unknown mode.");
-            return -1;
+            return DBG_RET_PARAM_ERR;
         }
     }
 #if !(DBG_NL_HEAD == 1)

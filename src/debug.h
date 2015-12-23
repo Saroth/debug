@@ -4,7 +4,7 @@
  * \file        debug.h
  * \brief       调试模块
  * \author      huanglf
- * \version     1.3
+ * \version     1.4
  * \date        2015-10-01
  */
 
@@ -15,9 +15,9 @@
 #ifndef DS_DEBUG_MAIN
 #define DS_DEBUG_MAIN       0           //!< 调试模块总开关，默认关闭
 #endif /* DS_DEBUG_MAIN */
-#ifndef BUFFER_SIZE
-#define BUFFER_SIZE         4096        //!< 数据输入输出缓存大小
-#endif /* BUFFER_SIZE */
+#ifndef DBG_MODULE_TEST
+#define DBG_MODULE_TEST     0           //!< debug模块测试
+#endif /* DBG_MODULE_TEST */
 
 /// debug模块功能配置
 #define DBG_COLOR_EN        1           //!< 使能带颜色输出
@@ -26,7 +26,7 @@
 #define DBG_LOG_EN          1           //!< 使能日志功能
 #define DBG_NL_HEAD         0           //!< 换行符放在开头
 #define DBG_NL_CHAR         "\n"        //!< 换行符
-#define DBG_MODULE_TEST     0           //!< 模块测试
+#define DBG_BUFFER_SIZE     4096        //!< 输入输出数据处理缓存大小
 
 typedef enum {                          //!< 显示模式选项 - 前8位为通用定义
     DBG_INFO                = 1 << 0,   //!< 显示输出信息
@@ -39,12 +39,12 @@ typedef enum {                          //!< 显示模式选项 - 前8位为通�
 }DBG_MODE_SWITCH_OPT_t;
 typedef enum {                          //!< 返回值
     DBG_RET_OK              = 0,        //!< 成功
-    DBG_RET_PARAM_ERR       = -1001,    //!< 参数错误
-    DBG_RET_OPEN_FILE_ERR   = -1002,    //!< 打开文件错误
-    DBG_RET_CLOSE_FILE_ERR  = -1003,    //!< 关闭文件错误
-    DBG_RET_WRITE_FILE_ERR  = -1004,    //!< 写文件错误
-    DBG_RET_NO_INPUT        = -1005,    //!< 无输入
-    DBG_RET_UNKNOWN_INPUT   = -1006,    //!< 未知输入
+    DBG_RET_PARAM_ERR       = -11,      //!< 参数错误
+    DBG_RET_OPEN_FILE_ERR   = -12,      //!< 打开文件错误
+    DBG_RET_CLOSE_FILE_ERR  = -13,      //!< 关闭文件错误
+    DBG_RET_WRITE_FILE_ERR  = -14,      //!< 写文件错误
+    DBG_RET_NO_INPUT        = -15,      //!< 无输入
+    DBG_RET_UNKNOWN_INPUT   = -16,      //!< 未知输入
 }DBG_RET_t;
 typedef enum {                          //!< Debug模块调试开关
     DS_OUT_ERR  = (DBG_INFO | DBG_LABEL_FUNC | DBG_LABEL_LINE), //!< 输出错误
@@ -60,44 +60,75 @@ typedef enum {                          //!< Debug模块调试开关
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#if (DS_DEBUG_MAIN == 1)
-/**
- * \brief       输出接口
- * \param       buf         输出数据的缓存
- * \param       len         输出长度
- * \return      >=0: len        <0: DBG_RET_t
- */
-int dbg_bio_out(char * buf, int len);
-/**
- * \brief       输入接口
- * \param       buf         获取输入数据的缓存
- * \param       len         缓存大小
- * \return      >=0: len        <0: DBG_RET_t
- * \detail      以回车或^D结束，返回结果包含换行符
- */
-int dbg_bio_in(char * buf, int len);
 /**
  * \brief       输出接口函数类型
  * \param       buf         输出数据的缓存
  * \param       len         输出长度
- * \return      >=0: Success    <0: Error
+ * \return      0: Success      <0: Error
  */
 typedef int (* DBG_FUNC_OUTPUT_T)(char * buf, int len);
 /**
  * \brief       输入接口函数类型
  * \param       buf         获取输入数据的缓存
  * \param       len         缓存大小
- * \return      >=0: Success    <0: Error
+ * \return      0: Success      <0: Error
+ * \detail      输入过程不立即返回，直到收到回车才退出
  */
 typedef int (* DBG_FUNC_INPUT_T)(char * buf, int len);
 /**
- * \brief       设置输入输出函数
- * \param       f_output:   输出函数接口;   NULL:默认(printf)
- * \param       f_input:    输入函数接口;   NULL:默认(getchar)
+ * \brief       打开文件接口函数类型
+ * \param       filename    文件名
+ * \return      0: Success      <0: Error
+ * \detail      必须以可写、追加模式打开文件。
+ *              或者打开后必须将读写指针移到文件末尾。
+ *              打开文件接口函数返回的指针或句柄，由接口内部管理。
+ */
+typedef int (* DBG_FUNC_FOPEN_T)(char * filename);
+/**
+ * \brief       关闭文件接口函数类型
+ * \return      0: Success      <0: Error
+ * \detail      如未打开日志，需返回0
+ */
+typedef int (* DBG_FUNC_FCLOSE_T)(void);
+/**
+ * \brief       写文件接口函数类型
+ * \param       buf         写入的数据
+ * \param       len         写入数据的长度
+ * \return      0: Success      <0: Error
+ * \detail      如未打开日志，需返回0
+ */
+typedef int (* DBG_FUNC_FWRITE_T)(char * buf, int len);
+/**
+ * \brief       同步文件接口函数类型
+ * \return      0: Success      <0: Error
+ * \detail      如未打开日志，需返回0
+ */
+typedef int (* DBG_FUNC_FSYNC_T)(void);
+typedef struct {                        //!< 基本输入输出接口配置结构体
+    DBG_FUNC_OUTPUT_T f_output;         //!< 输出接口函数
+    DBG_FUNC_INPUT_T f_input;           //!< 输入接口函数
+    DBG_FUNC_FOPEN_T f_open;            //!< 打开文件接口函数
+    DBG_FUNC_FCLOSE_T f_close;          //!< 关闭文件接口函数
+    DBG_FUNC_FWRITE_T f_write;          //!< 写文件接口函数
+    DBG_FUNC_FSYNC_T f_sync;            //!< 同步文件接口函数
+}DBG_BIO_T;
+
+#if (DS_DEBUG_MAIN == 1)
+/**
+ * \brief       输出接口
+ * \param       buf         输出数据的缓存
+ * \param       len         输出长度
  * \return      0: Success      <0: DBG_RET_t
  */
-int dbg_set_console_bio(DBG_FUNC_OUTPUT_T f_output, DBG_FUNC_INPUT_T f_input);
+int dbg_bio_out(char * buf, int len);
+/**
+ * \brief       输入接口
+ * \param       buf         获取输入数据的缓存
+ * \param       len         缓存大小
+ * \return      0: Success      <0: DBG_RET_t
+ * \detail      以回车或^D结束，返回结果包含换行符
+ */
+int dbg_bio_in(char * buf, int len);
 #if (DBG_LOG_EN == 1)
 /**
  * \brief       打开日志文件
@@ -116,7 +147,7 @@ int dbg_bio_close(void);
  * \brief       写日志
  * \param       buf         写入数据缓存
  * \param       len         写入数据长度
- * \return      >=0: len        <0: DBG_RET_t
+ * \return      0: Success      <0: DBG_RET_t
  */
 int dbg_bio_write(char * buf, int len);
 /**
@@ -125,51 +156,14 @@ int dbg_bio_write(char * buf, int len);
  * \detail      同步数据较慢，可能影响调试输出速度
  */
 int dbg_bio_sync(void);
-/**
- * \brief       打开文件接口函数类型
- * \param       filename    文件名
- * \return      指针类型或整形，用于传入f_close/f_write/f_sync
- * \descript    必须以可写、追加模式打开文件。
- *              或者打开后必须将读写指针移到文件末尾。
- */
-typedef void * (* DBG_FUNC_FOPEN_T)(char * filename);
-/**
- * \brief       关闭文件接口函数类型
- * \param       fp          f_open的返回值
- * \return      0: Success      <0: Error
- */
-typedef int (* DBG_FUNC_FCLOSE_T)(void * fp);
-/**
- * \brief       写文件接口函数类型
- * \param       fp          f_open的返回值
- * \param       buf         写入的数据
- * \param       len         写入数据的长度
- * \return      >=0: len        <0: Error
- */
-typedef int (* DBG_FUNC_FWRITE_T)(void * fp, char * buf, int len);
-/**
- * \brief       同步文件接口函数类型
- * \param       fp          f_open的返回值
- * \return      0: Success      <0: Error
- */
-typedef int (* DBG_FUNC_FSYNC_T)(void * fp);
-typedef enum {                          //!< f_open的返回值类型
-    DBG_FOPEN_RET_POINT = 0,            //!< 返回指针, NULL:失败
-    DBG_FOPEN_RET_FD,                   //!< 返回句柄, <0:失败
-}DBG_FOPEN_RET_TYPES_E;
-/**
- * \brief       设置文件操作函数接口
- * \param       open_ret_type   f_open返回值类型, DBG_FOPEN_RET_TYPES_E
- * \param       f_open      打开文件接口函数;   NULL:默认(fopen("ab+"))
- * \param       f_close     关闭文件接口函数;   NULL:默认(fclose)
- * \param       f_write     写文件接口函数;     NULL:默认(fwrite)
- * \param       f_sync      同步文件接口函数;   NULL:默认(fflush;fsync)
- * \return      0: Success      <0: DBG_RET_t
- */
-int dbg_set_file_bio(int open_ret_type,
-        DBG_FUNC_FOPEN_T f_open, DBG_FUNC_FCLOSE_T f_close,
-        DBG_FUNC_FWRITE_T f_write, DBG_FUNC_FSYNC_T f_sync);
 #endif /* (DBG_LOG_EN == 1) */
+/**
+ * \brief       配置基本接口
+ * \param       bio         接口配置结构体指针, NULL:使用默认接口
+ * \return      0: Success      <0: DBG_RET_t
+ * \detail      切换接口过程会自动关闭日志文件。
+ */
+int dbg_bio_conf(DBG_BIO_T * bio);
 #endif /* (DS_DEBUG_MAIN == 1) */
 #ifdef __cplusplus
 }
@@ -219,15 +213,15 @@ extern "C" {
 /**
  * \brief       格式化输出
  * \param       opt         参考宏定义DBG_LABEL_*
- * \param       fmt         格式字符串，内部缓存大小为BUFFER_SIZE
+ * \param       fmt         格式字符串，内部缓存大小为DBG_BUFFER_SIZE
  * \param       ...         格式化参数
- * \return      >=0: 输出长度       <0: DBG_RET_t
+ * \return      0: Success          <0: DBG_RET_t
  */
 int dbg_stdout(int opt, const char * fmt, ...);
 /**
  * \brief       标准错误信息输出
  * \param       opt         参考宏定义DBG_LABEL_*
- * \return      >=0: 输出长度       <0: DBG_RET_t
+ * \return      0: Success          <0: DBG_RET_t
  */
 int dbg_stderr(int opt);
 #if (DBG_COLOR_EN == 1)
@@ -246,7 +240,7 @@ int dbg_color_set(char * color);
  * \param       opt         参考宏定义DBG_LABEL_*
  * \param       fmt         格式化输出字符串
  * \param       ...         格式化参数
- * \return      >0: 输出长度        <0: DBG_RET_t
+ * \return      0: Success          <0: DBG_RET_t
  */
 int dbg_stdout_label(const char * file, const char * func, int line,
         int opt, const char * fmt, ...);
@@ -350,14 +344,14 @@ extern "C" {
  * \param       str         字符串缓存
  * \param       len         缓存大小
  * \return      >=0: 获取的数据长度 <0: DBG_RET_t
- * \descript    自动移除末尾换行符
+ * \detail      自动移除末尾换行符
  */
 int dbg_stdin(char * str, int len);
 /**
  * \brief       获取输入的数值
  * \param       num         变量指针，输出获取到的数值
  * \return      0: Success      <0: DBG_RET_t
- * \descript    0x开头识别为16进制，0开头识别为8进制
+ * \detail      0x开头识别为16进制，0开头识别为8进制
  */
 int dbg_stdin_num(int * num);
 /**
@@ -372,7 +366,7 @@ int dbg_stdin_num(int * num);
  * \param       len         DBG_MODE_STDIN_GETSTR：获取的数据长度
  *                          DBG_MODE_STDIN_GETNUM：不使用
  *                          DBG_MODE_STDIN_RETNUM：不使用
- * \return      
+ * \return      0: Success      <0: DBG_RET_t
  */
 int dbg_stdin_label(const char * file, const char * func, int line,
         int mode, void * output, int len);
@@ -435,7 +429,7 @@ int dbg_log_close(void);
  * \param       buf     数据
  * \param       len     数据长度
  * \return      >=0: 写入数据长度   <0: DBG_RET_t
- * \descript    不输出
+ * \detail      不输出
  */
 int dbg_log_write(char * buf, int len);
 /**
@@ -686,7 +680,7 @@ int dbg_testlist(DBG_TESTLIST_T * list, int size);
  *   ┃      ━        ┃
  *   ┃  >       <    ┃
  *   ┃               ┃
- *   ///   w   ///   ┃
+ *   ///   v   ///   ┃
  *   ┃               ┃
  *   ┗━━━┳━      ┏━━━┛
  *       ┃       ┃

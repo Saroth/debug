@@ -6,61 +6,16 @@
 
 #if (DS_DEBUG_MAIN == 1)
 
-typedef struct {                        //!< 基本接口定义
-    DBG_FUNC_OUTPUT_T f_output;         //!< 输出接口函数
-    DBG_FUNC_INPUT_T f_input;           //!< 输入接口函数
-    DBG_FUNC_FOPEN_T f_open;            //!< 打开文件接口函数
-    DBG_FUNC_FCLOSE_T f_close;          //!< 关闭文件接口函数
-    DBG_FUNC_FWRITE_T f_write;          //!< 写文件接口函数
-    DBG_FUNC_FSYNC_T f_sync;            //!< 同步文件接口函数
-    int open_ret_type;                  //!< 文件打开函数返回类型 0:指针; 1:句柄
-    void * fp;                          //!< 日志文件指针(或存储整形值)
-}DBG_BIO_T;
-
-static DBG_BIO_T g_dbg_bio = { 0 };
-
-/** 输出接口 */
-int dbg_bio_out(char * buf, int len)
+static int _std_out(char * buf, int len)
 {
-    if(buf == NULL) {
-        char errmsg[128];
-        sprintf(errmsg, "\r\n dbg_bio_out Param error: buf=%p\r\n", buf);
-        dbg_bio_out(errmsg, strlen(errmsg));
-        return DBG_RET_PARAM_ERR;
-    }
-    if(g_dbg_bio.f_output) {
-        if(g_dbg_bio.f_output(buf, len) < 0) {
-            return 0;
-        }
-        return len;
-    }
     printf(buf);
     fflush(stdout);
-    return len;
+    return 0;
 }
-
-/** 输入接口 */
-int dbg_bio_in(char * buf, int len)
+static int _std_in(char * buf, int len)
 {
     int ch = 0;
     char * b = buf;
-    char errmsg[128];
-
-    if(buf == NULL || len < 0) {
-        sprintf(errmsg, "\r\n dbg_bio_in Param error: buf=%p, len=%d\r\n",
-                buf, len);
-        dbg_bio_out(errmsg, strlen(errmsg));
-        return DBG_RET_PARAM_ERR;
-    }
-    if(g_dbg_bio.f_input) {
-        int ret = g_dbg_bio.f_input(buf, len);
-        if(ret < 0) {
-            sprintf(errmsg, "\r\n dbg_bio_in f_input error: %d\r\n", ret);
-            dbg_bio_out(errmsg, strlen(errmsg));
-            return 0;
-        }
-        return strlen(buf);
-    }
     while(1) {
         ch = getchar();
         if(ch == EOF) {
@@ -73,28 +28,104 @@ int dbg_bio_in(char * buf, int len)
             }
         }
     }
-    return strlen(buf);
+    return 0;
 }
-
-/** 设置输入输出函数 */
-int dbg_set_console_bio(DBG_FUNC_OUTPUT_T f_output, DBG_FUNC_INPUT_T f_input)
+#if (DBG_LOG_EN == 1)
+static void * s_dbg_fp;                 //!< 日志文件指针
+static int _f_open(char * filename)
 {
-    if(f_output) {
-        g_dbg_bio.f_output = f_output;
-    }
-    if(f_input) {
-        g_dbg_bio.f_input = f_input;
+    s_dbg_fp = fopen(filename, "ab+");
+    if(NULL == s_dbg_fp) {
+        return -1;
     }
     return 0;
 }
+static int _f_close(void)
+{
+    if(NULL == s_dbg_fp) {
+        return 0;
+    }
+    if(fclose(s_dbg_fp) && errno != EBADF) {
+        return -1;
+    }
+    return 0;
+}
+static int _f_write(char * buf, int len)
+{
+    if(NULL == s_dbg_fp) {
+        return 0;
+    }
+    if(fwrite(buf, 1, len, s_dbg_fp) != len) {
+        return -1;
+    }
+    return 0;
+}
+static int _f_sync(void)
+{
+    if(NULL == s_dbg_fp) {
+        return 0;
+    }
+    fflush(s_dbg_fp);                   //!< 将数据从C库缓存写到内核缓存
+#if defined(__unix__) || defined(__linux__)
+#include <unistd.h>
+    fsync(fileno(s_dbg_fp));            //!< 将数据从内核缓存写到磁盘
+#endif
+    return 0;
+}
+#endif /* (DBG_LOG_EN == 1) */
 
+static DBG_BIO_T g_dbg_bio_unix = {     //!< 默认接口(类unix平台)
+    .f_output   = _std_out,
+    .f_input    = _std_in,
 #if (DBG_LOG_EN == 1)
+    .f_open     = _f_open,
+    .f_close    = _f_close,
+    .f_write    = _f_write,
+    .f_sync     = _f_sync,
+#endif /* (DBG_LOG_EN == 1) */
+};
 
+static DBG_BIO_T * g_dbg_bio_p = &g_dbg_bio_unix;
+
+/** 输出接口 */
+int dbg_bio_out(char * buf, int len)
+{
+    if(buf == NULL) {
+        char errmsg[128];
+        sprintf(errmsg, "\r\n dbg_bio_out Param error: buf=%p\r\n", buf);
+        dbg_bio_out(errmsg, strlen(errmsg));
+        return DBG_RET_PARAM_ERR;
+    }
+    if(g_dbg_bio_p->f_output) {
+        g_dbg_bio_p->f_output(buf, len);
+    }
+    return DBG_RET_OK;
+}
+/** 输入接口 */
+int dbg_bio_in(char * buf, int len)
+{
+    int ret;
+    char errmsg[128];
+    if(buf == NULL || len < 0) {
+        sprintf(errmsg, "\r\n dbg_bio_in Param error: buf=%p, len=%d\r\n",
+                buf, len);
+        dbg_bio_out(errmsg, strlen(errmsg));
+        return DBG_RET_PARAM_ERR;
+    }
+    if(g_dbg_bio_p->f_input) {
+        if((ret = g_dbg_bio_p->f_input(buf, len)) == 0) {
+            return strlen(buf);
+        }
+        sprintf(errmsg, "\r\n f_input error: %d\r\n", ret);
+        dbg_bio_out(errmsg, strlen(errmsg));
+    }
+    return 0;
+}
+#if (DBG_LOG_EN == 1)
 /** 打开日志文件 */
 int dbg_bio_open(char * file)
 {
     int ret;
-    void * fp;
     char errmsg[128];
     if(NULL == file) {
         sprintf(errmsg, "\r\n dbg_bio_open Param error: file=%p\r\n", file);
@@ -104,137 +135,66 @@ int dbg_bio_open(char * file)
     if((ret = dbg_bio_close())) {
         return ret;
     }
-    if(g_dbg_bio.f_open) {
-        fp = g_dbg_bio.f_open(file);
-        if((g_dbg_bio.open_ret_type == DBG_FOPEN_RET_POINT && fp == NULL)
-                || (g_dbg_bio.open_ret_type == DBG_FOPEN_RET_FD && fp < 0)) {
-            sprintf(errmsg, "\r\n dbg_bio_open f_open: %p\r\n", fp);
-            dbg_bio_out(errmsg, strlen(errmsg));
-            return DBG_RET_OPEN_FILE_ERR;
-        }
-    }
-    else if(NULL == (fp = fopen(file, "ab+"))) {
-        sprintf(errmsg, "\r\n dbg_bio_open fopen: %s(%d)\r\n",
-                strerror(errno), errno);
+    if(g_dbg_bio_p->f_open && (ret = g_dbg_bio_p->f_open(file))) {
+        sprintf(errmsg, "\r\n f_open: ret:%d; err:%s(%d)\r\n",
+                ret, strerror(errno), errno);
         dbg_bio_out(errmsg, strlen(errmsg));
         return DBG_RET_OPEN_FILE_ERR;
     }
-    g_dbg_bio.fp = fp;
-
     return DBG_RET_OK;
 }
-
 /** 关闭日志文件 */
 int dbg_bio_close(void)
 {
+    int ret;
     char errmsg[128];
-    if((g_dbg_bio.open_ret_type == DBG_FOPEN_RET_POINT && g_dbg_bio.fp == NULL)
-            || (g_dbg_bio.open_ret_type == DBG_FOPEN_RET_FD
-                && g_dbg_bio.fp < 0)) {
-        return DBG_RET_OK;              //!< 文件未打开
-    }
-    if(g_dbg_bio.f_close) {
-        int ret = g_dbg_bio.f_close(g_dbg_bio.fp);
-        if(ret) {
-            sprintf(errmsg, "\r\n dbg_bio_close f_close: %d\r\n", ret);
-            dbg_bio_out(errmsg, strlen(errmsg));
-            return DBG_RET_CLOSE_FILE_ERR;
-        }
-    }
-    else if(fclose(g_dbg_bio.fp) && errno != EBADF) {
-        sprintf(errmsg, "\r\n dbg_bio_close fclose: %s(%d)\r\n",
-                strerror(errno), errno);
+    if(g_dbg_bio_p->f_close && (ret = g_dbg_bio_p->f_close())) {
+        sprintf(errmsg, "\r\n f_close: ret:%d; err:%s(%d)\r\n",
+                ret, strerror(errno), errno);
         dbg_bio_out(errmsg, strlen(errmsg));
         return DBG_RET_CLOSE_FILE_ERR;
     }
-    if(g_dbg_bio.open_ret_type == DBG_FOPEN_RET_POINT) {
-        g_dbg_bio.fp = NULL;
-    }
-    else if(g_dbg_bio.open_ret_type == DBG_FOPEN_RET_FD) {
-        g_dbg_bio.fp = (void *)-1;
-    }
-
     return DBG_RET_OK;
 }
-
 /** 写日志 */
 int dbg_bio_write(char * buf, int len)
 {
+    int ret;
     char errmsg[128];
-    if((g_dbg_bio.open_ret_type == DBG_FOPEN_RET_POINT && g_dbg_bio.fp == NULL)
-            || (g_dbg_bio.open_ret_type == DBG_FOPEN_RET_FD
-                && g_dbg_bio.fp < 0)) {
-        return DBG_RET_OK;              //!< 文件未打开
-    }
     if(buf == NULL || len < 0) {
         sprintf(errmsg, "\r\n dbg_bio_write Param error: buf=%p, len=%d\r\n",
                 buf, len);
         dbg_bio_out(errmsg, strlen(errmsg));
         return DBG_RET_PARAM_ERR;
     }
-    if(g_dbg_bio.f_write) {
-        int ret = g_dbg_bio.f_write(g_dbg_bio.fp, buf, len);
-        if(ret != len) {
-            sprintf(errmsg, "\r\n dbg_bio_write f_write: %d!=%d\r\n", ret, len);
-            dbg_bio_out(errmsg, strlen(errmsg));
-            return DBG_RET_WRITE_FILE_ERR;
-        }
-        return len;
-    }
-    if(fwrite(buf, 1, len, g_dbg_bio.fp) != len) {
-        sprintf(errmsg, "\r\n dbg_bio_write fwrite: %s(%d)\r\n",
-                strerror(errno), errno);
+    if(g_dbg_bio_p->f_write && (ret = g_dbg_bio_p->f_write(buf, len))) {
+        sprintf(errmsg, "\r\n f_write: ret:%d; err:%s(%d)\r\n",
+                ret, strerror(errno), errno);
         dbg_bio_out(errmsg, strlen(errmsg));
         return DBG_RET_WRITE_FILE_ERR;
     }
-
-    return len;
+    return DBG_RET_OK;
 }
-
 /** 同步数据，将缓存中的数据保存到存储设备 */
 int dbg_bio_sync(void)
 {
-    if(g_dbg_bio.f_sync) {
-        g_dbg_bio.f_sync(g_dbg_bio.fp);
-        return DBG_RET_OK;
+    if(g_dbg_bio_p->f_sync) {
+        g_dbg_bio_p->f_sync();
     }
-    fflush(g_dbg_bio.fp);               //!< 将数据从C库缓存写到内核缓存
-#if defined(__unix__) || defined(__linux__)
-#include <unistd.h>
-    fsync(fileno(g_dbg_bio.fp));        //!< 将数据从内核缓存写到磁盘
-#endif
-
     return DBG_RET_OK;
 }
-
-/** 设置文件操作函数接口 */
-int dbg_set_file_bio(int open_ret_type,
-        DBG_FUNC_FOPEN_T f_open, DBG_FUNC_FCLOSE_T f_close,
-        DBG_FUNC_FWRITE_T f_write, DBG_FUNC_FSYNC_T f_sync)
+#endif /* (DBG_LOG_EN == 1) */
+/** 配置基本接口 */
+int dbg_bio_conf(DBG_BIO_T * bio)
 {
-    if(open_ret_type < DBG_FOPEN_RET_POINT || open_ret_type > DBG_FOPEN_RET_FD){
-        char errmsg[128];
-        sprintf(errmsg, "\r\n dbg_set_file_bio Param error: "
-                "open_ret_type=%d\r\n", open_ret_type);
-        dbg_bio_out(errmsg, strlen(errmsg));
-        return DBG_RET_PARAM_ERR;
+    if(NULL == bio) {
+        g_dbg_bio_p = &g_dbg_bio_unix;  //!< 使用默认接口
     }
-    g_dbg_bio.open_ret_type = open_ret_type;
-    if(f_open) {
-        g_dbg_bio.f_open = f_open;
+    else {
+        g_dbg_bio_p = bio;
     }
-    if(f_close) {
-        g_dbg_bio.f_close = f_close;
-    }
-    if(f_write) {
-        g_dbg_bio.f_write = f_write;
-    }
-    if(f_sync) {
-        g_dbg_bio.f_sync = f_sync;
-    }
-    return 0;
+    return dbg_bio_close();
 }
 
-#endif /* (DBG_LOG_EN == 1) */
 #endif /* (DS_DEBUG_MAIN == 1) */
 
