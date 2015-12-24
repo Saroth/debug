@@ -11,8 +11,8 @@ version = 11
 project_name = 'debug'
 
 -- File And Folder Filters:
-folder_filter_mode = include -- { include, exclude }
-folder_filter +=
+folder_filter_mode = exclude -- { include, exclude }
+folder_filter += CMakeFiles,build
 file_filter +=
 file_ignore_pattern += *.o
 

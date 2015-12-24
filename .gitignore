@@ -1,4 +1,7 @@
-.exvim.*
+.exvim.*/
+build/
+lib/
+inc/
 test_debug
 *.swp
 *.swo

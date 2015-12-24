@@ -15,9 +15,6 @@
 #ifndef DS_DEBUG_MAIN
 #define DS_DEBUG_MAIN       0           //!< 调试模块总开关，默认关闭
 #endif /* DS_DEBUG_MAIN */
-#ifndef DBG_MODULE_TEST
-#define DBG_MODULE_TEST     0           //!< debug模块测试
-#endif /* DBG_MODULE_TEST */
 
 /// debug模块功能配置
 #define DBG_COLOR_EN        1           //!< 使能带颜色输出
@@ -164,6 +161,8 @@ int dbg_bio_sync(void);
  * \detail      切换接口时会先自动关闭日志文件。
  */
 int dbg_bio_conf(DBG_BIO_T * bio);
+#else
+#define dbg_bio_conf(...)
 #endif /* (DS_DEBUG_MAIN == 1) */
 #ifdef __cplusplus
 }
