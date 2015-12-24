@@ -161,7 +161,7 @@ int dbg_bio_sync(void);
  * \brief       配置基本接口
  * \param       bio         接口配置结构体指针, NULL:使用默认接口
  * \return      0: Success      <0: DBG_RET_t
- * \detail      切换接口过程会自动关闭日志文件。
+ * \detail      切换接口时会先自动关闭日志文件。
  */
 int dbg_bio_conf(DBG_BIO_T * bio);
 #endif /* (DS_DEBUG_MAIN == 1) */

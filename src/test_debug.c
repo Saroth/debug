@@ -149,7 +149,7 @@ static int test_std_in(char * buf, int len)
     }
     return 0;
 }
-static void * s_log_fp;                 //!< 日志文件指针
+static void * s_log_fp = NULL;                 //!< 日志文件指针
 static int test_f_open(char * filename)
 {
     printf("<fo>");
@@ -168,6 +168,7 @@ static int test_f_close(void)
     if(fclose(s_log_fp) && errno != EBADF) {
         return -1;
     }
+    s_log_fp = NULL;
     return 0;
 }
 static int test_f_write(char * buf, int len)

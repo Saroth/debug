@@ -31,7 +31,7 @@ static int _std_in(char * buf, int len)
     return 0;
 }
 #if (DBG_LOG_EN == 1)
-static void * s_dbg_fp;                 //!< 日志文件指针
+static void * s_dbg_fp = NULL;          //!< 日志文件指针
 static int _f_open(char * filename)
 {
     s_dbg_fp = fopen(filename, "ab+");
@@ -48,6 +48,7 @@ static int _f_close(void)
     if(fclose(s_dbg_fp) && errno != EBADF) {
         return -1;
     }
+    s_dbg_fp = NULL;
     return 0;
 }
 static int _f_write(char * buf, int len)
@@ -187,13 +188,14 @@ int dbg_bio_sync(void)
 /** 配置基本接口 */
 int dbg_bio_conf(DBG_BIO_T * bio)
 {
+    dbg_bio_close();                    //!< 切换接口前先关闭日志文件
     if(NULL == bio) {
         g_dbg_bio_p = &g_dbg_bio_unix;  //!< 使用默认接口
     }
     else {
         g_dbg_bio_p = bio;
     }
-    return dbg_bio_close();
+    return 0;
 }
 
 #endif /* (DS_DEBUG_MAIN == 1) */
