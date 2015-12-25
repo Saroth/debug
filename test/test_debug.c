@@ -216,7 +216,7 @@ int test_set_default_func(void *p)
 }
 
 // 模块测试
-int main(int argc, char * argv[])
+int test_debug(void *p)
 {
     dbg_test_setlist(
         { "dbg_out_*",          NULL,   test_output,            },
@@ -244,8 +244,14 @@ int main(int argc, char * argv[])
 
     return 0;
 }
-
 #else
-int main(int argc, char * argv[]) { return 0; }
+int test_debug(void *p) { return 0; }
 #endif /* (DBG_MODULE_TEST == 1) */
+
+// 模块测试入口
+int __entry_test_debug__(void)
+{
+    test_debug(NULL);
+    exit(0); 
+}
 
