@@ -2,9 +2,9 @@
 #include <stdlib.h> 
 #include <string.h>
 
-#include "libdebug.h"
-
 #if (DBG_MODULE_TEST == 1)
+
+#include "libdebug.h"
 
 #define DS_DEBUG_MODULE (DBG_INFO | DBG_LABEL_FUNC | DBG_LABEL_LINE)
 
