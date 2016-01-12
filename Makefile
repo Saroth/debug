@@ -16,10 +16,10 @@ test_debug:
 all: libdebug.a test_debug
 
 clean:
-	-@rm libdebug.a libdebug.h test_debug
-	-@rm src/*.o
-	-@rm test/*.o
-	-@rm inc/libdebug.h
-	-@rm lib/libdebug.a
+	-rm -f libdebug.a libdebug.h test_debug
+	-rm -f src/*.o
+	-rm -f test/*.o
+	-rm -f inc/libdebug.h
+	-rm -f lib/libdebug.a
 
 
