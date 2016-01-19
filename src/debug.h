@@ -285,8 +285,24 @@ int dbg_stdout_label(const char * file, const char * func, int line,
                 __VA_ARGS__); \
     } \
 }
-/** \brief      带错误标签的格式化输出，标签为错误高亮，附带错误信息 */
+/** \brief      带错误标签的格式化输出，标签为提示高亮，附带错误信息 */
 #define dbg_outerr_I(__debug_switch__, ...) { \
+    if(__debug_switch__) { \
+        dbg_stdout_label(__FILE__, __func__, __LINE__, \
+                __debug_switch__ | DBG_LABEL_INFO | DBG_LABEL_STDERR\
+                | DBG_LABEL_NEWLINE, __VA_ARGS__); \
+    } \
+}
+/** \brief      带错误标签的格式化输出，标签为警告高亮，附带错误信息 */
+#define dbg_outerr_W(__debug_switch__, ...) { \
+    if(__debug_switch__) { \
+        dbg_stdout_label(__FILE__, __func__, __LINE__, \
+                __debug_switch__ | DBG_LABEL_WARN | DBG_LABEL_STDERR\
+                | DBG_LABEL_NEWLINE, __VA_ARGS__); \
+    } \
+}
+/** \brief      带错误标签的格式化输出，标签为错误高亮，附带错误信息 */
+#define dbg_outerr_E(__debug_switch__, ...) { \
     if(__debug_switch__) { \
         dbg_stdout_label(__FILE__, __func__, __LINE__, \
                 __debug_switch__ | DBG_LABEL_ERR | DBG_LABEL_STDERR\
@@ -321,6 +337,8 @@ int dbg_stdout_label(const char * file, const char * func, int line,
 #define dbg_out_E(...)
 #define dbg_out_H(...)
 #define dbg_outerr_I(...)
+#define dbg_outerr_W(...)
+#define dbg_outerr_E(...)
 #define dbg_out_entry(...)
 #define dbg_out_exit(...)
 #endif /* (DS_DEBUG_MAIN == 1) */
