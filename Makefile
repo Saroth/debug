@@ -1,25 +1,17 @@
-CFLAGS = -Wall -O2 -DDS_DEBUG_MAIN=1
-FILE_OBJ=$(patsubst %.c, %.o, $(wildcard src/*.c))
+CFLAGS = -Wall -O2
+OBJ_FILE = bio.o output.o libsdb.o
+HEAD_FILE = config.h libsdb.h
 
-libdebug.a: $(FILE_OBJ)
-	ar rc libdebug.a $^
-	@cp src/debug.h libdebug.h
+all: libsdb.a sdb_selftest
 
-test_debug:
-	@cp libdebug.a lib/libdebug.a
-	@cp libdebug.h inc/libdebug.h
-	$(CC) $(CFLAGS) -DDBG_MODULE_TEST=1 -I./inc -c\
-		-o test/test_debug.o test/test_debug.c
-	$(CC) $(CFLAGS) -L./lib -nostartfiles -e __entry_test_debug__\
-		-o $@ test/test_debug.o -ldebug
+libsdb.a: $(HEAD_FILE) $(OBJ_FILE)
+	ar rc libsdb.a $^
 
-all: libdebug.a test_debug
+sdb_selftest: $(HEAD_FILE) sdb_selftest.c 
+	$(CC) $(CFLAGS) -DSDB_SELFTEST -I. -c -o sdb_selftest.o sdb_selftest.c
+	$(CC) $(CFLAGS) -L. -nostartfiles -e __entry_sdb_selftest__\
+		-o $@ sdb_selftest.o -lsdb
 
 clean:
-	-rm -f libdebug.a libdebug.h test_debug
-	-rm -f src/*.o
-	-rm -f test/*.o
-	-rm -f inc/libdebug.h
-	-rm -f lib/libdebug.a
-
+	-rm -f *.o libsdb.a sdb_selftest
 
