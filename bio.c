@@ -1,9 +1,9 @@
 #include "config.h"
 
 #if defined(SDB_ENABLE)
-#if defined(SDB_HAVE_STDIO)
+#if defined(SDB_SYS_HAVE_STDIO)
 
-static int _std_out(char * buf, size_t len)
+static int _std_out(char *buf, size_t len)
 {
     printf(buf);
     fflush(stdout);
@@ -11,10 +11,10 @@ static int _std_out(char * buf, size_t len)
     return 0;
 }
 
-static int _std_in(char * buf, size_t len)
+static int _std_in(char *buf, size_t len)
 {
     int ch = 0;
-    char * b = buf;
+    char *b = buf;
 
     while (1) {
         ch = getchar();
@@ -41,9 +41,9 @@ static SDB_BIO_T * sdb_bio = &sdb_bio_std;
 
 static SDB_BIO_T * sdb_bio = NULL;
 
-#endif /* defined(SDB_HAVE_STDIO) */
+#endif /* defined(SDB_SYS_HAVE_STDIO) */
 
-int sdb_bio_out(char * buf, size_t len)
+int sdb_bio_out(char *buf, size_t len)
 {
     int ret = 0;
     char errmsg[128];
@@ -67,7 +67,7 @@ int sdb_bio_out(char * buf, size_t len)
     return ret;
 }
 
-int sdb_bio_in(char * buf, size_t buflen, size_t *outlen)
+int sdb_bio_in(char *buf, size_t buflen, size_t *outlen)
 {
     int ret = 0;
     char errmsg[128];
@@ -92,7 +92,7 @@ int sdb_bio_in(char * buf, size_t buflen, size_t *outlen)
     return ret;
 }
 
-int sdb_bio_conf(SDB_BIO_T * bio)
+int sdb_bio_conf(SDB_BIO_T *bio)
 {
 #warning "@TODO: Multi-thread support"
     sdb_bio = bio;
