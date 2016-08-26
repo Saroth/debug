@@ -46,7 +46,7 @@
  *
  * 如果注释该选项，自检测试程序将不被编译
  */
-// #define SDB_MDL_SELFTEST
+#define SDB_MDL_SELFTEST
 /** @} */
 
 /**
@@ -105,19 +105,35 @@
  * Label信息总长度少于设定值时，填充部分空格。
  * 时间戳长度固定为12 + 1空格。
  * 说明:
- * YYMMDDhhmmss FILE_A.c:     Func_A:             xxxx info_1
- * |<-- 12 -->|1|<--- 14 --->||<------ 20 ------>||4 |1
+ * YYMMDDhhmmss FILE_A.c:       Func_A:             xxxxxxx info_1
+ * |<-- 12 -->|1|<---- 16 ---->||<------ 20 ------>||< 8 ->|
  * 显示示例:
- * 012345678900 test_file.c:func_aaaa:123              message
- * 012345678900 test_file_1.c:func_aaaa_bbbb_cccc_dddd:123 message
- *                                                     ^~~~~~~~~~~
- * 012345678900 test_f.c:123       message
- * 012345678900 test_file_aaaa_bbbb.c:123 message
- *                                 ^~~~~~~~~~~~~~
+ * 012345678900 test_file.c:func_aaaa:123                   message
+ * 012345678900 test_file_1.c:func_aaaa_bbbb_cccc_dddd:123  message
+ *                                                          >~~~~~~
+ * 012345678900 test_f.c:123                message
+ * 012345678900 test_file_aaaa_bbbb.c:123   message
+ *                                          >~~~~~~~~~~~~~
  */
 #define SDB_CONF_FILE_NAME_SPACE    16
 #define SDB_CONF_FUNC_NAME_SPACE    20
 #define SDB_CONF_LINE_NUM_SPACE     8
+
+/// 输出颜色定义
+#define SDB_COLOR_RES           "\33[0m"    //!< 恢复: normal
+#define SDB_COLOR_HL            "\33[1m"    //!< 特殊标记高亮: bold
+#define SDB_COLOR_WARN          "\33[1;36m" //!< 警告高亮: blue, bold
+#define SDB_COLOR_ERR           "\33[1;31m" //!< 错误高亮: red, bold
+#define SDB_COLOR_TITLE         "\33[7m"    //!< 标题高亮: inverse
+#define SDB_COLOR_INPUT         "\33[1;32m" //!< 输入和反馈标记高亮: green, bold
+#define SDB_COLOR_LABEL         "\33[1;30m" //!< 标签高亮, black, bold
+// 标记定义
+#define SDB_MARK_INFO           ""          //!< 提示标记
+#define SDB_MARK_WARN           "[Warning]" //!< 警告标记
+#define SDB_MARK_ERR            "[Error]"   //!< 错误标记
+#define SDB_MARK_IN_GETNUM      "[I_n]"     //!< 获取数值输入标记
+#define SDB_MARK_IN_GETSTR      "[I_s]"     //!< 获取字符串输入标记
+#define SDB_MARK_IN_ECHO        "[O]"       //!< 返回数值输出标记
 
 /** @} */
 
@@ -140,7 +156,7 @@
 #include "libsdb.h"
 #include "sdb_internal.h"
 
-#define DS_SDB  (SDB_IO | SDB_LINE | SDB_FILE | SDB_NO_INFO)
+#define DS_SDB  (SDB_IO)
 
 #endif /* __SDB_CONFIG_H__ */
 

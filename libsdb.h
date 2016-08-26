@@ -12,22 +12,52 @@
 
 typedef enum {                          //!< 调试输入输出选项
     SDB_IO              = (1 << 0),     //!< 输入输出使能
-
+    //!< 标签相关
     SDB_NO_LINE         = (1 << 1),     //!< 标签 - 不输出行号
     SDB_NO_FILE         = (1 << 2),     //!< 标签 - 不输出文件名
     SDB_FUNC            = (1 << 3),     //!< 标签 - 输出函数名，默认关闭
     SDB_TIME            = (1 << 4),     //!< 标签 - 输出时间戳，默认关闭
-
+    //!< 信息类型选择
     SDB_NO_INFO         = (1 << 8),     //!< 不输出所有信息
     SDB_NO_WARNING      = (1 << 9),     //!< 不输出所有警告
     SDB_NO_ERROR        = (1 << 10),    //!< 不输出所有错误
-    SDB_NO_TITLE        = (1 << 11),    //!< 不输出所有title信息
-    SDB_NO_DUMP         = (1 << 12),    //!< 不输出所有dump信息
-    SDB_NO_STDERR       = (1 << 13),    //!< 不输出所有标准错误信息
-    SDB_NO_COLOR        = (1 << 14),    //!< 不输出所有高亮色
-    SDB_NO_SYMBOL       = (1 << 15),    //!< 不输出所有指示标记
-    SDB_NO_LABLE        = (1 << 16),    //!< 不输出所有标签
-} SDB_IO_OPTION_T;
+    SDB_NO_DUMP         = (1 << 11),    //!< 不输出所有dump信息
+    //!< 输出样式控制
+    SDB_NO_STDERR       = (1 << 12),    //!< 不输出标准错误信息
+    SDB_NO_COLOR        = (1 << 13),    //!< 不输出高亮色
+    SDB_NO_MARK         = (1 << 14),    //!< 不输出指示标记
+    SDB_NO_LABLE        = (1 << 15),    //!< 不输出标签
+    SDB_NO_WRAP         = (1 << 16),    //!< 不输出换行
+} SDB_OPTION_T;
+
+typedef enum {
+    SDB_MODE_MARK_NONE      = (0),      //!< 无标记
+    SDB_MODE_MARK_INFO      = (1),      //!< 添加高亮提示标记
+    SDB_MODE_MARK_WARNING   = (2),      //!< 添加高亮警告标记
+    SDB_MODE_MARK_ERROR     = (3),      //!< 添加高亮错误标记
+    SDB_MODE_MARK_GETNUM    = (4),      //!< 添加高亮获取数值标记
+    SDB_MODE_MARK_GETSTR    = (5),      //!< 添加高亮获取字符串标记
+    SDB_MODE_MARK_ECHO      = (6),      //!< 添加高亮输入反馈标记
+    SDB_MODE_MARK_TYPEMAX   = (7),      //!< 标记类型数量
+    SDB_MODE_MARK_CHK       = (0x07),   //!< 标记类型检查
+
+    SDB_MODE_HL_NONE    = (0 << 3),     //!< 信息显示为标题高亮
+    SDB_MODE_HL_SIGN    = (1 << 3),     //!< 信息显示为特殊标记高亮
+    SDB_MODE_HL_WARN    = (2 << 3),     //!< 信息显示为警告高亮
+    SDB_MODE_HL_ERR     = (3 << 3),     //!< 信息显示为错误高亮
+    SDB_MODE_HL_TITLE   = (4 << 3),     //!< 信息显示为标题高亮
+    SDB_MODE_HL_INPUT   = (5 << 3),     //!< 信息显示为输入和反馈标记高亮
+    SDB_MODE_HL_LABEL   = (6 << 3),     //!< 信息显示为标签高亮
+    SDB_MODE_HL_RES     = (7 << 3),     //!< 信息显示为默认高亮
+    SDB_MODE_HL_CHK     = (0x0F << 3),  //!< 标记类型检查
+
+    SDB_MODE_MSG_NONE   = (0 << 7),     //!< 无特殊信息
+    SDB_MODE_MSG_ENTRY  = (1 << 7),     //!< 入口标记信息
+    SDB_MODE_MSG_EXIT   = (2 << 7),     //!< 出口标记信息
+    SDB_MODE_MSG_CHK    = (0x03 << 7),  //!< 信息类型检查
+
+    SDB_MODE_STDERR     = (1 << 9),     //!< 添加系统错误信息
+} SDB_MODE_T;
 
 typedef enum {                          //!< 返回值
     SDB_RET_OK              = 0,        //!< 成功
@@ -36,15 +66,6 @@ typedef enum {                          //!< 返回值
     SDB_RET_UNKNOWN_INPUT   = -13,      //!< 未知输入
     SDB_RET_ALLOC_FAILED    = -14,      //!< 内存申请失败
 } SDB_RET_T;
-
-/// 输出颜色定义
-#define SDB_COLOR_RES           "\33[0m"    //!< 恢复: normal
-#define SDB_COLOR_SIGN          "\33[1m"    //!< 特殊标记高亮: bold
-#define SDB_COLOR_WARN          "\33[1;36m" //!< 警告高亮: blue, bold
-#define SDB_COLOR_ERR           "\33[1;31m" //!< 错误高亮: red, bold
-#define SDB_COLOR_TITLE         "\33[7m"    //!< 标题高亮: inverse
-#define SDB_COLOR_INPUT         "\33[1;32m" //!< 输入和反馈标记高亮: green, bold
-#define SDB_COLOR_LABEL         "\33[1;30m" //!< 标签高亮, black, bold
 
 /**
  * \brief       输出接口函数类型
@@ -108,19 +129,46 @@ int sdb_out_style(int opt, int mode,
 /** \brief      格式化输出 */
 #define sdb_out(__sdb_opt, ...) ({\
         if ((__sdb_opt & SDB_IO) && ((~__sdb_opt) & SDB_NO_INFO)) {\
-        sdb_out_style(__sdb_opt, 0, __FILE__, __func__, __LINE__, __VA_ARGS__);\
-        }})\
+        sdb_out_style(__sdb_opt | SDB_NO_STDERR | SDB_NO_COLOR | SDB_NO_MARK\
+                | SDB_NO_LABLE | SDB_NO_WRAP, 0,\
+                __FILE__, __func__, __LINE__, __VA_ARGS__);\
+        }})
 /** \brief      带标签的格式化输出 */
 #define sdb_out_i(__sdb_opt, ...) ({\
         if ((__sdb_opt & SDB_IO) && ((~__sdb_opt) & SDB_NO_INFO)) {\
-        sdb_out_style(__sdb_opt, 0, __FILE__, __func__, __LINE__, __VA_ARGS__);\
-        }})\
-
-#define sdb_out_w(__sdb_opt, ...)
-#define sdb_out_e(__sdb_opt, ...)
-#define sdb_out_t(__sdb_opt, ...)
-#define sdb_out_entry(__sdb_opt)
-#define sdb_out_exit(__sdb_opt)
+        sdb_out_style(__sdb_opt, SDB_MODE_MARK_INFO,\
+                __FILE__, __func__, __LINE__, __VA_ARGS__);\
+        }})
+/** \brief      带标签的格式化输出，带警告标记 */
+#define sdb_out_w(__sdb_opt, ...) ({\
+        if ((__sdb_opt & SDB_IO) && ((~__sdb_opt) & SDB_NO_WARNING)) {\
+        sdb_out_style(__sdb_opt, SDB_MODE_MARK_WARNING,\
+                __FILE__, __func__, __LINE__, __VA_ARGS__);\
+        }})
+/** \brief      带标签的格式化输出，带错误标记 */
+#define sdb_out_e(__sdb_opt, ...) ({\
+        if ((__sdb_opt & SDB_IO) && ((~__sdb_opt) & SDB_NO_ERROR)) {\
+        sdb_out_style(__sdb_opt, SDB_MODE_MARK_ERROR,\
+                __FILE__, __func__, __LINE__, __VA_ARGS__);\
+        }})
+/** \brief      带标签的格式化输出，标题高亮 */
+#define sdb_out_t(__sdb_opt, ...) ({\
+        if ((__sdb_opt & SDB_IO) && ((~__sdb_opt) & SDB_NO_INFO)) {\
+        sdb_out_style(__sdb_opt, SDB_MODE_HL_TITLE,\
+                __FILE__, __func__, __LINE__, __VA_ARGS__);\
+        }})
+/** \brief      带标签的入口标记输出 */
+#define sdb_out_entry(__sdb_opt) ({\
+        if ((__sdb_opt & SDB_IO) && ((~__sdb_opt) & SDB_NO_INFO)) {\
+        sdb_out_style(__sdb_opt, SDB_MODE_HL_SIGN,\
+                __FILE__, __func__, __LINE__, ">>> %s {", __func__);\
+        }})
+/** \brief      带标签的出口标记输出 */
+#define sdb_out_exit(__sdb_opt) ({\
+        if ((__sdb_opt & SDB_IO) && ((~__sdb_opt) & SDB_NO_INFO)) {\
+        sdb_out_style(__sdb_opt, SDB_MODE_HL_SIGN,\
+                __FILE__, __func__, __LINE__, "<<< %s }", __func__);\
+        }})
 
 #define sdb_err(__sdb_opt, ...)
 #define sdb_err_i(__sdb_opt, ...)

@@ -4,8 +4,10 @@
 #include "config.h"
 
 typedef struct {            //!< 输出参数结构体
-    int options;            //!< 调试项目选项, SDB_IO_OPTION_T
+    int options;            //!< 调试项目选项, SDB_OPTION_T
     int mode;               //!< 调试输出模式
+    unsigned int mark_type; //!< 标记类型
+    unsigned int hl_type;   //!< 高亮类型
     int error;              //!< 错误码
     int outlen;             //!< 输出长度
 // #if defined(SDB_SYS_HAVE_MEM_ALLOC)
@@ -14,6 +16,23 @@ typedef struct {            //!< 输出参数结构体
     char outbuf[SDB_CONF_IO_CACHE_SIZE + 4];
 // #endif
 } SDB_OUT_PARAM_T;
+
+typedef enum {              //!< 高亮类型
+    SDB_HL_NONE,
+    SDB_HL_SIGN,
+    SDB_HL_WARN,
+    SDB_HL_ERR,
+    SDB_HL_TITLE,
+    SDB_HL_INPUT,
+    SDB_HL_LABEL,
+    SDB_HL_RES,
+    SDB_HL_MAX,
+} SDB_HL_TYPES_T;
+
+typedef struct {            //!< 标签信息结构体, SDB_MODE_SBL_*
+    int hl_type;            //!< 高亮类型, SDB_HL_TYPES_T
+    char *mark;             //!< 高亮定义, SDB_COLOR_*
+} SDB_MARK_T;
 
 /**
  * \brief       基本输出接口

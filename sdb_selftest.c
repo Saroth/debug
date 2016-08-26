@@ -6,7 +6,7 @@
 
 #if defined(SDB_SELFTEST)
 
-#define DS_SDB_ST ( SDB_IO/* | SDB_FUNC | SDB_TIME */)
+#define DS_SDB_ST ( SDB_IO /* | SDB_FUNC | SDB_TIME */ )
 
 int sdb_color_demo(void)
 {
@@ -38,21 +38,18 @@ int sdb_color_demo(void)
         printf("\33[0m\n");
     }
 
-    printf(" * Sign:  %s[x]%s\n", SDB_COLOR_SIGN,  SDB_COLOR_RES);
-    printf(" * Warn:  %s[x]%s\n", SDB_COLOR_WARN,  SDB_COLOR_RES);
-    printf(" * Err:   %s[x]%s\n", SDB_COLOR_ERR,   SDB_COLOR_RES);
-    printf(" * Title: %s[x]%s\n", SDB_COLOR_TITLE, SDB_COLOR_RES);
-    printf(" * Input: %s[x]%s\n", SDB_COLOR_INPUT, SDB_COLOR_RES);
-    printf(" * Label: %s[x]%s\n", SDB_COLOR_LABEL, SDB_COLOR_RES);
-
     return 0;
 }
 
 int sdb_selftest(void *p)
 {
-    sdb_out(DS_SDB_ST, "test: 格式化输出%s, %d, %#x\n", "123", 123, 123);
-    sdb_out_i(DS_SDB_ST, "test: 带标签的格式化输出%s, %d, %#x", "123", 123, 123);
+    sdb_out_t(DS_SDB_ST, "输出测试");
+    sdb_out(DS_SDB_ST, "无标签格式化输出:(%s, %d, %#x)\n", "123", 123, 123);
+    sdb_out_i(DS_SDB_ST, "带标签的格式化输出");
+    sdb_out_w(DS_SDB_ST, "带标签的格式化输出，带警告标记");
+    sdb_out_e(DS_SDB_ST, "带标签的格式化输出，带错误标记");
     sdb_out_entry(DS_SDB_ST);
+    sdb_out_exit(DS_SDB_ST);
     // sdb_color_demo();
     return 0;
 }
