@@ -1,13 +1,10 @@
 *.swp
 *.swo
 *.o
+*.d
 *.a
 *.gch
 .exvim.*/*
 backup/*
 
 sdb_selftest
-
-CMakeFiles/*
-CMakeCache.txt
-cmake_install.cmake

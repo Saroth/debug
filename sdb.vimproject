@@ -14,7 +14,7 @@ project_name = 'sdb'
 folder_filter_mode = exclude -- { include, exclude }
 folder_filter +=
 file_filter +=
-file_ignore_pattern += *.o
+file_ignore_pattern += *.a,*.d,*.o,*.gch
 
 -- Editing:
 indent = 4

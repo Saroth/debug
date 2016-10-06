@@ -13,13 +13,21 @@
  */
 #define SDB_ENABLE
 
+// #define SDB_SLIM
+
 /**
  * \block:      Modules
  * @{ */
+
+/**
+ * 启用标准错误信息提示
+ */
+#define SDB_MDL_STDERR_ENABLE
+
 /**
  * 启用终端输入获取
  *
- * Caller: menu.c
+ * \Caller: menu.c
  *
  * 如果注释该选项，输入模块和接口调用将不被编译
  */
@@ -35,7 +43,7 @@
 /**
  * 启用测试菜单
  *
- *  Required:   input.c
+ * \Required:   input.c
  *
  * 如果注释该选项 或选项 SDB_MDL_INPUT_ENABLE 未设置，测试器和接口调用将不被编译
  */
@@ -43,10 +51,8 @@
 
 /**
  * 模块自检
- *
- * 如果注释该选项，自检测试程序将不被编译
  */
-#define SDB_MDL_SELFTEST
+// #define SDB_MDL_SELFTEST
 /** @} */
 
 /**
@@ -73,50 +79,28 @@
  */
 #define SDB_SYS_HAVE_STDIO
 
-/**
- * 支持内存申请
- */
-// #define SDB_SYS_HAVE_MEM_ALLOC
-
-/**
- * 系统支持多线程
- *
- * 多线程系统环境下，需要对输出信息进行互斥
- */
-#define SDB_SYS_HAVE_THREAD
-
 /** @} */
 
 /**
  * \block:      Configuration
  * @{ */
 /**
- * 模块内部的输入输出缓存大小，SDB_SYS_HAVE_MEM_ALLOC未定义时使用
+ * 模块内部的输入输出缓存大小
  */
 #define SDB_CONF_IO_CACHE_SIZE  0x100
 
 /**
  * 换行符类型
  */
-#define SDB_CONF_WRAP_CHARACTER "\n"
+#define SDB_CONF_WRAP   "\n"
 
 /**
  * 标签预留间隔
  * Label信息总长度少于设定值时，填充部分空格。
- * 时间戳长度固定为12 + 1空格。
- * 说明:
- * YYMMDDhhmmss FILE_A.c:       Func_A:             xxxxxxx info_1
- * |<-- 12 -->|1|<---- 16 ---->||<------ 20 ------>||< 8 ->|
- * 显示示例:
- * 012345678900 test_file.c:func_aaaa:123                   message
- * 012345678900 test_file_1.c:func_aaaa_bbbb_cccc_dddd:123  message
- *                                                          >~~~~~~
- * 012345678900 test_f.c:123                message
- * 012345678900 test_file_aaaa_bbbb.c:123   message
- *                                          >~~~~~~~~~~~~~
+ * 时间戳长度固定为: 12字符 + 1空格。
  */
 #define SDB_CONF_FILE_NAME_SPACE    16
-#define SDB_CONF_FUNC_NAME_SPACE    20
+#define SDB_CONF_FUNC_NAME_SPACE    24
 #define SDB_CONF_LINE_NUM_SPACE     8
 
 /// 输出颜色定义
@@ -128,12 +112,16 @@
 #define SDB_COLOR_INPUT         "\33[1;32m" //!< 输入和反馈标记高亮: green, bold
 #define SDB_COLOR_LABEL         "\33[1;30m" //!< 标签高亮, black, bold
 // 标记定义
-#define SDB_MARK_INFO           ""          //!< 提示标记
-#define SDB_MARK_WARN           "[Warning]" //!< 警告标记
-#define SDB_MARK_ERR            "[Error]"   //!< 错误标记
-#define SDB_MARK_IN_GETNUM      "[I_n]"     //!< 获取数值输入标记
-#define SDB_MARK_IN_GETSTR      "[I_s]"     //!< 获取字符串输入标记
-#define SDB_MARK_IN_ECHO        "[O]"       //!< 返回数值输出标记
+#define SDB_MARK_NONE           "    "      //!< 无标记
+#define SDB_MARK_INFO           " .  "      //!< 提示标记
+#define SDB_MARK_WARN           " !  "      //!< 警告标记
+#define SDB_MARK_ERR            " x  "      //!< 错误标记
+#define SDB_MARK_GETNUM         "I.n "      //!< 获取数值输入标记
+#define SDB_MARK_GETSTR         "I.s "      //!< 获取字符串输入标记
+#define SDB_MARK_ECHO           "I.e "      //!< 返回数值输出标记
+#define SDB_MARK_ENTRY          ">>> "      //!< 入口标记
+#define SDB_MARK_EXIT           "<<< "      //!< 出口标记
+#define SDB_MARK_DUMP           " -  "      //!< 导出标记
 
 /** @} */
 

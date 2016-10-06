@@ -1,12 +1,14 @@
+#include <errno.h>
+
+#include <libsdb.h>
 #ifndef SDB_ENABLE
 #define SDB_ENABLE
 #endif
-#include "config.h"
-#include <libsdb.h>
+#include <libsdb.h> // reload
 
-#if defined(SDB_SELFTEST)
+#if defined(SDB_MDL_SELFTEST)
 
-#define DS_SDB_ST ( SDB_IO /* | SDB_FUNC | SDB_TIME */ )
+#define DS_SDB_ST   SDB_IO
 
 int sdb_color_demo(void)
 {
@@ -41,22 +43,96 @@ int sdb_color_demo(void)
     return 0;
 }
 
+int sdb_selftest_output(void)
+{
+    int opt[] = {
+        0,
+
+        (SDB_IO | SDB_NO_COLOR | SDB_NO_MARK),
+        (SDB_IO | SDB_NO_LABLE | SDB_NO_WRAP),
+
+        (SDB_IO | SDB_NO_LINE | SDB_NO_FILE | SDB_FUNC | SDB_TIME),
+        (SDB_IO | SDB_FUNC | SDB_TIME),
+        (SDB_IO | SDB_NO_LINE | SDB_NO_FILE),
+        (SDB_IO),
+    };
+    int i;
+
+    sdb_out_t(DS_SDB_ST, "____OUTPUT_TEST____");
+    for (i = 0; i < sizeof(opt) / sizeof(int); i++) {
+        sdb_out_t(DS_SDB_ST, "set opt:%#x", opt[i]);
+        sdb_out(opt[i], "format:(%s, %d, %#x)<\\n>\n", "123", 123, 123);
+        sdb_out_entry(opt[i]);
+        sdb_out_i(opt[i], "information");
+        sdb_out_w(opt[i], "warning");
+        sdb_out_e(opt[i], "error");
+        sdb_out_exit(opt[i]);
+        sdb_out(opt[i], "\n");
+    }
+    return 0;
+}
+
+int sdb_selftest_output_stderr(void)
+{
+    sdb_out_t(DS_SDB_ST, "____OUTPUT_STDERR_TEST____");
+    errno = 2;
+    sdb_err(DS_SDB_ST, "test");
+    sdb_out(DS_SDB_ST, "\n");
+    sdb_err_i(DS_SDB_ST, "information");
+    sdb_err_w(DS_SDB_ST, "warning");
+    sdb_err_e(DS_SDB_ST, "error");
+    sdb_err_t(DS_SDB_ST, "title");
+    sdb_out(DS_SDB_ST, "\n");
+    return 0;
+}
+
+int sdb_selftest_input(void)
+{
+    int ret = 0;
+    int num = 0;
+    char buf[32];
+
+    sdb_out_t(DS_SDB_ST, "____INPUT_TEST____");
+    sdb_out_i(DS_SDB_ST, "Input number(simple)");
+    if ((ret = sdb_in(DS_SDB_ST)) >= 0) {
+        sdb_out_i(DS_SDB_ST, "return:%d", ret);
+    }
+    else {
+        sdb_out_i(DS_SDB_ST, "bad input:%d", ret);
+    }
+    sdb_out_i(DS_SDB_ST, "Input a number");
+    ret = sdb_in_n(DS_SDB_ST, &num);
+    sdb_out_i(DS_SDB_ST, "return:%d, Get number:%d", ret, num);
+    sdb_out_i(DS_SDB_ST, "Input string");
+    ret = sdb_in_s(DS_SDB_ST, buf, &num);
+    sdb_out_i(DS_SDB_ST, "return:%d, Get string:%s(size:%d)", ret, buf, num);
+
+    ret = sdb_in_nt(DS_SDB_ST, &num, "Input a number");
+    sdb_out_i(DS_SDB_ST, "return:%d, Get number:%d", ret, num);
+    ret = sdb_in_st(DS_SDB_ST, buf, &num, "Input string");
+    sdb_out_i(DS_SDB_ST, "return:%d, Get string:%s(size:%d)", ret, buf, num);
+
+    return 0;
+}
+
+int sdb_selftest_dump(void)
+{
+    return 0;
+}
+
 int sdb_selftest(void *p)
 {
-    sdb_out_t(DS_SDB_ST, "输出测试");
-    sdb_out(DS_SDB_ST, "无标签格式化输出:(%s, %d, %#x)\n", "123", 123, 123);
-    sdb_out_i(DS_SDB_ST, "带标签的格式化输出");
-    sdb_out_w(DS_SDB_ST, "带标签的格式化输出，带警告标记");
-    sdb_out_e(DS_SDB_ST, "带标签的格式化输出，带错误标记");
-    sdb_out_entry(DS_SDB_ST);
-    sdb_out_exit(DS_SDB_ST);
     // sdb_color_demo();
+    // sdb_selftest_output();
+    // sdb_selftest_output_stderr();
+    // sdb_selftest_input();
+    sdb_selftest_dump();
     return 0;
 }
 
 #else
 int sdb_selftest(void *p) { return 0; }
-#endif /* defined(SDB_SELFTEST) */
+#endif /* defined(SDB_MDL_SELFTEST) */
 
 int __entry_sdb_selftest__(int argc, char *argv[])
 {
