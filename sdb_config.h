@@ -121,7 +121,7 @@
 #define SDB_MARK_ECHO           "I.e "      //!< 返回数值输出标记
 #define SDB_MARK_ENTRY          ">>> "      //!< 入口标记
 #define SDB_MARK_EXIT           "<<< "      //!< 出口标记
-#define SDB_MARK_DUMP           " -  "      //!< 导出标记
+#define SDB_MARK_DUMP           "  | "      //!< 导出标记
 
 /** @} */
 

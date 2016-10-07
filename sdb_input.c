@@ -40,23 +40,34 @@ static int sdb_in_num(SDB_IO_PARAM_T *p)
     return 0;
 }
 
-int sdb_input(int opt, int mode, char *file, const char *func, int line,
+int sdb_input(int opt, int mode, const char *file, const char *func, int line,
         char *buf, int *num, const char *format, ...)
 {
     int ret = 0;
     SDB_IO_PARAM_T p;
+    unsigned int mark_type = mode & SDB_MODE_MARK;
 
     if ((~opt) & SDB_IO) {
         return 0;
     }
-    p.mark_type = mode & SDB_MODE_MARK;
-    p.length = 0;
 
+    p.options   = opt | SDB_NO_WRAP;
+    p.mode      = mode | SDB_MODE_MSG_INPUTFLAG;
+    p.file      = file;
+    p.func      = func;
+    p.line      = line;
+    p.error     = errno;
+    p.format    = format;
+    p.length    = 0;
     va_start(p.ap, format);
-    sdb_voutput(opt | SDB_NO_WRAP, mode, file, func, line, format, p.ap);
+    if ((ret = sdb_out_style(&p))) {
+        va_end(p.ap);
+        return ret;
+    }
     va_end(p.ap);
-    if (p.mark_type == SDB_MODE_MARK_GETNUM) {
-        p.options = 0;
+
+    if (mark_type == SDB_MODE_MARK_GETNUM) {
+        p.options = 0;  // 用于临时传递输入数据长度
         if ((ret = sdb_in_num(&p))) {
             return ret;
         }
@@ -67,7 +78,7 @@ int sdb_input(int opt, int mode, char *file, const char *func, int line,
             ret = p.options;
         }
     }
-    else if (p.mark_type == SDB_MODE_MARK_GETSTR) {
+    else if (mark_type == SDB_MODE_MARK_GETSTR) {
         if ((ret = sdb_in_getchar(&p))) {
             return ret;
         }
@@ -79,9 +90,8 @@ int sdb_input(int opt, int mode, char *file, const char *func, int line,
         sdb_out_e(DS_SDB, "should never happen");
         return SDB_RET_PROCESS_ERR;
     }
-    sdb_output(opt, ((mode & ~(p.mark_type) & ~(SDB_MODE_MSG_INTERVAL))
-                | SDB_MODE_MARK_ECHO), file, func, line, "\"%s\"(%d)",
-            p.cache, p.length);
+    sdb_output(opt, (mode & ~(mark_type) | SDB_MODE_MARK_ECHO),
+            file, func, line, "\"%s\"(%d)", p.cache, p.length);
 
     if (buf && (ssize_t)p.length > 0) {
         memmove(buf, p.cache, p.length + 1);    //!< 包含结束符
@@ -91,7 +101,8 @@ int sdb_input(int opt, int mode, char *file, const char *func, int line,
 }
 
 #else
-inline int sdb_input(int opt, int mode, char *file, const char *func, int line,
+inline int sdb_input(int opt, int mode,
+        const char *file, const char *func, int line,
         char *buf, int *num, const char *format, ...)
 {
     return 0;

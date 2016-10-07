@@ -5,18 +5,16 @@
 #if defined(SDB_SYS_HAVE_TIME)
 static int sdb_out_time(SDB_IO_PARAM_T *p)
 {
-    int ret = 0;
     if (p->options & SDB_TIME) {
         time_t tim = time(NULL);
         struct tm *t;
         t = localtime(&tim);
-        if ((ret = sprintf(p->cache + p->length, "%02d%02d%02d%02d%02d%02d ",
+        p->length += sprintf(p->cache + p->length, "%02d%02d%02d%02d%02d%02d ",
                 t->tm_year % 100, 1 + t->tm_mon, t->tm_mday,
-                t->tm_hour, t->tm_min, t->tm_sec)) >= 0) {
-            p->length += ret;
-        }
+                t->tm_hour, t->tm_min, t->tm_sec);
     }
-    return ret;
+
+    return 0;
 }
 #else
 #define sdb_out_time(...)   0
@@ -28,7 +26,7 @@ static int sdb_out_color(SDB_IO_PARAM_T *p, unsigned int type)
     if (p->options & SDB_NO_COLOR || type >= SDB_MODE_HL_MAX) {
         return 0;
     }
-    char *sdb_out_hl_types[SDB_MODE_HL_MAX >> SDB_MODE_HL_OFS] = {
+    const char *sdb_out_hl_types[SDB_MODE_HL_MAX >> SDB_MODE_HL_OFS] = {
         "",
         SDB_COLOR_HL,
         SDB_COLOR_WARN,
@@ -38,15 +36,13 @@ static int sdb_out_color(SDB_IO_PARAM_T *p, unsigned int type)
         SDB_COLOR_LABEL,
         SDB_COLOR_RES,
     };
-    int ret;
     if (type == 0) {
         type = SDB_MODE_HL_RES;
     }
-    if ((ret = sprintf(p->cache + p->length, "%s",
-                    sdb_out_hl_types[type >> SDB_MODE_HL_OFS])) >= 0) {
-        p->length += ret;
-    }
-    return ret;
+    p->length += sprintf(p->cache + p->length, "%s",
+            sdb_out_hl_types[type >> SDB_MODE_HL_OFS]);
+
+    return 0;
 }
 #else
 #define sdb_out_color(...)  0
@@ -54,7 +50,9 @@ static int sdb_out_color(SDB_IO_PARAM_T *p, unsigned int type)
 
 static int sdb_out_mark(SDB_IO_PARAM_T *p)
 {
-    if ((p->options & SDB_NO_MARK) || p->mark_type >= SDB_MODE_MARK_MAX) {
+    unsigned int mark_type = p->mode & SDB_MODE_MARK;
+
+    if ((p->options & SDB_NO_MARK) || mark_type >= SDB_MODE_MARK_MAX) {
         return 0;
     }
     SDB_MARK_T sdb_marks[SDB_MODE_MARK_MAX >> SDB_MODE_MARK_OFS] = {
@@ -70,57 +68,51 @@ static int sdb_out_mark(SDB_IO_PARAM_T *p)
         {   SDB_MODE_HL_NONE,   SDB_MARK_DUMP,      },
     };
     int ret = 0;
-    int t = p->mark_type >> SDB_MODE_MARK_OFS;
+    int t = mark_type >> SDB_MODE_MARK_OFS;
+
     if (sdb_marks[t].hl_type != SDB_MODE_HL_NONE
             && (ret = sdb_out_color(p, sdb_marks[t].hl_type)) < 0) {
         return ret;
     }
-    if ((ret = sprintf(p->cache + p->length, "%s", sdb_marks[t].mark)) >= 0) {
-        p->length += ret;
-    }
+    p->length += sprintf(p->cache + p->length, "%s", sdb_marks[t].mark);
     if (sdb_marks[t].hl_type != SDB_MODE_HL_NONE
             && (ret = sdb_out_color(p, 0)) < 0) {
         return ret;
     }
-    return ret;
+
+    return 0;
 }
 
 static int sdb_out_message(SDB_IO_PARAM_T *p)
 {
-    int ret = 0;
+    unsigned int msg_type = p->mode & SDB_MODE_MSG;
 
-    if (p->msg_type == 0) {
+    if (msg_type == 0) {
         return 0;
     }
+    else
 #if defined(SDB_MDL_STDERR_ENABLE)
-    else if (p->msg_type == SDB_MODE_MSG_STDERR) {
+    if (msg_type == SDB_MODE_MSG_STDERR) {
         if (p->options & SDB_NO_STDERR) {
             return 0;
         }
-        if ((ret = sprintf(p->cache + p->length, ": %s(%d)",
-                        strerror(p->error), p->error)) >= 0) {
-            p->length += ret;
-        }
-        return ret;
+        p->length += sprintf(p->cache + p->length, ": %s(%d)",
+                strerror(p->error), p->error);
     }
+    else
 #endif /* defined(SDB_MDL_STDERR_ENABLE) */
-    else if (p->msg_type == SDB_MODE_MSG_ENTRY) {
-        if ((ret = sprintf(p->cache + p->length, "%s {", p->func)) >= 0) {
-            p->length += ret;
-        }
-        return ret;
+    if (msg_type == SDB_MODE_MSG_ENTRY) {
+        p->length += sprintf(p->cache + p->length, "%s {", p->func);
     }
-    else if (p->msg_type == SDB_MODE_MSG_EXIT) {
-        if ((ret = sprintf(p->cache + p->length, "%s }", p->func)) >= 0) {
-            p->length += ret;
-        }
-        return ret;
+    else if (msg_type == SDB_MODE_MSG_EXIT) {
+        p->length += sprintf(p->cache + p->length, "%s }", p->func);
     }
-    else if (p->msg_type == SDB_MODE_MSG_INTERVAL) {
-        if ((ret = sprintf(p->cache + p->length, " => ")) >= 0) {
-            p->length += ret;
-        }
-        return ret;
+    else if (msg_type == SDB_MODE_MSG_INPUTFLAG) {
+        p->length += sprintf(p->cache + p->length, " => ");
+    }
+    else if (msg_type == SDB_MODE_MSG_DUMPSIZE) {
+        p->length += sprintf(p->cache + p->length, " (size:%d)",
+                (size_t)p->addr);
     }
     else {
         sdb_out_e(DS_SDB, "should never happen");
@@ -156,19 +148,21 @@ static int sdb_out_vprintf(SDB_IO_PARAM_T *p)
     return ret;
 }
 
-static int sdb_out_style(SDB_IO_PARAM_T *p)
+int sdb_out_style(SDB_IO_PARAM_T *p)
 {
     int ret = 0;
     int ofslen = 0;
     int lbllen = 0;
+    unsigned int hl_type = p->mode & SDB_MODE_HL;
+    unsigned int mark_type = p->mode & SDB_MODE_MARK;
 
     if ((~p->options) & SDB_IO
             || (p->options & SDB_NO_INFO
-                && p->mark_type == SDB_MODE_MARK_INFO)
+                && mark_type == SDB_MODE_MARK_INFO)
             || (p->options & SDB_NO_WARNING
-                && p->mark_type == SDB_MODE_MARK_WARNING)
+                && mark_type == SDB_MODE_MARK_WARNING)
             || (p->options & SDB_NO_ERROR
-                && p->mark_type == SDB_MODE_MARK_ERROR)) {
+                && mark_type == SDB_MODE_MARK_ERROR)) {
         return 0;
     }
     // 标签
@@ -180,25 +174,19 @@ static int sdb_out_style(SDB_IO_PARAM_T *p)
             return ret;
         }
         if ((~p->options) & SDB_NO_FILE) {
-            if ((ret = sprintf(p->cache + p->length, "%s:", p->file)) < 0) {
-                return ret;
-            }
+            ret = sprintf(p->cache + p->length, "%s:", p->file);
             p->length += ret;
             ofslen += ret;
             lbllen += SDB_CONF_FILE_NAME_SPACE;
         }
         if (p->options & SDB_FUNC) {
-            if ((ret = sprintf(p->cache + p->length, "%s:", p->func)) < 0) {
-                return ret;
-            }
+            ret = sprintf(p->cache + p->length, "%s:", p->func);
             p->length += ret;
             ofslen += ret;
             lbllen += SDB_CONF_FUNC_NAME_SPACE;
         }
         if ((~p->options) & SDB_NO_LINE) {
-            if ((ret = sprintf(p->cache + p->length, "%04d ", p->line)) < 0) {
-                return ret;
-            }
+            ret = sprintf(p->cache + p->length, "%04d ", p->line);
             p->length += ret;
             ofslen += ret;
             lbllen += SDB_CONF_LINE_NUM_SPACE;
@@ -215,7 +203,7 @@ static int sdb_out_style(SDB_IO_PARAM_T *p)
     if ((ret = sdb_out_mark(p)) < 0) {
         return ret;
     }
-    if (p->hl_type && (ret = sdb_out_color(p, p->hl_type)) < 0) {
+    if (hl_type && (ret = sdb_out_color(p, hl_type)) < 0) {
         return ret;
     }
     // 字符串格式化处理
@@ -228,15 +216,12 @@ static int sdb_out_style(SDB_IO_PARAM_T *p)
     if ((ret = sdb_out_message(p)) < 0) {
         return ret;
     }
-    if (p->hl_type && (ret = sdb_out_color(p, 0)) < 0) {
+    if (hl_type && (ret = sdb_out_color(p, 0)) < 0) {
         return ret;
     }
     // 换行符
     if ((~p->options) & SDB_NO_WRAP) {
-        if ((ret = sprintf(p->cache + p->length, "%s", SDB_CONF_WRAP)) < 0) {
-            return ret;
-        }
-        p->length += ret;
+        p->length += sprintf(p->cache + p->length, "%s", SDB_CONF_WRAP);
     }
 
     if (ret >= 0 && p->length > 0) {
@@ -246,30 +231,7 @@ static int sdb_out_style(SDB_IO_PARAM_T *p)
     return ret;
 }
 
-int sdb_voutput(int opt, int mode, char *file, const char *func, int line,
-        const char *format, va_list ap)
-{
-    int ret = 0;
-    SDB_IO_PARAM_T p;
-
-    p.options   = opt;
-    p.mode      = mode;
-    p.mark_type = mode & SDB_MODE_MARK;
-    p.msg_type  = mode & SDB_MODE_MSG;
-    p.hl_type   = mode & SDB_MODE_HL;
-    p.file      = file;
-    p.func      = func;
-    p.line      = line;
-    p.error     = errno;
-    p.format    = format;
-    p.length    = 0;
-    va_copy(p.ap, ap);
-    ret = sdb_out_style(&p);
-
-    return ret;
-}
-
-int sdb_output(int opt, int mode, char *file, const char *func, int line,
+int sdb_output(int opt, int mode, const char *file, const char *func, int line,
         const char *format, ...)
 {
     int ret = 0;
@@ -277,9 +239,6 @@ int sdb_output(int opt, int mode, char *file, const char *func, int line,
 
     p.options   = opt;
     p.mode      = mode;
-    p.mark_type = mode & SDB_MODE_MARK;
-    p.msg_type  = mode & SDB_MODE_MSG;
-    p.hl_type   = mode & SDB_MODE_HL;
     p.file      = file;
     p.func      = func;
     p.line      = line;
@@ -294,8 +253,8 @@ int sdb_output(int opt, int mode, char *file, const char *func, int line,
 }
 
 #else
-inline int sdb_output(int opt, int mode, char *file, const char *func, int line,
-        const char *format, ...)
+inline int sdb_output(int opt, int mode,
+        const char *file, const char *func, int line, const char *format, ...)
 {
     return 0;
 }

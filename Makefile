@@ -1,3 +1,4 @@
+# CC = g++
 CFLAGS = -Wall -O2
 OBJ_FILE = sdb_bio.o sdb_output.o sdb_input.o sdb_dump.o
 HEAD_FILE = libsdb.h sdb_config.h sdb_internal.h
@@ -12,8 +13,7 @@ libsdb.a: $(OBJ_FILE)
 
 sdb_selftest: $(OBJ_FILE) sdb_selftest.c
 	$(CC) $(CFLAGS) -DSDB_MDL_SELFTEST -I. -c -o sdb_selftest.o sdb_selftest.c
-	$(CC) $(CFLAGS) -L. -nostartfiles -e __entry_sdb_selftest__\
-		-o $@ sdb_selftest.o -lsdb
+	$(CC) $(CFLAGS) -L. -o $@ sdb_selftest.o -lsdb
 
 .PHONY: clean
 clean:

@@ -32,9 +32,8 @@ typedef enum {                          //!< 调试输入输出选项
     SDB_NO_LABLE        = (1 << 15),    //!< 不输出标签
     SDB_NO_WRAP         = (1 << 16),    //!< 不输出换行
     //!< 导出样式控制 - 字节分割，默认每行16
-    SDB_DUMP_SEC32      = (1 << 17),    //!< 每行输出32字节
-    SDB_DUMP_SEC48      = (2 << 17),    //!< 每行输出48字节
-    SDB_DUMP_SEC64      = (3 << 17),    //!< 每行输出64字节
+    SDB_DUMP_SEC_ADD16  = (1 << 17),    //!< 每行输出增加16字节
+    SDB_DUMP_SEC_ADD32  = (1 << 18),    //!< 每行输出增加32字节
 } SDB_OPTION_T;
 
 typedef enum {                          //!< 显示模式 - 控制输出样式
@@ -69,9 +68,17 @@ typedef enum {                          //!< 显示模式 - 控制输出样式
     SDB_MODE_MSG_ENTRY      = (0x01 << SDB_MODE_MSG_OFS),   //!< 入口标记
     SDB_MODE_MSG_EXIT       = (0x02 << SDB_MODE_MSG_OFS),   //!< 出口标记
     SDB_MODE_MSG_STDERR     = (0x03 << SDB_MODE_MSG_OFS),   //!< 系统错误信息
-    SDB_MODE_MSG_INTERVAL   = (0x04 << SDB_MODE_MSG_OFS),   //!< 输入前间隔
-    SDB_MODE_MSG_MAX        = (0x05 << SDB_MODE_MSG_OFS),   //!< 信息类型数量
+    SDB_MODE_MSG_INPUTFLAG  = (0x04 << SDB_MODE_MSG_OFS),   //!< 输入前标记
+    SDB_MODE_MSG_DUMPSIZE   = (0x05 << SDB_MODE_MSG_OFS),   //!< 导出数据大小
+    SDB_MODE_MSG_MAX        = (0x06 << SDB_MODE_MSG_OFS),   //!< 信息类型数量
     SDB_MODE_MSG            = (0x0f << SDB_MODE_MSG_OFS),   //!< 信息类型获取
+
+    SDB_MODE_DMP_OFS        = 12,                           //!< 数据导出类型偏移
+    SDB_MODE_DMP_STR        = (0x00 << SDB_MODE_DMP_OFS),   //!< 字符输出,无换行,独立使用
+    SDB_MODE_DMP_HEX        = (0x01 << SDB_MODE_DMP_OFS),   //!< 16进制输出
+    SDB_MODE_DMP_CHAR       = (0x02 << SDB_MODE_DMP_OFS),   //!< 字符输出
+    SDB_MODE_DMP_MAX        = (0x03 << SDB_MODE_DMP_OFS),   //!< 数据导出类型数量
+    SDB_MODE_DMP            = (0x0f << SDB_MODE_DMP_OFS),   //!< 数据导出类型获取
 
 } SDB_MODE_T;
 
@@ -127,7 +134,7 @@ int sdb_bio_conf(SDB_BIO_T *bio);
  * \param       ...         不定参数
  * \return      0:Success; <0:Error
  */
-int sdb_output(int opt, int mode, char *file, const char *func, int line,
+int sdb_output(int opt, int mode, const char *file, const char *func, int line,
         const char *format, ...);
 
 /**
@@ -146,7 +153,7 @@ int sdb_output(int opt, int mode, char *file, const char *func, int line,
  * \return      num != NULL:  0:Success <0:Error;
  *              num == NULL:  >=0:输入的数值 <0:Error;
  */
-int sdb_input(int opt, int mode, char *file, const char *func, int line,
+int sdb_input(int opt, int mode, const char *file, const char *func, int line,
         char *buf, int *num, const char *format, ...);
 
 /**
@@ -163,8 +170,9 @@ int sdb_input(int opt, int mode, char *file, const char *func, int line,
  * \param       ...         不定参数
  * \return      0:Success; <0:Error
  */
-int sdb_dump(int opt, int mode, char *file, const char *func, int line,
-        char *buf, int len, void *addr, const char *format, ...);
+int sdb_dump(size_t opt, size_t mode,
+        const char *file, const char *func, size_t line,
+        void *buf, size_t len, void *addr, const char *format, ...);
 
 /**
  * \brief       内联空实现
@@ -245,13 +253,13 @@ int sdb_nop(void);
 
 #else /* defined(SDB_ENABLE) */
 
-#define sdb_out(...)
-#define sdb_out_i(...)
-#define sdb_out_w(...)
-#define sdb_out_e(...)
-#define sdb_out_t(...)
-#define sdb_out_entry(...)
-#define sdb_out_exit(...)
+#define sdb_out(...)        sdb_nop()
+#define sdb_out_i(...)      sdb_nop()
+#define sdb_out_w(...)      sdb_nop()
+#define sdb_out_e(...)      sdb_nop()
+#define sdb_out_t(...)      sdb_nop()
+#define sdb_out_entry(...)  sdb_nop()
+#define sdb_out_exit(...)   sdb_nop()
 
 #endif /* defined(SDB_ENABLE) */
 /** @} */
@@ -307,11 +315,11 @@ int sdb_nop(void);
 
 #else
 
-#define sdb_err(...)
-#define sdb_err_i(...)
-#define sdb_err_w(...)
-#define sdb_err_e(...)
-#define sdb_err_t(...)
+#define sdb_err(...)    sdb_nop()
+#define sdb_err_i(...)  sdb_nop()
+#define sdb_err_w(...)  sdb_nop()
+#define sdb_err_e(...)  sdb_nop()
+#define sdb_err_t(...)  sdb_nop()
 
 #endif /* defined(SDB_ENABLE) */
 /** @} */
@@ -339,27 +347,27 @@ int sdb_nop(void);
 
 /** \brief      返回输入的数值，无效输入返回对应错误码 */
 #define sdb_in(__sdb_opt) ({\
-        sdb_input(__sdb_opt, SDB_MODE_MARK_GETNUM | SDB_MODE_MSG_INTERVAL,\
+        sdb_input(__sdb_opt, SDB_MODE_MARK_GETNUM,\
                 __FILE__, __func__, __LINE__, NULL, NULL, NULL);\
         })
 /** \brief      返回输入的数值，无效输入返回对应错误码，可识别8进制、10进制和16进制 */
 #define sdb_in_n(__sdb_opt, __pnum) ({\
-        sdb_input(__sdb_opt, SDB_MODE_MARK_GETNUM | SDB_MODE_MSG_INTERVAL,\
+        sdb_input(__sdb_opt, SDB_MODE_MARK_GETNUM,\
                 __FILE__, __func__, __LINE__, NULL, __pnum, NULL);\
         })
 /** \brief      获取输入的字符串，不包含换行符 */
 #define sdb_in_s(__sdb_opt, __buf, __pnum) ({\
-        sdb_input(__sdb_opt, SDB_MODE_MARK_GETSTR | SDB_MODE_MSG_INTERVAL,\
+        sdb_input(__sdb_opt, SDB_MODE_MARK_GETSTR,\
                 __FILE__, __func__, __LINE__, __buf, __pnum, NULL);\
         })
 /** \brief      返回输入的数值，无效输入返回对应错误码，可识别8进制、10进制和16进制，同时输出标题 */
 #define sdb_in_nt(__sdb_opt, __pnum, ...) ({\
-        sdb_input(__sdb_opt, SDB_MODE_MARK_GETNUM | SDB_MODE_MSG_INTERVAL,\
+        sdb_input(__sdb_opt, SDB_MODE_MARK_GETNUM,\
                 __FILE__, __func__, __LINE__, NULL, __pnum, __VA_ARGS__);\
         })
 /** \brief      获取输入的字符串，不包含换行符，同时输出标题 */
 #define sdb_in_st(__sdb_opt, __buf, __pnum, ...) ({\
-        sdb_input(__sdb_opt, SDB_MODE_MARK_GETSTR | SDB_MODE_MSG_INTERVAL,\
+        sdb_input(__sdb_opt, SDB_MODE_MARK_GETSTR,\
                 __FILE__, __func__, __LINE__, __buf, __pnum, __VA_ARGS__);\
         })
 
@@ -401,23 +409,59 @@ int sdb_nop(void);
 
 #if defined(SDB_ENABLE)
 
-#define sdb_dmp(...)
-#define sdb_dmp_h(...)
-#define sdb_dmp_hc(...)
-#define sdb_dmp_hca(...)
-#define sdb_dmp_ht(...)
-#define sdb_dmp_hct(...)
-#define sdb_dmp_hcat(...)
+/** \brief      纯字符导出, 无任何格式(可用于将内存或Flash数据导出到文件) */
+#define sdb_dmp(__sdb_opt, __buf, __len) ({\
+        sdb_dump(__sdb_opt | SDB_NO_MARK | SDB_NO_LABLE | SDB_NO_WRAP,\
+                SDB_MODE_DMP_STR, __FILE__, __func__, __LINE__,\
+                __buf, __len, NULL, NULL);\
+        })
+/** \brief      16进制导出, 带行号, 每行16字节 */
+#define sdb_dmp_h(__sdb_opt, __buf, __len) ({\
+        sdb_dump(__sdb_opt,\
+                SDB_MODE_MARK_DUMP | SDB_MODE_DMP_HEX,\
+                __FILE__, __func__, __LINE__, __buf, __len, NULL, NULL);\
+        })
+/** \brief      16进制导出, 同时输出字符, 带行号, 每行16字节 */
+#define sdb_dmp_hc(__sdb_opt, __buf, __len) ({\
+        sdb_dump(__sdb_opt,\
+                SDB_MODE_MARK_DUMP | SDB_MODE_DMP_HEX | SDB_MODE_DMP_CHAR,\
+                __FILE__, __func__, __LINE__, __buf, __len, NULL, NULL);\
+        })
+/** \brief      16进制导出, 同时输出字符, 带行号, 带地址, 每行16字节 */
+#define sdb_dmp_hca(__sdb_opt, __buf, __len, __addr) ({\
+        sdb_dump(__sdb_opt,\
+                SDB_MODE_MARK_DUMP | SDB_MODE_DMP_HEX | SDB_MODE_DMP_CHAR,\
+                __FILE__, __func__, __LINE__, __buf, __len, __addr, NULL);\
+        })
+/** \brief      16进制导出, 带标题和行号, 每行16字节 */
+#define sdb_dmp_ht(__sdb_opt, __buf, __len, ...) ({\
+        sdb_dump(__sdb_opt,\
+                SDB_MODE_MARK_DUMP | SDB_MODE_DMP_HEX,\
+                __FILE__, __func__, __LINE__, __buf, __len, NULL, __VA_ARGS__);\
+        })
+/** \brief      16进制导出, 同时输出字符, 带标题和行号, 每行16字节 */
+#define sdb_dmp_hct(__sdb_opt, __buf, __len, ...) ({\
+        sdb_dump(__sdb_opt,\
+                SDB_MODE_MARK_DUMP | SDB_MODE_DMP_HEX | SDB_MODE_DMP_CHAR,\
+                __FILE__, __func__, __LINE__, __buf, __len, NULL, __VA_ARGS__);\
+        })
+/** \brief      16进制导出, 同时输出字符, 带标题和地址, 每行16字节 */
+#define sdb_dmp_hcat(__sdb_opt, __buf, __len, __addr, ...) ({\
+        sdb_dump(__sdb_opt,\
+                SDB_MODE_MARK_DUMP | SDB_MODE_DMP_HEX | SDB_MODE_DMP_CHAR,\
+                __FILE__, __func__, __LINE__, __buf, __len, __addr,\
+                __VA_ARGS__);\
+        })
 
 #else
 
-#define sdb_dmp(...)
-#define sdb_dmp_h(...)
-#define sdb_dmp_hc(...)
-#define sdb_dmp_hca(...)
-#define sdb_dmp_ht(...)
-#define sdb_dmp_hct(...)
-#define sdb_dmp_hcat(...)
+#define sdb_dmp(...)        sdb_nop()
+#define sdb_dmp_h(...)      sdb_nop()
+#define sdb_dmp_hc(...)     sdb_nop()
+#define sdb_dmp_hca(...)    sdb_nop()
+#define sdb_dmp_ht(...)     sdb_nop()
+#define sdb_dmp_hct(...)    sdb_nop()
+#define sdb_dmp_hcat(...)   sdb_nop()
 
 #endif /* defined(SDB_ENABLE) */
 /** @} */
