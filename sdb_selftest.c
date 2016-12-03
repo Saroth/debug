@@ -3,13 +3,14 @@
 
 #include <libsdb.h>
 #ifndef SDB_ENABLE
-#define SDB_ENABLE
+// #define SDB_ENABLE
 #endif
 #include <libsdb.h> // reload
 
 #if defined(SDB_MDL_SELFTEST)
 
-#define DS_SDB_ST   SDB_IO
+SDB_CONFIG_LOAD(&sdb_cfg_std);
+
 
 int sdb_color_demo(void)
 {
@@ -21,7 +22,7 @@ int sdb_color_demo(void)
     const char *bg[] = {
         "2",
         "40", "41", "42", "43", "44", "45", "46", "47",
-        "1;100", "1;101", "1;102", "1;103", "1;104", "1;105", "1;106", "1;107",
+        "100", "101", "102", "103", "104", "105", "106", "107",
     };
     int i;
     int j;
@@ -40,44 +41,40 @@ int sdb_color_demo(void)
         }
         printf("\33[0m\n");
     }
+    for (i = -1; i < 17; i++) {
+        if (i < 0)
+            printf(" bold");
+        else
+            printf("  %3s", fg[i]);
+        for (j = 0; j < 17; j++) {
+            if (i < 0)
+                printf(" %3s", bg[j]);
+            else
+                printf("\33[0m \33[%s;%s;1m[x]", fg[i], bg[j]);
+        }
+        printf("\33[0m\n");
+    }
+    printf("\n");
 
     return 0;
 }
 
 int sdb_selftest_output(void)
 {
-    int opt[] = {
-        0,
-
-        (SDB_IO | SDB_NO_COLOR | SDB_NO_MARK),
-        (SDB_IO | SDB_NO_LABLE | SDB_NO_WRAP),
-
-        (SDB_IO | SDB_NO_LINE | SDB_NO_FILE | SDB_FUNC | SDB_TIME),
-        (SDB_IO | SDB_FUNC | SDB_TIME),
-        (SDB_IO | SDB_NO_LINE | SDB_NO_FILE),
-        (SDB_IO),
-    };
-    unsigned int i;
     int ret = 0;
 
-    sdb_out_t(DS_SDB_ST, "____OUTPUT_TEST____");
+    ((void) ret);
+    ret = SDB_OUT("bare, format output test:%s, %d, %#x, <\\n>\n",
+            "123", 123, 123);
+    SDB_OUT_I("Return: %d", ret);
+    ret = SDB_OUT_I("information");
+    SDB_OUT_I("Return: %d", ret);
+    ret = SDB_OUT_W("warning");
+    SDB_OUT_I("Return: %d", ret);
+    ret = SDB_OUT_E("error");
+    SDB_OUT_I("Return: %d", ret);
+    SDB_OUT("\n");
 
-    for (i = 0; i < sizeof(opt) / sizeof(int); i++) {
-        sdb_out_t(DS_SDB_ST, "set opt:%#x", opt[i]);
-        ret = sdb_out(opt[i], "format:(%s, %d, %#x)<\\n>\n", "123", 123, 123);
-        sdb_out_i(DS_SDB_ST, "Return: %d", ret);
-        ret = sdb_out_entry(opt[i]);
-        sdb_out_i(DS_SDB_ST, "Return: %d", ret);
-        ret = sdb_out_i(opt[i], "information");
-        sdb_out_i(DS_SDB_ST, "Return: %d", ret);
-        ret = sdb_out_w(opt[i], "warning");
-        sdb_out_i(DS_SDB_ST, "Return: %d", ret);
-        ret = sdb_out_e(opt[i], "error");
-        sdb_out_i(DS_SDB_ST, "Return: %d", ret);
-        ret = sdb_out_exit(opt[i]);
-        sdb_out_i(DS_SDB_ST, "Return: %d", ret);
-        sdb_out(opt[i], "\n");
-    }
     return 0;
 }
 
@@ -85,22 +82,21 @@ int sdb_selftest_output_stderr(void)
 {
     int ret = 0;
 
-    sdb_out_t(DS_SDB_ST, "____OUTPUT_STDERR_TEST____");
-
+    ((void) ret);
     errno = 2;
-    ret = sdb_err(DS_SDB_ST, "test");
-    sdb_out_i(DS_SDB_ST, "Return: %d", ret);
-    ret = sdb_out(DS_SDB_ST, "\n");
-    sdb_out_i(DS_SDB_ST, "Return: %d", ret);
-    ret = sdb_err_i(DS_SDB_ST, "information");
-    sdb_out_i(DS_SDB_ST, "Return: %d", ret);
-    ret = sdb_err_w(DS_SDB_ST, "warning");
-    sdb_out_i(DS_SDB_ST, "Return: %d", ret);
-    ret = sdb_err_e(DS_SDB_ST, "error");
-    sdb_out_i(DS_SDB_ST, "Return: %d", ret);
-    ret = sdb_err_t(DS_SDB_ST, "title");
-    sdb_out_i(DS_SDB_ST, "Return: %d", ret);
-    sdb_out(DS_SDB_ST, "\n");
+    ret = SDB_OUT("bare");
+    SDB_OUT_I("Return: %d", ret);
+    errno = 3;
+    ret = SDB_OUT_I("information");
+    SDB_OUT_I("Return: %d", ret);
+    errno = 4;
+    ret = SDB_OUT_W("warning");
+    SDB_OUT_I("Return: %d", ret);
+    errno = 5;
+    ret = SDB_OUT_E("error");
+    SDB_OUT_I("Return: %d", ret);
+    SDB_OUT("\n");
+
     return 0;
 }
 
@@ -110,30 +106,29 @@ int sdb_selftest_input(void)
     int num = 0;
     char buf[32];
 
-    sdb_out_t(DS_SDB_ST, "____INPUT_TEST____");
+    ((void) buf);
+    ((void) num);
+    ((void) ret);
+    SDB_OUT_I("Input number(simple)");
+    ret = SDB_IN_N(NULL);
+    SDB_OUT_I("return:%d", ret);
+    SDB_OUT_I("Input a number");
+    ret = SDB_IN_N(&num);
+    SDB_OUT_I("return:%d, Get number:%d", ret, num);
+    SDB_OUT_I("Input string");
+    ret = SDB_IN_S(buf, 32, &num);
+    SDB_OUT_I("return:%d, Get string:%s(size:%d)", ret, buf, num);
 
-    sdb_out_i(DS_SDB_ST, "Input number(simple)");
-    if ((ret = sdb_in(DS_SDB_ST)) >= 0) {
-        sdb_out_i(DS_SDB_ST, "return:%d", ret);
-    }
-    else {
-        sdb_out_i(DS_SDB_ST, "bad input:%d", ret);
-    }
-    sdb_out_i(DS_SDB_ST, "Input a number");
-    ret = sdb_in_n(DS_SDB_ST, &num);
-    sdb_out_i(DS_SDB_ST, "return:%d, Get number:%d", ret, num);
-    sdb_out_i(DS_SDB_ST, "Input string");
-    ret = sdb_in_s(DS_SDB_ST, buf, &num);
-    sdb_out_i(DS_SDB_ST, "return:%d, Get string:%s(size:%d)", ret, buf, num);
-
-    ret = sdb_in_nt(DS_SDB_ST, &num, "Input a number");
-    sdb_out_i(DS_SDB_ST, "return:%d, Get number:%d", ret, num);
-    ret = sdb_in_st(DS_SDB_ST, buf, &num, "Input string");
-    sdb_out_i(DS_SDB_ST, "return:%d, Get string:%s(size:%d)", ret, buf, num);
+    ret = SDB_IN_NT(&num, "Input a number");
+    SDB_OUT_I("return:%d, Get number:%d", ret, num);
+    ret = SDB_IN_ST(buf, 32, &num, "Input string");
+    SDB_OUT_I("return:%d, Get string:%s(size:%d)", ret, buf, num);
+    SDB_OUT("\n");
 
     return 0;
 }
 
+#if 0
 int sdb_selftest_dump(void)
 {
     unsigned char buf1[16] = {
@@ -217,14 +212,15 @@ int sdb_selftest_dump(void)
 
     return 0;
 }
+#endif
 
 int sdb_selftest(void *p)
 {
     // sdb_color_demo();
-    // sdb_selftest_output();
-    // sdb_selftest_output_stderr();
-    // sdb_selftest_input();
-    sdb_selftest_dump();
+    sdb_selftest_output();
+    sdb_selftest_output_stderr();
+    sdb_selftest_input();
+    // sdb_selftest_dump();
     return 0;
 }
 

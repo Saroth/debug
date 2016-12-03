@@ -8,66 +8,59 @@ inline int sdb_nop(void)
 #if defined(SDB_ENABLE)
 
 #if defined(SDB_SYS_HAVE_STDIO)
-static int _std_out(char *buf, size_t len)
+static void output_std(const sdb_bio_context_t *out)
 {
-    printf(buf);
+    if (!(out->flag & SDB_FLG_BARE)) {
+        printf("%s:%d ", out->file, out->line);
+    }
+    printf("%s", out->buffer);
+    if (!(out->flag & SDB_FLG_NOWRAP)) {
+        printf("\n");
+    }
     fflush(stdout);
-
-    return 0;
 }
-static int _std_in(char *buf, size_t bufsize, size_t *outlen)
+
+static int input_std(char *buf, size_t bufsize, size_t *outlen)
 {
     int ch = 0;
     int i = 0;
 
-    while (1) {
-        if ((ch = getchar()) == EOF) {
+    while (buf) {
+        if ((ch = getchar()) == EOF)
             break;
-        }
-        if ((buf[i++] = ch) == '\n' || (bufsize > 0 && i >= bufsize)) {
+        if ((buf[i++] = ch) == '\n' || (bufsize > 0 && i >= bufsize))
             break;
-        }
     }
-    if (outlen) {
+    if (outlen)
         *outlen = i;
-    }
 
     return 0;
 }
-static SDB_BIO_T sdb_bio_std = {
-    .f_output   = _std_out,
-    .f_input    = _std_in,
+
+const sdb_config_t sdb_cfg_std = {
+    .opt        = SDB_IO,
+    .input      = input_std,
+    .output     = output_std,
+    .ptr        = NULL,
 };
-static SDB_BIO_T * sdb_bio = &sdb_bio_std;
-#else
-static SDB_BIO_T * sdb_bio = NULL;
 #endif /* defined(SDB_SYS_HAVE_STDIO) */
 
-int sdb_bio_out(char *buf, size_t len)
+int bio_output(sdb_bio_context_t *ctx)
 {
-    if (buf == NULL) {
-        return SDB_RET_PARAM_ERR;
-    }
-    if (sdb_bio == NULL || sdb_bio->f_output == NULL) {
-        return 0;
-    }
-    return sdb_bio->f_output(buf, len);
+    if (ctx->cfg && ctx->cfg->output)
+        ctx->cfg->output(ctx);
+
+    return 0;
 }
 
-int sdb_bio_in(char *buf, size_t bufsize, size_t *outlen)
+int bio_input(const sdb_config_t *cfg,
+        char *buf, size_t bufsize, size_t *outlen)
 {
-    if (buf == NULL) {
+    if (buf == NULL)
         return SDB_RET_PARAM_ERR;
-    }
-    if (sdb_bio == NULL || sdb_bio->f_input == NULL) {
-        return 0;
-    }
-    return sdb_bio->f_input(buf, bufsize, outlen);
-}
+    if (cfg && cfg->input)
+        return cfg->input(buf, bufsize, outlen);
 
-int sdb_bio_conf(SDB_BIO_T *bio)
-{
-    sdb_bio = bio;
     return 0;
 }
 

@@ -2,108 +2,109 @@
 
 #if defined(SDB_ENABLE) && defined(SDB_MDL_INPUT_ENABLE)
 
-static int sdb_in_getchar(SDB_IO_PARAM_T *p)
+#define __sdb_cfg p->cfg
+
+static int input_getchar(input_param_t *p)
 {
     int ret = 0;
 
-    if ((ret = sdb_bio_in(p->cache, SDB_CONF_IO_CACHE_SIZE,
-                    (size_t *)&p->length))) {
+    if ((ret = bio_input(p->cfg, p->buf, p->bufsize, &p->len)))
         return ret;
-    }
-    p->cache[p->length] = 0;
+    p->buf[p->len] = 0;
     // 移除末尾换行符
-    while (p->length > 0 && (p->cache[p->length - 1] == '\r'
-                || p->cache[p->length - 1] == '\n')) {
-        p->cache[--(p->length)] = 0;
-    }
+    while (p->len > 0 && (p->buf[p->len - 1] == '\r'
+                || p->buf[p->len - 1] == '\n'))
+        p->buf[--p->len] = 0;
 
     return ret;
 }
 
-static int sdb_in_num(SDB_IO_PARAM_T *p)
+static int input_proc(input_param_t *p)
 {
-    int ret = 0;
+    switch (p->flag & SDB_FLG_T) {
+        case SDB_FLG_T_INPUT_STR: {
+            int ret;
 
-    if ((ret = sdb_in_getchar(p))) {
-        return ret;
-    }
-    if (p->length == 0) {
-        sdb_out_w(DS_SDB, "No input.");
-        return SDB_RET_NO_INPUT;
-    }
-    p->options = strtol(p->cache, NULL, 0);
-    if (p->options == 0 && p->cache[0] != '0') {
-        sdb_out_w(DS_SDB, "Unrecognizable input.");
-        return SDB_RET_UNKNOWN_INPUT;
-    }
+            if (p->buf == NULL || p->bufsize <= 0) {
+                SDB_OUT_E("Bad param, buf:%#x, bufsize:%d", p->buf, p->bufsize);
+                return SDB_RET_PARAM_ERR;
+            }
+            if ((ret = input_getchar(p)))
+                return ret;
+            if (p->pnum)
+                *p->pnum = p->len;
 
+            return 0;
+        }
+        case SDB_FLG_T_INPUT_NUM: {
+            int ret;
+            char buf[SDB_CONF_BUFFER_SIZE_GETNUM];
+
+            p->buf = buf;
+            p->bufsize = SDB_CONF_BUFFER_SIZE_GETNUM;
+            if ((ret = input_getchar(p)))
+                return ret;
+            if (p->len == 0) {
+                SDB_OUT_W("No input.");
+                return SDB_RET_NO_INPUT;
+            }
+            p->num = strtol(p->buf, NULL, 0);
+            if (p->num == 0 && p->buf[0] != '0') {
+                SDB_OUT_W("Unrecognizable input.");
+                return SDB_RET_UNKNOWN_INPUT;
+            }
+            if (p->pnum)
+                *p->pnum = p->num;
+
+            return 0;
+        }
+        default: {
+            SDB_OUT_E("Should never happen!");
+        }
+    }
     return 0;
 }
 
-int sdb_input(int opt, int mode, const char *file, const char *func, int line,
-        char *buf, int *num, const char *format, ...)
+int sdb_input(const sdb_config_t *cfg, int flag,
+        const char *file, const char *func, int line,
+        char *buf, size_t bufsize, int *pnum, const char *format, ...)
 {
-    int ret = 0;
-    SDB_IO_PARAM_T p;
-    unsigned int mark_type = mode & SDB_MODE_MARK;
+    int ret;
+    va_list ap;
+    input_param_t p;
 
-    if ((~opt) & SDB_IO) {
-        return 0;
+    p.cfg           = cfg;
+    p.flag          = flag;
+    p.buf           = buf;
+    p.bufsize       = bufsize;
+    p.len           = 0;
+    p.num           = 0;
+    p.pnum          = pnum;
+
+    if (format) {
+        va_start(ap, format);
+        ret = sdb_output_v(cfg, flag | SDB_FLG_NOWRAP,
+                file, func, line, format, ap);
+        va_end(ap);
+        if (ret)
+            return ret;
     }
-
-    p.options   = opt | SDB_NO_WRAP;
-    p.mode      = mode | SDB_MODE_MSG_INPUTFLAG;
-    p.file      = file;
-    p.func      = func;
-    p.line      = line;
-    p.error     = errno;
-    p.format    = format;
-    p.length    = 0;
-    va_start(p.ap, format);
-    if ((ret = sdb_out_style(&p))) {
-        va_end(p.ap);
+    if ((ret = sdb_output(cfg, SDB_FLG_NOWRAP | (format ? SDB_FLG_BARE : 0),
+                    file, func, line, " => ")))
         return ret;
-    }
-    va_end(p.ap);
+    if ((ret = input_proc(&p)))
+        return ret;
+    if ((ret = sdb_output(cfg, SDB_FLG_T_INPUTECHO,
+            file, func, line, "\"%s\"(%d)", p.buf, p.len)))
+        return ret;
 
-    if (mark_type == SDB_MODE_MARK_GETNUM) {
-        p.options = 0;  // 用于临时传递输入数据长度
-        if ((ret = sdb_in_num(&p))) {
-            return ret;
-        }
-        if (num) {
-            *num = p.options;
-        }
-        else {
-            ret = p.options;
-        }
-    }
-    else if (mark_type == SDB_MODE_MARK_GETSTR) {
-        if ((ret = sdb_in_getchar(&p))) {
-            return ret;
-        }
-        if (num) {
-            *num = p.length;
-        }
-    }
-    else {
-        sdb_out_e(DS_SDB, "should never happen");
-        return SDB_RET_PROCESS_ERR;
-    }
-    sdb_output(opt, (mode & ~(mark_type) | SDB_MODE_MARK_ECHO),
-            file, func, line, "\"%s\"(%d)", p.cache, p.length);
-
-    if (buf && (ssize_t)p.length > 0) {
-        memmove(buf, p.cache, p.length + 1);    //!< 包含结束符
-    }
-
-    return ret;
+    return p.num;
 }
 
 #else
-inline int sdb_input(int opt, int mode,
+inline int sdb_input(const sdb_config_t *cfg, int flag,
         const char *file, const char *func, int line,
-        char *buf, int *num, const char *format, ...)
+        char *buf, size_t bufsize, int *pnum, const char *format, ...)
 {
     return 0;
 }
