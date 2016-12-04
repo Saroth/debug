@@ -3,16 +3,16 @@
 
 #include "sdb_config.h"
 
-typedef struct {                        //!< 内部传递参数结构体
+typedef struct {                        //!< 内部输出参数传递结构体
 #if defined(SDB_SYS_HAVE_STDERR)
     int errnum;                         //!< 错误码
 #endif
-    const char *format;                 //!< 格式化字符串
+    const char *fmt;                 //!< 格式化字符串
     va_list ap;                         //!< 参数列表结构体指针
     sdb_bio_context_t *ctx;             //!< 调试上下文结构体
-} internal_param_t;
+} output_param_t;
 
-typedef struct {
+typedef struct {                        //!< 内部输入参数传递结构体
     const sdb_config_t *cfg;            //!< 配置结构体
     int flag;                           //!< 输入类型标记
     char *buf;                          //!< 传入缓存
@@ -21,6 +21,14 @@ typedef struct {
     int num;                            //!< 输出数值
     int *pnum;                          //!< 输出数值指针
 } input_param_t;
+
+typedef struct {                        //!< 内部数据导出参数传递结构体
+    int opt;                            //!< 数据导出控制选项, sdb_option_t
+    unsigned char *data;                //!< 数据
+    size_t len;                         //!< 数据长度
+    void *addr;                         //!< 数据地址
+    sdb_bio_context_t *ctx;             //!< 调试上下文结构体
+} dump_param_t;
 
 #ifdef __cplusplus
 extern "C" {
@@ -52,13 +60,13 @@ int bio_input(const sdb_config_t *cfg,
  * \param       file        __FILE__
  * \param       func        __func__
  * \param       line        __LINE__
- * \param       format      格式化输出
+ * \param       fmt      格式化输出
  * \param       ap          va_list
  * \return      0:Success; <0:Error
  */
 int sdb_output_v(const sdb_config_t *cfg, int flag,
         const char *file, const char *func, int line,
-        const char *format, va_list ap);
+        const char *fmt, va_list ap);
 #ifdef __cplusplus
 }
 #endif

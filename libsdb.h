@@ -13,16 +13,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef enum {                                              //!< 调试选项定义
-    SDB_IO                  = (1 << 0),                     //!< 调试使能
+typedef enum {                          //!< 调试选项定义
+    SDB_IO                  = (1 << 0), //!< 调试使能
 
-    SDB_OPT_DUMP_OFS        = 4,                            //!< 数据导出控制偏移
-    SDB_OPT_DUMP_NONUM      = (0x01 << SDB_OPT_DUMP_OFS),   //!< 不输出计数或地址
-    SDB_OPT_DUMP_NOHEX      = (0x02 << SDB_OPT_DUMP_OFS),   //!< 不输出16进制
-    SDB_OPT_DUMP_NOCHAR     = (0x03 << SDB_OPT_DUMP_OFS),   //!< 不输出字符
-    SDB_OPT_DUMP_SEGADD16   = (0x04 << SDB_OPT_DUMP_OFS),   //!< 每行增加16字节
-    SDB_OPT_DUMP_SEGADD32   = (0x05 << SDB_OPT_DUMP_OFS),   //!< 每行增加32字节
-    SDB_OPT_DUMP            = (0x0f << SDB_OPT_DUMP_OFS),   //!< 数据导出控制位与
+    SDB_DUMP_NONUM          = (1 << 1), //!< 不输出计数或地址
+    SDB_DUMP_NOHEX          = (1 << 2), //!< 不输出16进制
+    SDB_DUMP_NOCHAR         = (1 << 3), //!< 不输出字符
+    SDB_DUMP_SEGADD16       = (1 << 4), //!< 每行增加16字节
+    SDB_DUMP_SEGADD32       = (1 << 5), //!< 每行增加32字节
 } sdb_option_t;
 
 typedef enum {                                              //!< 输出标记定义
@@ -55,6 +53,7 @@ typedef enum {                          //!< 返回值定义
 
 typedef struct sdb_config_t sdb_config_t;
 typedef struct sdb_bio_context_t sdb_bio_context_t;
+typedef struct sdb_item_t sdb_item_t;
 /**
  * \brief       输出接口函数类型
  * \param       ctx         调试上下文结构体
@@ -81,9 +80,14 @@ struct sdb_bio_context_t {              //!< 调试上下文结构体
     int flag;                           //!< 输出标记定义, sdb_flag_t
     const char *file;                   //!< 文件名
     const char *func;                   //!< 函数名
-    int line;                           //!< 行号
-    int length;                         //!< 缓存数据长度
-    char *buffer;                       //!< 缓存, size:SDB_CONF_BUFFER_SIZE
+    size_t line;                        //!< 行号
+    char *buf;                          //!< 缓存, size:SDB_CONF_BUFFER_SIZE
+    int len;                            //!< 缓存数据长度
+};
+struct sdb_item_t {                     //!< 调试菜单项目结构体
+    char *info;                         //!< 项目显示信息
+    void *param;                        //!< 参数
+    int (*func)(void *);                //!< 函数
 };
 
 #ifdef __cplusplus
@@ -99,12 +103,13 @@ extern const sdb_config_t sdb_cfg_std;
  * \param       file        __FILE__
  * \param       func        __func__
  * \param       line        __LINE__
- * \param       format      格式化输出
+ * \param       fmt         格式化输出
  * \param       ...         不定参数
  * \return      0:Success; <0:Error
  */
 int sdb_output(const sdb_config_t *cfg, int flag,
-        const char *file, const char *func, int line, const char *format, ...);
+        const char *file, const char *func, size_t line,
+        const char *fmt, ...);
 
 /**
  * \brief       调试输入控制
@@ -113,38 +118,43 @@ int sdb_output(const sdb_config_t *cfg, int flag,
  * \param       file        __FILE__
  * \param       func        __func__
  * \param       line        __LINE__
- * \param       buf         SDB_FLG_T_INPUT_STR: 输出缓存
+ * \param       buf         SDB_FLG_T_INPUT_STR: 输出缓存，可以为NULL
  *                          SDB_FLG_T_INPUT_NUM: 不使用
  * \param       bufsize     SDB_FLG_T_INPUT_STR: 输出缓存大小
  *                          SDB_FLG_T_INPUT_NUM: 不使用
  * \param       pnum        SDB_FLG_T_INPUT_STR: 输出长度
  *                          SDB_FLG_T_INPUT_NUM: 数值
- * \param       format      格式化输出
+ *                          可以为NULL
+ * \param       fmt         格式化输出
  * \param       ...         不定参数
- * \return      num != NULL:  0:Success <0:Error;
- *              num == NULL:  >=0:输入的数值 <0:Error;
+ * \return      SDB_FLG_T_INPUT_STR:    0:Success; <0:Error
+ *              SDB_FLG_T_INPUT_NUM:    ~:输入的数值 sdb_ret_t:Error;
  */
 int sdb_input(const sdb_config_t *cfg, int flag,
-        const char *file, const char *func, int line,
-        char *buf, size_t bufsize, int *pnum, const char *format, ...);
+        const char *file, const char *func, size_t line,
+        char *buf, size_t bufsize, int *pnum, const char *fmt, ...);
 
 /**
  * \brief       数据导出控制
- * \param       opt         输出控制, SDB_OPTION_T
- * \param       mode        显示模式, SDB_MODE_T
+ * \param       cfg         配置结构体
+ * \param       opt         数据导出控制选项, sdb_option_t
  * \param       file        __FILE__
  * \param       func        __func__
  * \param       line        __LINE__
  * \param       buf         数据
  * \param       len         数据长度
  * \param       addr        地址
- * \param       format      格式化输出
+ * \param       fmt         格式化输出
  * \param       ...         不定参数
  * \return      0:Success; <0:Error
  */
-int sdb_dump(size_t opt, size_t mode,
+int sdb_dump(const sdb_config_t *cfg, int opt,
         const char *file, const char *func, size_t line,
-        void *buf, size_t len, void *addr, const char *format, ...);
+        void *data, size_t len, void *addr, const char *fmt, ...);
+
+int sdb_menu(const sdb_config_t *cfg,
+        const char *file, const char *func, size_t line,
+        sdb_item_t *list, size_t num);
 
 /**
  * \brief       内联空实现
@@ -173,16 +183,16 @@ int sdb_nop(void);
  * \block:      Output
  * @{ */
 #ifdef SDB_OUT
-#undef SDB_OUT
+#undef SDB_OUT              //!< bare
 #endif
 #ifdef SDB_OUT_I
-#undef SDB_OUT_I
+#undef SDB_OUT_I            //!< send Information
 #endif
 #ifdef SDB_OUT_W
-#undef SDB_OUT_W
+#undef SDB_OUT_W            //!< send Warning
 #endif
 #ifdef SDB_OUT_E
-#undef SDB_OUT_E
+#undef SDB_OUT_E            //!< send Error
 #endif
 
 #if defined(SDB_ENABLE)
@@ -209,16 +219,16 @@ int sdb_nop(void);
  * \block:      Input
  * @{ */
 #ifdef SDB_IN_N
-#undef SDB_IN_N
+#undef SDB_IN_N             //!< get Number
 #endif
 #ifdef SDB_IN_S
-#undef SDB_IN_S
+#undef SDB_IN_S             //!< get String
 #endif
-#ifdef SDB_IN_NT
-#undef SDB_IN_NT
+#ifdef SDB_IN_NI
+#undef SDB_IN_NI            //!< get Number, with Information
 #endif
-#ifdef SDB_IN_ST
-#undef SDB_IN_ST
+#ifdef SDB_IN_SI
+#undef SDB_IN_SI            //!< get String, with Information
 #endif
 
 #if defined(SDB_ENABLE)
@@ -230,82 +240,69 @@ int sdb_nop(void);
             SDB_FLG_T_INPUT_STR,\
             __FILE__, __func__, __LINE__,\
             __buf, __psize, __pnum, NULL); })
-#define SDB_IN_NT(__pnum, ...)                  ({ sdb_input(__sdb_cfg,\
+#define SDB_IN_NI(__pnum, ...)                  ({ sdb_input(__sdb_cfg,\
             SDB_FLG_T_INPUT_NUM,\
             __FILE__, __func__, __LINE__,\
             NULL, 0, __pnum, __VA_ARGS__); })
-#define SDB_IN_ST(__buf, __psize, __pnum, ...)  ({ sdb_input(__sdb_cfg,\
+#define SDB_IN_SI(__buf, __psize, __pnum, ...)  ({ sdb_input(__sdb_cfg,\
             SDB_FLG_T_INPUT_STR,\
             __FILE__, __func__, __LINE__,\
             __buf, __psize, __pnum, __VA_ARGS__); })
 #else
-#define SDB_IN_N(...)   sdb_nop()
-#define SDB_IN_S(...)   sdb_nop()
-#define SDB_IN_NT(...)  sdb_nop()
-#define SDB_IN_ST(...)  sdb_nop()
+#define SDB_IN_N(...)       sdb_nop()
+#define SDB_IN_S(...)       sdb_nop()
+#define SDB_IN_NI(...)      sdb_nop()
+#define SDB_IN_SI(...)      sdb_nop()
 #endif /* defined(SDB_ENABLE) */
 /** @} */
 /**
  * \block:      Dump
  * @{ */
-#ifdef SDB_DMP_H
-#undef SDB_DMP_H
+#ifdef SDB_DMP
+#undef SDB_DMP              //!< dump in Hex
 #endif
-#ifdef SDB_DMP_HC
-#undef SDB_DMP_HC
+#ifdef SDB_DMP_C
+#undef SDB_DMP_C            //!< dump with SOME Charactors
 #endif
-#ifdef SDB_DMP_HCA
-#undef SDB_DMP_HCA
+#ifdef SDB_DMP_CA
+#undef SDB_DMP_CA           //!< dump, with address and some Charactors
 #endif
-#ifdef SDB_DMP_HT
-#undef SDB_DMP_HT
+#ifdef SDB_DMP_I
+#undef SDB_DMP_I            //!< dump with Information
 #endif
-#ifdef SDB_DMP_HCT
-#undef SDB_DMP_HCT
+#ifdef SDB_DMP_CI
+#undef SDB_DMP_CI           //!< dump with Information and some Charactors
 #endif
-#ifdef SDB_DMP_HCAT
-#undef SDB_DMP_HCAT
+#ifdef SDB_DMP_CAI
+#undef SDB_DMP_CAI          //!< dump with Information, address, and some Charactors
 #endif
 
 #if defined(SDB_ENABLE)
-#define sdb_dmp_h(__sdb_opt, __buf, __len) ({\
-        sdb_dump(__sdb_opt,\
-                SDB_MODE_MARK_DUMP | SDB_MODE_DMP_HEX,\
-                __FILE__, __func__, __LINE__, __buf, __len, NULL, NULL);\
-        })
-#define sdb_dmp_hc(__sdb_opt, __buf, __len) ({\
-        sdb_dump(__sdb_opt,\
-                SDB_MODE_MARK_DUMP | SDB_MODE_DMP_HEX | SDB_MODE_DMP_CHAR,\
-                __FILE__, __func__, __LINE__, __buf, __len, NULL, NULL);\
-        })
-#define sdb_dmp_hca(__sdb_opt, __buf, __len, __addr) ({\
-        sdb_dump(__sdb_opt,\
-                SDB_MODE_MARK_DUMP | SDB_MODE_DMP_HEX | SDB_MODE_DMP_CHAR,\
-                __FILE__, __func__, __LINE__, __buf, __len, __addr, NULL);\
-        })
-#define sdb_dmp_ht(__sdb_opt, __buf, __len, ...) ({\
-        sdb_dump(__sdb_opt,\
-                SDB_MODE_MARK_DUMP | SDB_MODE_DMP_HEX,\
-                __FILE__, __func__, __LINE__, __buf, __len, NULL, __VA_ARGS__);\
-        })
-#define sdb_dmp_hct(__sdb_opt, __buf, __len, ...) ({\
-        sdb_dump(__sdb_opt,\
-                SDB_MODE_MARK_DUMP | SDB_MODE_DMP_HEX | SDB_MODE_DMP_CHAR,\
-                __FILE__, __func__, __LINE__, __buf, __len, NULL, __VA_ARGS__);\
-        })
-#define sdb_dmp_hcat(__sdb_opt, __buf, __len, __addr, ...) ({\
-        sdb_dump(__sdb_opt,\
-                SDB_MODE_MARK_DUMP | SDB_MODE_DMP_HEX | SDB_MODE_DMP_CHAR,\
-                __FILE__, __func__, __LINE__, __buf, __len, __addr,\
-                __VA_ARGS__);\
-        })
+#define SDB_DMP(__buf, __len)                   sdb_dump(__sdb_cfg,\
+        SDB_DUMP_NOCHAR,\
+        __FILE__, __func__, __LINE__, __buf, __len, NULL, NULL);
+#define SDB_DMP_C(__buf, __len)                 sdb_dump(__sdb_cfg,\
+        0,\
+        __FILE__, __func__, __LINE__, __buf, __len, NULL, NULL);
+#define SDB_DMP_CA(__buf, __len, __addr)        sdb_dump(__sdb_cfg,\
+        0,\
+        __FILE__, __func__, __LINE__, __buf, __len, __addr, NULL);
+#define SDB_DMP_I(__buf, __len, ...)            sdb_dump(__sdb_cfg,\
+        SDB_DUMP_NOCHAR,\
+        __FILE__, __func__, __LINE__, __buf, __len, NULL, __VA_ARGS__);
+#define SDB_DMP_CI(__buf, __len, ...)           sdb_dump(__sdb_cfg,\
+        0,\
+        __FILE__, __func__, __LINE__, __buf, __len, NULL, __VA_ARGS__);
+#define SDB_DMP_CAI(__buf, __len, __addr, ...)  sdb_dump(__sdb_cfg,\
+        0,\
+        __FILE__, __func__, __LINE__, __buf, __len, __addr, __VA_ARGS__);
 #else
-#define SDB_DMP_H(...)      sdb_nop()
-#define SDB_DMP_HC(...)     sdb_nop()
-#define SDB_DMP_HCA(...)    sdb_nop()
-#define SDB_DMP_HT(...)     sdb_nop()
-#define SDB_DMP_HCT(...)    sdb_nop()
-#define SDB_DMP_HCAT(...)   sdb_nop()
+#define SDB_DMP(...)        sdb_nop()
+#define SDB_DMP_C(...)      sdb_nop()
+#define SDB_DMP_CA(...)     sdb_nop()
+#define SDB_DMP_I(...)      sdb_nop()
+#define SDB_DMP_CI(...)     sdb_nop()
+#define SDB_DMP_CAI(...)    sdb_nop()
 #endif /* defined(SDB_ENABLE) */
 /** @} */
 /**
@@ -316,7 +313,11 @@ int sdb_nop(void);
 #endif
 
 #if defined(SDB_ENABLE)
-#define SDB_MENU(...)
+#define SDB_MENU(...) {\
+    sdb_item_t __sdb_item_list[] = { __VA_ARGS__ }; \
+    sdb_menu(__sdb_cfg, __FILE__, __func__, __LINE__,\
+            __sdb_item_list, sizeof(__sdb_item_list) / sizeof(sdb_item_t));\
+}
 #else
 #define SDB_MENU(...)
 #endif

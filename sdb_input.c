@@ -66,8 +66,8 @@ static int input_proc(input_param_t *p)
 }
 
 int sdb_input(const sdb_config_t *cfg, int flag,
-        const char *file, const char *func, int line,
-        char *buf, size_t bufsize, int *pnum, const char *format, ...)
+        const char *file, const char *func, size_t line,
+        char *buf, size_t bufsize, int *pnum, const char *fmt, ...)
 {
     int ret;
     va_list ap;
@@ -81,21 +81,21 @@ int sdb_input(const sdb_config_t *cfg, int flag,
     p.num           = 0;
     p.pnum          = pnum;
 
-    if (format) {
-        va_start(ap, format);
-        ret = sdb_output_v(cfg, flag | SDB_FLG_NOWRAP,
-                file, func, line, format, ap);
+    if (fmt) {
+        va_start(ap, fmt);
+        ret = sdb_output_v(cfg, SDB_FLG_LV_INFO | SDB_FLG_NOWRAP,
+                file, func, line, fmt, ap);
         va_end(ap);
         if (ret)
             return ret;
     }
-    if ((ret = sdb_output(cfg, SDB_FLG_NOWRAP | (format ? SDB_FLG_BARE : 0),
-                    file, func, line, " => ")))
+    if ((ret = sdb_output(cfg, flag | SDB_FLG_NOWRAP | (fmt ? SDB_FLG_BARE : 0),
+                    file, func, line, " [>]")))
         return ret;
     if ((ret = input_proc(&p)))
         return ret;
     if ((ret = sdb_output(cfg, SDB_FLG_T_INPUTECHO,
-            file, func, line, "\"%s\"(%d)", p.buf, p.len)))
+            file, func, line, " [\"%s\"(%d)]", p.buf, p.len)))
         return ret;
 
     return p.num;
@@ -103,8 +103,8 @@ int sdb_input(const sdb_config_t *cfg, int flag,
 
 #else
 inline int sdb_input(const sdb_config_t *cfg, int flag,
-        const char *file, const char *func, int line,
-        char *buf, size_t bufsize, int *pnum, const char *format, ...)
+        const char *file, const char *func, size_t line,
+        char *buf, size_t bufsize, int *pnum, const char *fmt, ...)
 {
     return 0;
 }

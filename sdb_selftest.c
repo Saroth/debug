@@ -3,7 +3,7 @@
 
 #include <libsdb.h>
 #ifndef SDB_ENABLE
-// #define SDB_ENABLE
+#define SDB_ENABLE
 #endif
 #include <libsdb.h> // reload
 
@@ -12,7 +12,7 @@
 SDB_CONFIG_LOAD(&sdb_cfg_std);
 
 
-int sdb_color_demo(void)
+int sdb_color_demo(void *p)
 {
     const char *fg[] = {
         "2",
@@ -59,7 +59,7 @@ int sdb_color_demo(void)
     return 0;
 }
 
-int sdb_selftest_output(void)
+int sdb_selftest_output(void *p)
 {
     int ret = 0;
 
@@ -78,7 +78,7 @@ int sdb_selftest_output(void)
     return 0;
 }
 
-int sdb_selftest_output_stderr(void)
+int sdb_selftest_output_stderr(void *p)
 {
     int ret = 0;
 
@@ -100,7 +100,7 @@ int sdb_selftest_output_stderr(void)
     return 0;
 }
 
-int sdb_selftest_input(void)
+int sdb_selftest_input(void *p)
 {
     int ret = 0;
     int num = 0;
@@ -119,17 +119,16 @@ int sdb_selftest_input(void)
     ret = SDB_IN_S(buf, 32, &num);
     SDB_OUT_I("return:%d, Get string:%s(size:%d)", ret, buf, num);
 
-    ret = SDB_IN_NT(&num, "Input a number");
+    ret = SDB_IN_NI(&num, "Input a number");
     SDB_OUT_I("return:%d, Get number:%d", ret, num);
-    ret = SDB_IN_ST(buf, 32, &num, "Input string");
+    ret = SDB_IN_SI(buf, 32, &num, "Input string");
     SDB_OUT_I("return:%d, Get string:%s(size:%d)", ret, buf, num);
     SDB_OUT("\n");
 
     return 0;
 }
 
-#if 0
-int sdb_selftest_dump(void)
+int sdb_selftest_dump(void *p)
 {
     unsigned char buf1[16] = {
         0x00, 0x01, 0x1f, 0x20, 0x7e, 0x7f, 0x80, 0xff,
@@ -182,45 +181,53 @@ int sdb_selftest_dump(void)
     a.f = 6;
     a.g = 7;
 
-    sdb_out_t(DS_SDB_ST, "____DUMP_TEST____");
+    SDB_OUT_I("Dump buf1:");
+    ret = SDB_DMP_C(buf1, sizeof(buf1));
+    SDB_OUT_I("Return: %d", ret);
 
-    sdb_out_i(DS_SDB_ST, "Dump buf2:");
-    ret = sdb_dmp(DS_SDB_ST, buf2, sizeof(buf2));
-    sdb_out(DS_SDB_ST, "\n");
-    sdb_out_i(DS_SDB_ST, "Return: %d", ret);
+    SDB_OUT_I("Dump buf2:");
+    ret = SDB_DMP(buf2, sizeof(buf2));
+    SDB_OUT_I("Return: %d", ret);
 
-    sdb_out_i(DS_SDB_ST, "Dump buf1:");
-    ret = sdb_dmp_hc(DS_SDB_ST, buf1, sizeof(buf1));
-    sdb_out_i(DS_SDB_ST, "Return: %d", ret);
+    SDB_OUT_I("Dump buf3:");
+    ret = SDB_DMP_CA(buf3, sizeof(buf3), &buf3);
+    SDB_OUT_I("Return: %d", ret);
 
-    sdb_out_i(DS_SDB_ST, "Dump buf2:");
-    ret = sdb_dmp_h(DS_SDB_ST, buf2, sizeof(buf2));
-    sdb_out_i(DS_SDB_ST, "Return: %d", ret);
+    SDB_OUT_I("Dump buf4:");
+    ret = SDB_DMP_CA(buf4, sizeof(buf4), (void *)0x2000f0a3);
+    SDB_OUT_I("Return: %d", ret);
 
-    sdb_out_i(DS_SDB_ST, "Dump buf3:");
-    ret = sdb_dmp_hca(DS_SDB_ST, buf3, sizeof(buf3), &buf3);
-    sdb_out_i(DS_SDB_ST, "Return: %d", ret);
+    ret = SDB_DMP_CI(&a, sizeof(a), "Dump structure");
+    SDB_OUT_I("Return: %d", ret);
 
-    sdb_out_i(DS_SDB_ST, "Dump buf4:");
-    ret = sdb_dmp_hca(DS_SDB_ST, buf4, sizeof(buf4), (void *)0x200a3);
-    sdb_out_i(DS_SDB_ST, "Return: %d", ret);
+    ret = SDB_DMP_CAI(buf5, sizeof(buf5), 0, "Dump buf5");
+    SDB_OUT_I("Return: %d", ret);
 
-    ret = sdb_dmp_hct(DS_SDB_ST, &a, sizeof(a), "Dump structure");
-    sdb_out_i(DS_SDB_ST, "Return: %d", ret);
+    ret = SDB_DMP_I("# This is a test.", 0x10000, "Dump string");
+    SDB_OUT_I("Return: %d", ret);
 
-    sdb_out(DS_SDB_ST, "\n");
+    SDB_OUT("\n");
 
     return 0;
 }
-#endif
 
 int sdb_selftest(void *p)
 {
-    // sdb_color_demo();
-    sdb_selftest_output();
-    sdb_selftest_output_stderr();
-    sdb_selftest_input();
-    // sdb_selftest_dump();
+    // sdb_color_demo(NULL);
+    // sdb_selftest_output(NULL);
+    // sdb_selftest_output_stderr(NULL);
+    // sdb_selftest_input(NULL);
+    // sdb_selftest_dump(NULL);
+    SDB_MENU(
+            { "color demo", 0, sdb_color_demo, },
+            { "output", 0, sdb_selftest_output, },
+            { "output err", 0, sdb_selftest_output_stderr, },
+            { "input", 0, sdb_selftest_input, },
+            { "dump", 0, sdb_selftest_dump, },
+            { NULL, 0, sdb_selftest_output, },
+            { "NULL", 0, NULL, },
+            );
+
     return 0;
 }
 

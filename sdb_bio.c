@@ -10,13 +10,11 @@ inline int sdb_nop(void)
 #if defined(SDB_SYS_HAVE_STDIO)
 static void output_std(const sdb_bio_context_t *out)
 {
-    if (!(out->flag & SDB_FLG_BARE)) {
-        printf("%s:%d ", out->file, out->line);
-    }
-    printf("%s", out->buffer);
-    if (!(out->flag & SDB_FLG_NOWRAP)) {
+    if (!(out->flag & SDB_FLG_BARE))
+        printf("%16s:%04d ", out->file, out->line);
+    printf("%s", out->buf);
+    if (!(out->flag & SDB_FLG_NOWRAP))
         printf("\n");
-    }
     fflush(stdout);
 }
 

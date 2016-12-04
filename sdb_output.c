@@ -37,38 +37,37 @@ static void get_color(int flag, const char **head, const char **end)
     else
         *end = NULL;
 }
-static void str_append(internal_param_t *p, const char *str)
+static void str_append(output_param_t *p, const char *str)
 {
     if (str) {
-        strncpy(p->ctx->buffer + p->ctx->length, str,
-                SDB_CONF_BUFFER_SIZE - p->ctx->length);
-        p->ctx->length += strlen(str);
+        strncpy(p->ctx->buf + p->ctx->len, str,
+                SDB_CONF_BUFFER_SIZE - p->ctx->len);
+        p->ctx->len += strlen(str);
     }
 }
 #endif /* defined(SDB_SYS_HAVE_COLOR) */
 
 #if defined(SDB_SYS_HAVE_STDERR)
-static int output_stderr(internal_param_t *p)
+static int output_stderr(output_param_t *p)
 {
     if (p->errnum) {
         int ret;
 
-        p->ctx->buffer[p->ctx->length++] = ' ';
 #if defined(SDB_SYS_HAVE_COLOR)
         const char *head;
         const char *end;
         get_color(SDB_FLG_STDERR, &head, &end);
         str_append(p, head);
 #endif
-        ret = snprintf(p->ctx->buffer + p->ctx->length,
-                SDB_CONF_BUFFER_SIZE - p->ctx->length,
-                "[%s(%d)]", strerror(p->errnum), p->errnum);
+        ret = snprintf(p->ctx->buf + p->ctx->len,
+                SDB_CONF_BUFFER_SIZE - p->ctx->len,
+                " [%s(%d)]", strerror(p->errnum), p->errnum);
         if (ret > SDB_CONF_BUFFER_SIZE) {
             SDB_OUT_W("Output string too long.");
-            ret = SDB_CONF_BUFFER_SIZE - p->ctx->length;
+            ret = SDB_CONF_BUFFER_SIZE - p->ctx->len;
         }
         errno = 0;
-        p->ctx->length += ret;
+        p->ctx->len += ret;
         p->ctx->flag |= SDB_FLG_STDERR;
 #if defined(SDB_SYS_HAVE_COLOR)
         str_append(p, end);
@@ -79,7 +78,7 @@ static int output_stderr(internal_param_t *p)
 }
 #endif /* defined(SDB_SYS_HAVE_STDERR) */
 
-static int output_vprintf(internal_param_t *p)
+static int output_vprintf(output_param_t *p)
 {
     int ret;
 
@@ -89,17 +88,17 @@ static int output_vprintf(internal_param_t *p)
     get_color(p->ctx->flag, &head, &end);
     str_append(p, head);
 #endif
-    ret = vsnprintf(p->ctx->buffer + p->ctx->length,
-            SDB_CONF_BUFFER_SIZE - p->ctx->length, p->format, p->ap);
+    ret = vsnprintf(p->ctx->buf + p->ctx->len,
+            SDB_CONF_BUFFER_SIZE - p->ctx->len, p->fmt, p->ap);
     if (ret > SDB_CONF_BUFFER_SIZE) {
         SDB_OUT_W("Output string too long.");
-        ret = SDB_CONF_BUFFER_SIZE - p->ctx->length;
+        ret = SDB_CONF_BUFFER_SIZE - p->ctx->len;
     }
     else if (ret < 0) {
         SDB_OUT_E("vsnprintf");
         return ret;
     }
-    p->ctx->length += ret;
+    p->ctx->len += ret;
 #if defined(SDB_SYS_HAVE_COLOR)
     str_append(p, end);
 #endif
@@ -107,13 +106,13 @@ static int output_vprintf(internal_param_t *p)
     return 0;
 }
 
-static int output_proc(internal_param_t *p)
+static int output_proc(output_param_t *p)
 {
     int ret = 0;
 
     if ((~p->ctx->cfg->opt) & SDB_IO)
         return 0;
-    if (p->format)
+    if (p->fmt)
         if ((ret = output_vprintf(p)) < 0)
             return ret;
 #if defined(SDB_SYS_HAVE_STDERR)
@@ -126,17 +125,17 @@ static int output_proc(internal_param_t *p)
 
 int sdb_output_v(const sdb_config_t *cfg, int flag,
         const char *file, const char *func, int line,
-        const char *format, va_list ap)
+        const char *fmt, va_list ap)
 {
     int ret;
-    internal_param_t p;
+    output_param_t p;
     sdb_bio_context_t ctx;
     char buf[SDB_CONF_BUFFER_SIZE];
 
 #if defined(SDB_SYS_HAVE_STDERR)
     p.errnum        = errno;
 #endif
-    p.format        = format;
+    p.fmt           = fmt;
     p.ctx           = &ctx;
     va_copy(p.ap, ap);
     ctx.cfg         = cfg;
@@ -144,34 +143,34 @@ int sdb_output_v(const sdb_config_t *cfg, int flag,
     ctx.file        = file;
     ctx.func        = func;
     ctx.line        = line;
-    ctx.length      = 0;
-    ctx.buffer      = buf;
+    ctx.buf         = buf;
+    ctx.len         = 0;
 
     return output_proc(&p);
 }
 
 int sdb_output(const sdb_config_t *cfg, int flag,
-        const char *file, const char *func, int line, const char *format, ...)
+        const char *file, const char *func, size_t line, const char *fmt, ...)
 {
     int ret;
-    internal_param_t p;
+    output_param_t p;
     sdb_bio_context_t ctx;
     char buf[SDB_CONF_BUFFER_SIZE];
 
 #if defined(SDB_SYS_HAVE_STDERR)
     p.errnum        = errno;
 #endif
-    p.format        = format;
+    p.fmt           = fmt;
     p.ctx           = &ctx;
     ctx.cfg         = cfg;
     ctx.flag        = flag;
     ctx.file        = file;
     ctx.func        = func;
     ctx.line        = line;
-    ctx.length      = 0;
-    ctx.buffer      = buf;
+    ctx.buf         = buf;
+    ctx.len         = 0;
 
-    va_start(p.ap, format);
+    va_start(p.ap, fmt);
     ret = output_proc(&p);
     va_end(p.ap);
 
@@ -180,7 +179,7 @@ int sdb_output(const sdb_config_t *cfg, int flag,
 
 #else
 inline int sdb_output(const sdb_config_t *cfg, int flag,
-        const char *file, const char *func, int line, const char *format, ...)
+        const char *file, const char *func, size_t line, const char *fmt, ...)
 {
     return 0;
 }
