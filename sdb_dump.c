@@ -107,15 +107,11 @@ int sdb_dump(const sdb_config_t *cfg, int opt,
     }
     if (fmt) {
         va_start(ap, fmt);
-        ret = sdb_output_v(cfg, SDB_FLG_T_DUMP | SDB_FLG_NOWRAP,
+        sdb_output_v(cfg, SDB_FLG_LV_INFO | SDB_FLG_T_DUMP | SDB_FLG_NOWRAP,
                 file, func, line, fmt, ap);
         va_end(ap);
-        if (ret)
-            return ret;
-        if ((ret = sdb_output(cfg,
-                        SDB_FLG_T_DUMP | SDB_FLG_BARE,
-                        file, func, line, " [len:%d]", p.len)))
-            return ret;
+        sdb_output(cfg, SDB_FLG_LV_INFO | SDB_FLG_T_DUMP | SDB_FLG_BARE,
+                file, func, line, " [len:%d]", p.len);
     }
     return dump_proc(&p);
 }

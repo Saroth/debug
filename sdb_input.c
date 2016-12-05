@@ -83,20 +83,16 @@ int sdb_input(const sdb_config_t *cfg, int flag,
 
     if (fmt) {
         va_start(ap, fmt);
-        ret = sdb_output_v(cfg, SDB_FLG_LV_INFO | SDB_FLG_NOWRAP,
+        sdb_output_v(cfg, SDB_FLG_LV_INFO | SDB_FLG_NOWRAP,
                 file, func, line, fmt, ap);
         va_end(ap);
-        if (ret)
-            return ret;
     }
-    if ((ret = sdb_output(cfg, flag | SDB_FLG_NOWRAP | (fmt ? SDB_FLG_BARE : 0),
-                    file, func, line, " [>]")))
-        return ret;
+    sdb_output(cfg, SDB_FLG_LV_INFO | flag | SDB_FLG_NOWRAP
+                    | (fmt ? SDB_FLG_BARE : 0), file, func, line, " [>]");
     if ((ret = input_proc(&p)))
         return ret;
-    if ((ret = sdb_output(cfg, SDB_FLG_T_INPUTECHO,
-            file, func, line, " [\"%s\"(%d)]", p.buf, p.len)))
-        return ret;
+    sdb_output(cfg, SDB_FLG_LV_INFO | SDB_FLG_T_INPUTECHO,
+            file, func, line, " [\"%s\"(%d)]", p.buf, p.len);
 
     return p.num;
 }
