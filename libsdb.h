@@ -13,6 +13,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define __sdb_cfg SDB_SET_CONFIG        //!< 调试配置宏
+
 typedef enum {                          //!< 调试选项定义
     SDB_IO                  = (1 << 0), //!< 调试使能
 
@@ -169,15 +171,13 @@ int sdb_nop(void);
 /**
  * \block:      Config
  * @{ */
-#ifdef SDB_CONFIG_LOAD
-#undef SDB_CONFIG_LOAD
+#ifdef SDB_SET_CONFIG
+#undef SDB_SET_CONFIG
 #endif
-
-#if defined(SDB_ENABLE)
-#define SDB_CONFIG_LOAD(p) static const sdb_config_t *__sdb_cfg = p;
-#else
-#define SDB_CONFIG_LOAD(p)
-#endif
+/*
+ * \brief:  设置调试配置, 配置结构体为sdb_config_t
+ * \usage:  #define SDB_SET_CONFIG (&<my_config>)
+ */
 /** @} */
 /**
  * \block:      Output

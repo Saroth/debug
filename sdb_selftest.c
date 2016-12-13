@@ -1,16 +1,13 @@
 #include <string.h>
 #include <errno.h>
 
-#include <libsdb.h>
 #ifndef SDB_ENABLE
 #define SDB_ENABLE
 #endif
-#include <libsdb.h> // reload
+#include <libsdb.h>
+#define SDB_SET_CONFIG (&sdb_cfg_std)
 
 #if defined(SDB_MDL_SELFTEST)
-
-SDB_CONFIG_LOAD(&sdb_cfg_std);
-
 
 int sdb_color_demo(void *p)
 {
@@ -194,7 +191,7 @@ int sdb_selftest_dump(void *p)
     SDB_OUT_I("Return: %d", ret);
 
     SDB_OUT_I("Dump buf4:");
-    ret = SDB_DMP_CA(buf4, sizeof(buf4), (void *)0x2000f0a3);
+    ret = SDB_DMP_CA(buf4, sizeof(buf4), (void *)0x0200f0a3);
     SDB_OUT_I("Return: %d", ret);
 
     ret = SDB_DMP_CI(&a, sizeof(a), "Dump structure");

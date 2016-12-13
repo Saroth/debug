@@ -11,11 +11,11 @@ int sdb_menu(const sdb_config_t *cfg,
 
     while (1) {
         sdb_output(cfg, SDB_FLG_LV_INFO, file, func, line,
-                " ######## (%d)", num);
+                "######## (%d)", num);
         for (i = 0; i < num; i++)
             sdb_output(cfg, SDB_FLG_LV_INFO, file, func, line,
-                    " #%3d.%s", i + 1, (list + i)->info);
-        sdb_output(cfg, SDB_FLG_LV_INFO, file, func, line, " #  0.Return");
+                    "#%3d.%s", i + 1, (list + i)->info);
+        sdb_output(cfg, SDB_FLG_LV_INFO, file, func, line, "#  0.Return");
         ret = sdb_input(cfg, SDB_FLG_T_INPUT_NUM, file, func, line,
                 NULL, 0, NULL, NULL);
         if (ret == 0)

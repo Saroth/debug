@@ -56,7 +56,7 @@
 /**
  * 内部输出缓存大小
  */
-#define SDB_CONF_BUFFER_SIZE    320
+#define SDB_CONF_BUFFER_SIZE    288
 
 /*
  * 内部获取数值的输入缓存
@@ -79,8 +79,6 @@
 #define SDB_MARK_GETNUM         "I.n "      //!< 获取数值输入标记
 #define SDB_MARK_GETSTR         "I.s "      //!< 获取字符串输入标记
 #define SDB_MARK_ECHO           "I.e "      //!< 返回数值输出标记
-#define SDB_MARK_ENTRY          ">>> "      //!< 入口标记
-#define SDB_MARK_EXIT           "<<< "      //!< 出口标记
 #define SDB_MARK_DUMP           "  | "      //!< 导出标记
 
 /** @} */

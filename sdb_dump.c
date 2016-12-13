@@ -2,7 +2,7 @@
 
 #if defined(SDB_ENABLE) && defined(SDB_MDL_DUMP_ENABLE)
 
-#define __sdb_cfg p.ctx->cfg
+#define SDB_SET_CONFIG p.ctx->cfg
 
 static int dump_line(dump_param_t *p, size_t ofs, unsigned char sec)
 {
@@ -21,7 +21,7 @@ static int dump_line(dump_param_t *p, size_t ofs, unsigned char sec)
         end = p->len + head - ofs;
 
     if (~opt & SDB_DUMP_NONUM)
-        buf += sprintf(buf, "%04x:", addr + head);
+        buf += sprintf(buf, (p->addr ? "%08x:" : "%04x:"), addr + head);
     if (~opt & SDB_DUMP_NOHEX)
         for (i = head; i < head + sec; i++) {
             if ((addr + i) % 16 == 0)
@@ -56,7 +56,9 @@ static int dump_proc(dump_param_t *p)
     int ret;
     size_t count = 0;
     unsigned char seg = 16;
+    unsigned char buf[SDB_CONF_BUFFER_SIZE];
 
+    p->ctx->buf = buf;
     if (p->opt & SDB_DUMP_SEGADD16)
         seg += 16;
     if (p->opt & SDB_DUMP_SEGADD32)
@@ -78,7 +80,6 @@ int sdb_dump(const sdb_config_t *cfg, int opt,
     va_list ap;
     dump_param_t p;
     sdb_bio_context_t ctx;
-    unsigned char buf[SDB_CONF_BUFFER_SIZE];
 
     p.opt           = opt;
     p.data          = data;
@@ -86,13 +87,12 @@ int sdb_dump(const sdb_config_t *cfg, int opt,
     p.addr          = addr;
     p.ctx           = &ctx;
     ctx.cfg         = cfg;
-    ctx.flag        = SDB_FLG_T_DUMP;
+    ctx.flag        = SDB_FLG_LV_INFO | SDB_FLG_T_DUMP;
     ctx.file        = file;
     ctx.func        = func;
     ctx.line        = line;
-    ctx.buf         = buf;
 
-    if (buf == NULL)
+    if (data == NULL)
         return SDB_RET_PARAM_ERR;
     if (len < 0 || len > 0xFFFF) {
         SDB_OUT_W("Data length too large! len:%d(%#x)", len, len);
@@ -107,10 +107,10 @@ int sdb_dump(const sdb_config_t *cfg, int opt,
     }
     if (fmt) {
         va_start(ap, fmt);
-        sdb_output_v(cfg, SDB_FLG_LV_INFO | SDB_FLG_T_DUMP | SDB_FLG_NOWRAP,
+        sdb_output_v(cfg, ctx.flag | SDB_FLG_NOWRAP,
                 file, func, line, fmt, ap);
         va_end(ap);
-        sdb_output(cfg, SDB_FLG_LV_INFO | SDB_FLG_T_DUMP | SDB_FLG_BARE,
+        sdb_output(cfg, ctx.flag | SDB_FLG_BARE,
                 file, func, line, " [len:%d]", p.len);
     }
     return dump_proc(&p);

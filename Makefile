@@ -11,7 +11,7 @@ libsdb.a: $(OBJ_FILE)
 %.o: %.c $(HEAD_FILE)
 	$(CC) -c -o $@ $<
 
-sdb_selftest: $(OBJ_FILE) sdb_selftest.c
+sdb_selftest: sdb_selftest.c libsdb.a
 	$(CC) $(CFLAGS) -DSDB_MDL_SELFTEST -I. -c -o sdb_selftest.o sdb_selftest.c
 	$(CC) $(CFLAGS) -L. -o $@ sdb_selftest.o -lsdb
 

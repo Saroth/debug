@@ -2,7 +2,7 @@
 
 #if defined(SDB_ENABLE) && defined(SDB_MDL_INPUT_ENABLE)
 
-#define __sdb_cfg p->cfg
+#define SDB_SET_CONFIG p->cfg
 
 static int input_getchar(input_param_t *p)
 {
@@ -83,16 +83,17 @@ int sdb_input(const sdb_config_t *cfg, int flag,
 
     if (fmt) {
         va_start(ap, fmt);
-        sdb_output_v(cfg, SDB_FLG_LV_INFO | SDB_FLG_NOWRAP,
+        sdb_output_v(cfg, SDB_FLG_LV_INFO | flag | SDB_FLG_NOWRAP,
                 file, func, line, fmt, ap);
         va_end(ap);
     }
-    sdb_output(cfg, SDB_FLG_LV_INFO | flag | SDB_FLG_NOWRAP
-                    | (fmt ? SDB_FLG_BARE : 0), file, func, line, " [>]");
+    else
+        sdb_output(cfg, SDB_FLG_LV_INFO | flag | SDB_FLG_NOWRAP
+                | (fmt ? SDB_FLG_BARE : 0), file, func, line, "[>]");
     if ((ret = input_proc(&p)))
         return ret;
     sdb_output(cfg, SDB_FLG_LV_INFO | SDB_FLG_T_INPUTECHO,
-            file, func, line, " [\"%s\"(%d)]", p.buf, p.len);
+            file, func, line, "[\"%s\"(%d)]", p.buf, p.len);
 
     return p.num;
 }

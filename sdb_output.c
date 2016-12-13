@@ -2,7 +2,7 @@
 
 #if defined(SDB_ENABLE)
 
-#define __sdb_cfg p->ctx->cfg
+#define SDB_SET_CONFIG p->ctx->cfg
 
 #if defined(SDB_SYS_HAVE_COLOR)
 static void get_color(int flag, const char **head, const char **end)
