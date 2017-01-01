@@ -1,5 +1,19 @@
 #include "sdb_config.h"
 
+char *gstack_head = 0;
+
+void sdb_set_stack(void)
+{
+    char i;
+    gstack_head = &i;
+}
+
+int sdb_get_stack(void)
+{
+    char i;
+    return (gstack_head - &i);
+}
+
 inline int sdb_nop(void)
 {
     return 0;
@@ -8,66 +22,48 @@ inline int sdb_nop(void)
 #if defined(SDB_ENABLE)
 
 #if defined(SDB_SYS_HAVE_STDIO)
-static void output_std(const sdb_bio_context_t *out)
+static void output_std(void *ptr, sdb_flag_t flag, const char *buf, size_t len)
 {
-    char *flag;
-
-    if ((out->flag & SDB_FLG_LV) == SDB_FLG_LV_ERR)
-        flag = SDB_MARK_ERR;
-    else if ((out->flag & SDB_FLG_LV) == SDB_FLG_LV_WARN)
-        flag = SDB_MARK_WARN;
-    else if ((out->flag & SDB_FLG_LV) == SDB_FLG_LV_INFO) {
-        if ((out->flag & SDB_FLG_T) == SDB_FLG_T_INPUT_NUM)
-            flag = SDB_MARK_GETNUM;
-        else if ((out->flag & SDB_FLG_T) == SDB_FLG_T_INPUT_STR)
-            flag = SDB_MARK_GETSTR;
-        else if ((out->flag & SDB_FLG_T) == SDB_FLG_T_INPUTECHO)
-            flag = SDB_MARK_ECHO;
-        else if ((out->flag & SDB_FLG_T) == SDB_FLG_T_DUMP)
-            flag = SDB_MARK_DUMP;
-        else
-            flag = SDB_MARK_INFO;
+    if (flag & SDB_DATA_PEND) {
+        printf("[%04d]", sdb_get_stack());
     }
-    else
-        flag = SDB_MARK_NONE;
-
-    if (!(out->flag & SDB_FLG_BARE))
-        printf("%16s:%04d %s", out->file, out->line, flag);
-    printf("%s", out->buf);
-    if (!(out->flag & SDB_FLG_NOWRAP))
-        printf("\n");
+    
+    char b[64];
+    memmove(b, buf, len);
+    b[len] = 0;
+    printf("%s", b);
     fflush(stdout);
 }
 
-static int input_std(char *buf, size_t bufsize, size_t *outlen)
+static int input_std(void *ptr, char *buf, size_t size, size_t *len)
 {
-    int ch = 0;
+    int c = 0;
     int i = 0;
 
     while (buf) {
-        if ((ch = getchar()) == EOF)
+        if ((c = getchar()) == EOF)
             break;
-        if ((buf[i++] = ch) == '\n' || (bufsize > 0 && i >= bufsize))
+        if ((buf[i++] = c) == '\n' || (size > 0 && i >= size))
             break;
     }
-    if (outlen)
-        *outlen = i;
+    if (len)
+        *len = i;
 
     return 0;
 }
 
 const sdb_config_t sdb_cfg_std = {
-    .opt        = SDB_IO,
-    .input      = input_std,
-    .output     = output_std,
+    .opt        = 0,
+    .put        = output_std,
+    .get        = input_std,
     .ptr        = NULL,
 };
 #endif /* defined(SDB_SYS_HAVE_STDIO) */
 
 int bio_output(sdb_bio_context_t *ctx)
 {
-    if (ctx->cfg && ctx->cfg->output)
-        ctx->cfg->output(ctx);
+    if (ctx->cfg && ctx->cfg->put)
+        // ctx->cfg->put(ctx->cfg->ptr, );
 
     return 0;
 }
@@ -77,8 +73,8 @@ int bio_input(const sdb_config_t *cfg,
 {
     if (buf == NULL)
         return SDB_RET_PARAM_ERR;
-    if (cfg && cfg->input)
-        return cfg->input(buf, bufsize, outlen);
+    if (cfg && cfg->get)
+        return cfg->get(cfg->ptr, buf, bufsize, outlen);
 
     return 0;
 }

@@ -1,6 +1,6 @@
 # CC = colorg++
-CFLAGS = -Wall -O2
-OBJ_FILE = sdb_bio.o sdb_output.o sdb_input.o sdb_dump.o sdb_menu.o
+CFLAGS = -Wall -Os -std=c89
+OBJ_FILE = sdb_printf.o sdb_bio.o sdb_output.o sdb_input.o sdb_dump.o sdb_menu.o
 HEAD_FILE = libsdb.h sdb_config.h sdb_internal.h
 
 all: libsdb.a sdb_selftest

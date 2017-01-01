@@ -1,6 +1,6 @@
 #include "sdb_config.h"
 
-#if defined(SDB_ENABLE) && defined(SDB_MDL_DUMP_ENABLE)
+#if 0 //defined(SDB_ENABLE) && defined(SDB_MDL_DUMP_ENABLE)
 
 #define SDB_SET_CONFIG p.ctx->cfg
 

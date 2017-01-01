@@ -48,6 +48,13 @@
  * 启用标准错误信息提示
  */
 #define SDB_SYS_HAVE_STDERR
+
+#define SDB_SYS_SIZE_T_SUPPORT
+
+#define SDB_SYS_LONG_SUPPORT
+
+#define SDB_SYS_LONG_LONG_SUPPORT
+
 /** @} */
 
 /**
@@ -96,9 +103,6 @@
  */
 #define SDB_VERSION_NUMBER      0x00020000
 
-#if defined(SDB_SYS_HAVE_TIME)
-#include <time.h>
-#endif
 #include <string.h>
 #include <stdarg.h>
 #include <stdint.h>
