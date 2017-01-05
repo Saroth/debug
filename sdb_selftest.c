@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <string.h>
 #include <errno.h>
 
@@ -10,10 +11,10 @@
 #if defined(SDB_MDL_SELFTEST)
 
 #include <stdarg.h>
-typedef int (* put_t)(void *p, const char *buf, size_t len);
+typedef int (* put_t)(void *p, const char *buf, unsigned int len);
 extern int vxprint(void *ptr, put_t put, const char *fmt, va_list va);
 
-int _put(void *p, const char *buf, size_t len)
+int _put(void *p, const char *buf, unsigned int len)
 {
     printf("[%04d]  ", sdb_get_stack());
     char b[64];
@@ -175,7 +176,6 @@ int sdb_selftest_put_stderr(void *p)
     return 0;
 }
 
-#if 0
 int sdb_selftest_get(void *p)
 {
     int ret = 0;
@@ -204,6 +204,7 @@ int sdb_selftest_get(void *p)
     return 0;
 }
 
+#if 0
 int sdb_selftest_dump(void *p)
 {
     unsigned char buf1[16] = {
@@ -292,11 +293,24 @@ int sdb_selftest(void *p)
 {
     sdb_set_stack();
     sdb_selftest_printf(NULL);
+    printf("Max stack: %d\n", sdb_get_stack_max());
+
     /* sdb_color_demo(NULL); */
+    sdb_set_stack();
     sdb_selftest_put(NULL);
+    printf("Max stack: %d\n", sdb_get_stack_max());
+
+    sdb_set_stack();
     sdb_selftest_put_stderr(NULL);
-    /* sdb_selftest_get(NULL); */
+    printf("Max stack: %d\n", sdb_get_stack_max());
+
+    sdb_set_stack();
+    sdb_selftest_get(NULL);
+    printf("Max stack: %d\n", sdb_get_stack_max());
+
+    sdb_set_stack();
     /* sdb_selftest_dump(NULL); */
+    printf("Max stack: %d\n", sdb_get_stack_max());
 
     /* SDB_MENU( */
             /* { "color demo", 0, sdb_color_demo, }, */

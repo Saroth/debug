@@ -3,8 +3,8 @@
 #if defined(SDB_ENABLE) && defined(SDB_MDL_MENU_ENABLE)
 
 int sdb_menu(const sdb_config_t *cfg,
-        const char *file, const char *func, size_t line,
-        sdb_item_t *list, size_t num)
+        const char *file, const char *func, unsigned int line,
+        sdb_item_t *list, unsigned int num)
 {
     int i;
     int ret;
@@ -30,8 +30,8 @@ int sdb_menu(const sdb_config_t *cfg,
 
 #else
 inline int sdb_menu(const sdb_config_t *cfg,
-        const char *file, const char *func, size_t line,
-        sdb_item_t *list, size_t num)
+        const char *file, const char *func, unsigned int line,
+        sdb_item_t *list, unsigned int num)
 {
     return 0;
 }

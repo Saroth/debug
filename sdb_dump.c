@@ -4,7 +4,7 @@
 
 #define SDB_SET_CONFIG p.ctx->cfg
 
-static int dump_line(dump_param_t *p, size_t ofs, unsigned char sec)
+static int dump_line(dump_param_t *p, unsigned int ofs, unsigned char sec)
 {
     int ret;
     int i;
@@ -12,7 +12,7 @@ static int dump_line(dump_param_t *p, size_t ofs, unsigned char sec)
     int end = sec;
     int opt = p->opt & p->ctx->cfg->opt;
     unsigned char *data = p->data + ofs;
-    size_t addr = (size_t)p->addr + ofs;
+    unsigned int addr = (unsigned int)p->addr + ofs;
     char *buf = p->ctx->buf;
 
     if (addr % sec)
@@ -54,7 +54,7 @@ static int dump_line(dump_param_t *p, size_t ofs, unsigned char sec)
 static int dump_proc(dump_param_t *p)
 {
     int ret;
-    size_t count = 0;
+    unsigned int count = 0;
     unsigned char seg = 16;
     unsigned char buf[SDB_CONF_BUFFER_SIZE];
 
@@ -73,8 +73,8 @@ static int dump_proc(dump_param_t *p)
 }
 
 int sdb_dump(const sdb_config_t *cfg, int opt,
-        const char *file, const char *func, size_t line,
-        void *data, size_t len, void *addr, const char *fmt, ...)
+        const char *file, const char *func, unsigned int line,
+        void *data, unsigned int len, void *addr, const char *fmt, ...)
 {
     int ret = 0;
     va_list ap;
@@ -118,8 +118,8 @@ int sdb_dump(const sdb_config_t *cfg, int opt,
 
 #else
 inline int sdb_dump(const sdb_config_t *cfg, int opt,
-        const char *file, const char *func, size_t line,
-        void *data, size_t len, void *addr, const char *fmt, ...)
+        const char *file, const char *func, unsigned int line,
+        void *data, unsigned int len, void *addr, const char *fmt, ...)
 {
     return 0;
 }

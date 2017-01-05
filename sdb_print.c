@@ -1,5 +1,8 @@
-#include <stdarg.h>
 #include "sdb_config.h"
+
+#if defined(SDB_SYS_SUPPORT_SIZE_T)
+#include <stddef.h>
+#endif
 
 #if defined(SDB_ENABLE)
 
@@ -98,8 +101,12 @@ static unsigned int s2u(const char **str, int base)
         while (ctx->fmt.width-- > 0) PUTC(' ');\
         return 0;\
     }
+#if defined(SDB_SYS_SUPPORT_LONG_LONG)
 _U2S(ulli2s, unsigned long long int);
+#endif
+#if defined(SDB_SYS_SUPPORT_LONG)
 _U2S(uli2s, unsigned long int);
+#endif
 _U2S(ui2s, unsigned int);
 
 static int put_u2s(print_context_t *ctx, va_list va)
@@ -123,8 +130,12 @@ static int put_u2s(print_context_t *ctx, va_list va)
         if (num < 0) { ctx->fmt.flag |= (SIGN | NEGATIVE_SIGN); num = -num; }\
         u##__name(ctx, num);\
     }
+#if defined(SDB_SYS_SUPPORT_LONG_LONG)
 _I2S(lli2s, long long int);
+#endif
+#if defined(SDB_SYS_SUPPORT_LONG)
 _I2S(li2s, long int);
+#endif
 _I2S(i2s, int);
 
 static int put_i2s(print_context_t *ctx, va_list va)

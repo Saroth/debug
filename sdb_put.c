@@ -1,9 +1,8 @@
 #include "sdb_config.h"
 
-#include <stdarg.h>
 #if defined(SDB_SYS_SUPPORT_STDERR)
-#include "errno.h"
-#include "string.h"
+#include <errno.h>
+#include <string.h>
 #endif
 
 #if defined(SDB_ENABLE)
@@ -12,8 +11,8 @@ typedef struct {                        /* 内部输出参数传递结构体 */
     const sdb_config_t *cfg;            /* 配置结构体 */
     const char *file;                   /* 文件名 */
     const char *func;                   /* 函数名 */
-    size_t line;                        /* 行号 */
-    size_t flag;                        /* 输出标记定义, sdb_flag_t */
+    unsigned int line;                  /* 行号 */
+    unsigned int flag;                  /* 输出标记定义, sdb_flag_t */
 #if defined(SDB_SYS_SUPPORT_STDERR)
     int err;                            /* 错误码 */
 #endif
@@ -21,21 +20,21 @@ typedef struct {                        /* 内部输出参数传递结构体 */
     va_list va;                         /* 参数列表 */
 } put_param_t;
 
-static inline  int cb_putx(void *p, const char *buf, size_t len)
+static inline  int cb_putx(void *p, const char *buf, unsigned int len)
 {
     return bio_put(((const put_param_t *)p)->cfg,
             ((put_param_t *)p)->flag, buf, len);
 }
 
-static inline int cb_put(void *p, const char *buf, size_t len)
+static inline int cb_put(void *p, const char *buf, unsigned int len)
 {
     return bio_put((const sdb_config_t *)p, SDB_DATA_INFO, buf, len);
 }
 
 #if defined(SDB_SYS_SUPPORT_ANSI_COLOR_SEQUENCES)
-static void set_color(size_t flag, const char **head, const char **end)
+static void set_color(unsigned int flag, const char **head, const char **end)
 {
-    size_t type = flag & SDB_TYPE_MASK;
+    unsigned int type = flag & SDB_TYPE_MASK;
     enum {
         HL_RES,
         HL_ERR,
@@ -115,22 +114,19 @@ static int put_proc(put_param_t *p)
     return 0;
 }
 
-int sdb_vput(const sdb_config_t *cfg, const char *fmt, va_list va)
-{
-    return vxprint((void *)cfg, cb_put, fmt, va);
-}
-
 int sdb_putx(const sdb_config_t *cfg, int flag,
-        const char *file, const char *func, size_t line, const char *fmt, ...)
+        const char *file, const char *func, unsigned int line,
+        const char *fmt, ...)
 {
     int ret;
     put_param_t p;
 
+    flag &= SDB_TYPE_MASK;
 #if defined(SDB_SYS_SUPPORT_STDERR)
     p.err           = errno;
 #endif
     p.cfg           = cfg;
-    p.flag          = flag & SDB_TYPE_MASK;
+    p.flag          = flag;
     p.file          = file;
     p.func          = func;
     p.line          = line;
@@ -140,13 +136,14 @@ int sdb_putx(const sdb_config_t *cfg, int flag,
     va_start(p.va, fmt);
     ret = put_proc(&p);
     va_end(p.va);
-    bio_put(cfg, flag | SDB_DATA_WRAP, "\n", 0);
+    if (flag != SDB_TYPE_INPUT_NUM && flag != SDB_TYPE_INPUT_STR)
+        bio_put(cfg, flag | SDB_DATA_WRAP, "\n", 0);
     bio_put(cfg, flag | SDB_DATA_POST, "$", 0);
 
     return ret;
 }
 
-int sdb_put(const sdb_config_t *cfg, const char *fmt, ...)
+int sdb_put_bare(const sdb_config_t *cfg, const char *fmt, ...)
 {
     int ret;
     va_list va;
@@ -162,11 +159,12 @@ int sdb_put(const sdb_config_t *cfg, const char *fmt, ...)
 
 #else
 inline int sdb_putx(const sdb_config_t *cfg, int flag,
-        const char *file, const char *func, size_t line, const char *fmt, ...)
+        const char *file, const char *func, unsigned int line,
+        const char *fmt, ...)
 {
     return 0;
 }
-inline int sdb_put(const sdb_config_t *cfg, const char *fmt, ...)
+inline int sdb_put_bare(const sdb_config_t *cfg, const char *fmt, ...)
 {
     return 0;
 }

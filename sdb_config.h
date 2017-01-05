@@ -8,7 +8,7 @@
  * \block:      Modules
  * @{ */
 /** 启用终端输入获取 */
-// #define SDB_MDL_GET_ENABLE
+#define SDB_MDL_GET_ENABLE
 
 /** 启用数据导出 */
 // #define SDB_MDL_DUMP_ENABLE
@@ -82,12 +82,7 @@
  *      I:Minor
  *      S:Status, 0 .. 0xFE:Beta, 0xFF:Release
  */
-#define SDB_VERSION_NUMBER      0x00020000
-
-// #include <string.h>
-// #include <stdarg.h>
-// #include <stdint.h>
-// #include <errno.h>
+#define SDB_VERSION_NUMBER      0x00020001
 
 #include "libsdb.h"
 #include "sdb_internal.h"
