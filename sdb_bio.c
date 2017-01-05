@@ -1,5 +1,11 @@
 #include "sdb_config.h"
 
+inline int sdb_nop(void)
+{
+    return 0;
+}
+
+#if defined(SDB_STACK_WATCH)
 char *gstack_head = 0;
 
 void sdb_set_stack(void)
@@ -13,29 +19,51 @@ int sdb_get_stack(void)
     char i;
     return (gstack_head - &i);
 }
-
-inline int sdb_nop(void)
-{
-    return 0;
-}
+#else
+inline void sdb_set_stack(void) { }
+inline int sdb_get_stack(void) { return 0; }
+#endif
 
 #if defined(SDB_ENABLE)
 
-#if defined(SDB_SYS_HAVE_STDIO)
-static void output_std(void *ptr, sdb_flag_t flag, const char *buf, size_t len)
+#if defined(SDB_SYS_SUPPORT_STDIO)
+#include <string.h>
+static int std_put(void *ptr, sdb_flag_t flag, const char *buf, size_t len)
 {
-    if (flag & SDB_DATA_PEND) {
-        printf("[%04d]", sdb_get_stack());
+    switch (flag & SDB_DATA_MASK) {
+#if 0
+        case SDB_DATA_PEND: {
+#if defined(SDB_STACK_WATCH)
+            printf("[%04d]  ", sdb_get_stack());
+#endif
+            break;
+        }
+        case SDB_DATA_FILE: printf("%16s:", buf); break;
+        case SDB_DATA_FUNC: break;
+        case SDB_DATA_LINE: printf("%04d  ", len); break;
+        case SDB_DATA_WRAP: printf("\n"); break;
+        case SDB_DATA_STDERR_STR: printf("  [%s", buf); break;
+        case SDB_DATA_STDERR_NUM: printf("(%d)]", len); break;
+#endif
+        default: {
+#if defined(SDB_STACK_WATCH)
+            // printf("[%04d]  ", sdb_get_stack()); 
+#endif
+            // char b[64];
+            // if (len > 60 && buf == NULL)
+            //     break;
+            // memmove(b, buf, len);
+            // b[len] = 0;
+            printf("%s", buf);
+            break;
+        }
     }
-    
-    char b[64];
-    memmove(b, buf, len);
-    b[len] = 0;
-    printf("%s", b);
     fflush(stdout);
+
+    return 0;
 }
 
-static int input_std(void *ptr, char *buf, size_t size, size_t *len)
+static int std_get(void *ptr, char *buf, size_t size, size_t *len)
 {
     int c = 0;
     int i = 0;
@@ -54,27 +82,28 @@ static int input_std(void *ptr, char *buf, size_t size, size_t *len)
 
 const sdb_config_t sdb_cfg_std = {
     .opt        = 0,
-    .put        = output_std,
-    .get        = input_std,
+    .put        = std_put,
+    .get        = std_get,
     .ptr        = NULL,
 };
-#endif /* defined(SDB_SYS_HAVE_STDIO) */
+#endif /* defined(SDB_SYS_SUPPORT_STDIO) */
 
-int bio_output(sdb_bio_context_t *ctx)
+int bio_put(const sdb_config_t *cfg, size_t flag, const char *buf, size_t len)
 {
-    if (ctx->cfg && ctx->cfg->put)
-        // ctx->cfg->put(ctx->cfg->ptr, );
-
+    if (cfg && cfg->put) {
+        if (len == 0 && buf)
+            while (buf[len++]);
+        return cfg->put(cfg->ptr, flag, buf, len);
+    }
     return 0;
 }
 
-int bio_input(const sdb_config_t *cfg,
-        char *buf, size_t bufsize, size_t *outlen)
+int bio_get(const sdb_config_t *cfg, char *buf, size_t size, size_t *len)
 {
     if (buf == NULL)
         return SDB_RET_PARAM_ERR;
     if (cfg && cfg->get)
-        return cfg->get(cfg->ptr, buf, bufsize, outlen);
+        return cfg->get(cfg->ptr, buf, size, len);
 
     return 0;
 }

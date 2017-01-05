@@ -42,8 +42,11 @@ typedef enum {                                              /* 输出标记定�
     SDB_DATA_FUNC           = (0x04 << SDB_DATA_OFS),       /* 函数名 */
     SDB_DATA_LINE           = (0x05 << SDB_DATA_OFS),       /* 行号 */
     SDB_DATA_INFO           = (0x06 << SDB_DATA_OFS),       /* 消息数据 */
-    SDB_DATA_STDERR         = (0x07 << SDB_DATA_OFS),       /* 标准错误信息 */
-    SDB_DATA_WRAP           = (0x08 << SDB_DATA_OFS),       /* 换行 */
+    SDB_DATA_STDERR_STR     = (0x07 << SDB_DATA_OFS),       /* 标准错误信息 */
+    SDB_DATA_STDERR_NUM     = (0x08 << SDB_DATA_OFS),       /* 标准错误码 */
+    SDB_DATA_WRAP           = (0x09 << SDB_DATA_OFS),       /* 换行 */
+    SDB_DATA_COLOR          = (0x0a << SDB_DATA_OFS),       /* 颜色控制序列 */
+    SDB_DATA_BLANK          = (0x0b << SDB_DATA_OFS),       /* 空白 */
     SDB_DATA_MASK           = (0x0f << SDB_DATA_OFS),       /* 掩码 */
 } sdb_flag_t;
 
@@ -56,7 +59,6 @@ typedef enum {                                              /* 返回值定义 *
 } sdb_ret_t;
 
 typedef struct sdb_config_t sdb_config_t;
-typedef struct sdb_bio_context_t sdb_bio_context_t;
 typedef struct sdb_item_t sdb_item_t;
 /**
  * \brief       输出接口函数类型
@@ -66,8 +68,8 @@ typedef struct sdb_item_t sdb_item_t;
  * \param       len         数据长度
  * \return      0:Success; <0:Error
  */
-typedef int (* sdb_bio_put_t)(void *ptr,
-        sdb_flag_t flag, const char *buf, size_t len);
+typedef int (* sdb_bio_put_t)(void *ptr, sdb_flag_t flag,
+        const char *buf, size_t len);
 /**
  * \brief       输入接口函数类型
  * \param       cfg         配置结构体
@@ -84,15 +86,6 @@ struct sdb_config_t {                   /* 配置结构体 */
     sdb_bio_get_t get;                  /* 输入接口函数 */
     void *ptr;                          /* 输出接口传递参数 */
 };
-struct sdb_bio_context_t {              /* 调试上下文结构体 */
-    const sdb_config_t *cfg;            /* 配置结构体 */
-    int flag;                           /* 输出标记定义, sdb_flag_t */
-    const char *file;                   /* 文件名 */
-    const char *func;                   /* 函数名 */
-    size_t line;                        /* 行号 */
-    char *buf;                          /* 缓存, size:SDB_CONF_BUFFER_SIZE */
-    int len;                            /* 缓存数据长度 */
-};
 struct sdb_item_t {                     /* 调试菜单项目结构体 */
     char *info;                         /* 项目显示信息 */
     void *param;                        /* 参数 */
@@ -104,6 +97,7 @@ extern "C" {
 #endif
 /**\brief       标准输入输出，SDB_SYS_HAVE_STDIO启用时有效 */
 extern const sdb_config_t sdb_cfg_std;
+
 void sdb_set_stack(void);
 int sdb_get_stack(void);
 
@@ -118,9 +112,16 @@ int sdb_get_stack(void);
  * \param       ...         不定参数
  * \return      0:Success; <0:Error
  */
-int sdb_output(const sdb_config_t *cfg, int flag,
-        const char *file, const char *func, size_t line,
-        const char *fmt, ...);
+int sdb_putx(const sdb_config_t *cfg, int flag,
+        const char *file, const char *func, size_t line, const char *fmt, ...);
+/**
+ * \brief       调试输出控制
+ * \param       cfg         配置结构体
+ * \param       fmt         格式化输出
+ * \param       ...         不定参数
+ * \return      0:Success; <0:Error
+ */
+int sdb_put(const sdb_config_t *cfg, const char *fmt, ...);
 
 /**
  * \brief       调试输入控制
@@ -205,17 +206,12 @@ int sdb_nop(void);
 #endif
 
 #if defined(SDB_ENABLE)
-#define SDB_OUT(...)        sdb_output(__sdb_cfg,\
-        SDB_FLG_LV_INFO | SDB_FLG_BARE | SDB_FLG_NOWRAP,\
+#define SDB_OUT(...)        sdb_put(__sdb_cfg, __VA_ARGS__)
+#define SDB_OUT_I(...)      sdb_putx(__sdb_cfg, SDB_TYPE_INFO,\
         __FILE__, __func__, __LINE__, __VA_ARGS__)
-#define SDB_OUT_I(...)      sdb_output(__sdb_cfg,\
-        SDB_FLG_LV_INFO,\
+#define SDB_OUT_W(...)      sdb_putx(__sdb_cfg, SDB_TYPE_WARN,\
         __FILE__, __func__, __LINE__, __VA_ARGS__)
-#define SDB_OUT_W(...)      sdb_output(__sdb_cfg,\
-        SDB_FLG_LV_WARN,\
-        __FILE__, __func__, __LINE__, __VA_ARGS__)
-#define SDB_OUT_E(...)      sdb_output(__sdb_cfg,\
-        SDB_FLG_LV_ERR,\
+#define SDB_OUT_E(...)      sdb_putx(__sdb_cfg, SDB_TYPE_ERR,\
         __FILE__, __func__, __LINE__, __VA_ARGS__)
 #else
 #define SDB_OUT(...)        sdb_nop()

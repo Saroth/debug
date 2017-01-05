@@ -1,6 +1,6 @@
 #include "sdb_config.h"
 
-#if 0 //defined(SDB_ENABLE) && defined(SDB_MDL_MENU_ENABLE)
+#if defined(SDB_ENABLE) && defined(SDB_MDL_MENU_ENABLE)
 
 int sdb_menu(const sdb_config_t *cfg,
         const char *file, const char *func, size_t line,

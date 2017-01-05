@@ -1,73 +1,55 @@
 #ifndef __SDB_CONFIG_H__
 #define __SDB_CONFIG_H__
 
-/**
- * 启用调试器
- */
+/** 启用调试器 */
 #define SDB_ENABLE
 
 /**
  * \block:      Modules
  * @{ */
-/**
- * 启用终端输入获取
- * \Caller:     menu.c
- */
-#define SDB_MDL_INPUT_ENABLE
+/** 启用终端输入获取 */
+// #define SDB_MDL_GET_ENABLE
 
-/**
- * 启用数据导出
- * \Caller:     dump.c
- */
-#define SDB_MDL_DUMP_ENABLE
+/** 启用数据导出 */
+// #define SDB_MDL_DUMP_ENABLE
 
-/**
- * 启用测试菜单
- * \Required:   SDB_MDL_INPUT_ENABLE
- * \Caller:     input.c
- */
-#define SDB_MDL_MENU_ENABLE
+/** 启用测试菜单 */
+// #define SDB_MDL_MENU_ENABLE
+
+/** 启用栈调试 */
+#define SDB_STACK_WATCH
 /** @} */
 
 /**
  * \block:      System environment
  * @{ */
-/**
- * 启用终端文本颜色
- * 使用Linux的ANSI颜色控制序列
- */
-#define SDB_SYS_HAVE_COLOR
+/** 启用终端文本颜色, 使用Linux的ANSI颜色控制序列 */
+#define SDB_SYS_SUPPORT_ANSI_COLOR_SEQUENCES
 
-/**
- * 启用标准输入输出
- * 如果运行环境不支持printf输出和scanf输入，则注释该选项
- */
-#define SDB_SYS_HAVE_STDIO
+/** 启用标准输入输出, 如果运行环境不支持printf输出和scanf输入，则注释该选项 */
+#define SDB_SYS_SUPPORT_STDIO
 
-/**
- * 启用标准错误信息提示
- */
-#define SDB_SYS_HAVE_STDERR
+/** 启用标准错误信息提示 */
+#define SDB_SYS_SUPPORT_STDERR
 
-#define SDB_SYS_SIZE_T_SUPPORT
+/** 系统支持size_t */
+#define SDB_SYS_SUPPORT_SIZE_T
 
-#define SDB_SYS_LONG_SUPPORT
+/** 系统支持long类型, 通常32位平台下长度为4, 64位平台下长度为8 */
+#define SDB_SYS_SUPPORT_LONG
 
-#define SDB_SYS_LONG_LONG_SUPPORT
+/** 系统支持long long类型, 通常长度为8 */
+#define SDB_SYS_SUPPORT_LONG_LONG
 
 /** @} */
 
 /**
  * \block:      Configuration
  * @{ */
-/**
- * 内部输出缓存大小
- */
+/** 内部输出缓存大小 */
 #define SDB_CONF_BUFFER_SIZE    288
 
-/*
- * 内部获取数值的输入缓存
- */
+/** 内部获取数值的输入缓存 */
 #define SDB_CONF_BUFFER_SIZE_GETNUM 32
 
 /// 输出颜色定义
@@ -87,7 +69,6 @@
 #define SDB_MARK_GETSTR         "I.s "      //!< 获取字符串输入标记
 #define SDB_MARK_ECHO           "I.e "      //!< 返回数值输出标记
 #define SDB_MARK_DUMP           "  | "      //!< 导出标记
-
 /** @} */
 
 /**
@@ -103,10 +84,10 @@
  */
 #define SDB_VERSION_NUMBER      0x00020000
 
-#include <string.h>
-#include <stdarg.h>
-#include <stdint.h>
-#include <errno.h>
+// #include <string.h>
+// #include <stdarg.h>
+// #include <stdint.h>
+// #include <errno.h>
 
 #include "libsdb.h"
 #include "sdb_internal.h"
