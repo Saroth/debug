@@ -50,7 +50,7 @@ int sdb_selftest_printf(void *p)
     };
     unsigned int i;
 
-    printf("[[%04d]]  \n", sdb_get_stack());
+    sdb_set_stack();
     for (i = 0; i < 2; i++) {
         pp[i]("----\n");
         pp[i](
@@ -81,8 +81,9 @@ int sdb_selftest_printf(void *p)
                 /* "test1", "test2", "test3", "test4", */
                 /* 0x5f5f, */
                 /* 3.1415, 2.16, 1.234, 0x5a5a, 3.8, */
-                "[end]\n\n");
+                "[end]\n");
     }
+    printf("Max stack: %d\n\n", sdb_get_stack_max());
 
     return 0;
 }
@@ -138,7 +139,7 @@ int sdb_selftest_put(void *p)
 {
     int ret = 0;
 
-    printf("[[%04d]]  \n", sdb_get_stack());
+    sdb_set_stack();
     ((void) ret);
     ret = SDB_OUT("bare, format put test:%s, %d, %#x, <\\n>\n",
             "123", 123, 123);
@@ -149,6 +150,7 @@ int sdb_selftest_put(void *p)
     SDB_OUT_I("Return: %d", ret);
     ret = SDB_OUT_E("error");
     SDB_OUT_I("Return: %d", ret);
+    SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
     SDB_OUT("\n");
 
     return 0;
@@ -158,6 +160,7 @@ int sdb_selftest_put_stderr(void *p)
 {
     int ret = 0;
 
+    sdb_set_stack();
     ((void) ret);
     errno = 2;
     ret = SDB_OUT("bare<\\n>\n");
@@ -171,6 +174,7 @@ int sdb_selftest_put_stderr(void *p)
     errno = 5;
     ret = SDB_OUT_E("error");
     SDB_OUT_I("Return: %d (errno:%d)", ret, errno);
+    SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
     SDB_OUT("\n");
 
     return 0;
@@ -182,29 +186,42 @@ int sdb_selftest_get(void *p)
     int num = 0;
     char buf[32];
 
+    sdb_set_stack();
     ((void) buf);
     ((void) num);
     ((void) ret);
     SDB_OUT_I("get number(simple)");
     ret = SDB_IN_N(NULL);
     SDB_OUT_I("return:%d", ret);
+    SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
+
+    sdb_set_stack();
     SDB_OUT_I("get a number");
     ret = SDB_IN_N(&num);
     SDB_OUT_I("return:%d, Get number:%d", ret, num);
+    SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
+
+    sdb_set_stack();
     SDB_OUT_I("get string");
     ret = SDB_IN_S(buf, 32, &num);
     SDB_OUT_I("return:%d, Get string:%s(size:%d)", ret, buf, num);
+    SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
 
+    sdb_set_stack();
     ret = SDB_IN_NI(&num, "get a number");
     SDB_OUT_I("return:%d, Get number:%d", ret, num);
+    SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
+
+    sdb_set_stack();
     ret = SDB_IN_SI(buf, 32, &num, "get string");
     SDB_OUT_I("return:%d, Get string:%s(size:%d)", ret, buf, num);
+    SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
+
     SDB_OUT("\n");
 
     return 0;
 }
 
-#if 0
 int sdb_selftest_dump(void *p)
 {
     unsigned char buf1[16] = {
@@ -249,6 +266,7 @@ int sdb_selftest_dump(void *p)
     struct test_a a;
     int ret = 0;
 
+    sdb_set_stack();
     memset(&a, 0x00, sizeof(a));
     a.a = 1;
     a.b = 2;
@@ -258,59 +276,58 @@ int sdb_selftest_dump(void *p)
     a.f = 6;
     a.g = 7;
 
+    sdb_set_stack();
     SDB_OUT_I("Dump buf1:");
     ret = SDB_DMP_C(buf1, sizeof(buf1));
     SDB_OUT_I("Return: %d", ret);
+    SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
 
+    sdb_set_stack();
     SDB_OUT_I("Dump buf2:");
     ret = SDB_DMP(buf2, sizeof(buf2));
     SDB_OUT_I("Return: %d", ret);
+    SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
 
+    sdb_set_stack();
     SDB_OUT_I("Dump buf3:");
     ret = SDB_DMP_CA(buf3, sizeof(buf3), &buf3);
     SDB_OUT_I("Return: %d", ret);
+    SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
 
+    sdb_set_stack();
     SDB_OUT_I("Dump buf4:");
     ret = SDB_DMP_CA(buf4, sizeof(buf4), (void *)0x0200f0a3);
     SDB_OUT_I("Return: %d", ret);
+    SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
 
+    sdb_set_stack();
     ret = SDB_DMP_CI(&a, sizeof(a), "Dump structure");
     SDB_OUT_I("Return: %d", ret);
+    SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
 
+    sdb_set_stack();
     ret = SDB_DMP_CAI(buf5, sizeof(buf5), 0, "Dump buf5");
     SDB_OUT_I("Return: %d", ret);
+    SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
 
+    sdb_set_stack();
     ret = SDB_DMP_I("# This is a test.", 0x10000, "Dump string");
     SDB_OUT_I("Return: %d", ret);
+    SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
 
     SDB_OUT("\n");
 
     return 0;
 }
-#endif
 
 int sdb_selftest(void *p)
 {
-    sdb_set_stack();
     sdb_selftest_printf(NULL);
-    printf("Max stack: %d\n", sdb_get_stack_max());
-
     /* sdb_color_demo(NULL); */
-    sdb_set_stack();
     sdb_selftest_put(NULL);
-    printf("Max stack: %d\n", sdb_get_stack_max());
-
-    sdb_set_stack();
     sdb_selftest_put_stderr(NULL);
-    printf("Max stack: %d\n", sdb_get_stack_max());
-
-    sdb_set_stack();
     sdb_selftest_get(NULL);
-    printf("Max stack: %d\n", sdb_get_stack_max());
-
-    sdb_set_stack();
-    /* sdb_selftest_dump(NULL); */
-    printf("Max stack: %d\n", sdb_get_stack_max());
+    sdb_selftest_dump(NULL);
 
     /* SDB_MENU( */
             /* { "color demo", 0, sdb_color_demo, }, */

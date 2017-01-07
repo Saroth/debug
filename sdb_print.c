@@ -6,34 +6,6 @@
 
 #if defined(SDB_ENABLE)
 
-typedef enum {
-    PAD_ZERO                = 0x01,     /* 填充0 */
-    ALIGN_LEFT              = 0x02,     /* 左对齐 */
-    CAPITAL_HEX             = 0x04,     /* 字母大写 */
-    ALTERNATE_FORM          = 0x08,     /* 数值格式, %#x => 0xff */
-    SIGN                    = 0x10,     /* 显示正负号 */
-    NEGATIVE_SIGN           = 0x20,     /* 显示为负号 */
-    LONG_INT                = 0x40,     /* unsigned long int */
-    LONG_LONG_INT           = 0x80,     /* unsigned long long int */
-} flag_t;
-typedef struct {                        /* 格式化输出解析参数结构体 */
-    unsigned char flag;                 /* 标记, flag_t */
-    unsigned char base;                 /* 进制 */
-    unsigned char width;                /* 输出宽度 */
-    unsigned char precision;            /* 小数精度 */
-} fmt_t;
-typedef struct {                        /* print 内部参数结构体 */
-    unsigned char c1;                   /* 临时字符存放 */
-    unsigned char c2;                   /* 结束符 / 备用临时字符存放 */
-    unsigned char c3;                   /* 结束符 */
-    unsigned char c4;                   /* 临时计数 */
-    int ret;                            /* 返回值  (_U2S中临时复用) */
-
-    void *ptr;                          /* 外部指针传递 */
-    put_t put;                          /* 输出处理函数指针 */
-    fmt_t fmt;                          /* 格式化输出解析参数结构体 */
-} print_context_t;
-
 #define PUTC(_c) do {\
     ctx->c1 = (unsigned char)(_c);\
     if ((ctx->ret = ctx->put(ctx->ptr, (const char *)&ctx->c1, 1)))\
@@ -67,7 +39,8 @@ static unsigned int s2u(const char **str, int base)
 }
 
 #define _U2S(__name, __type) \
-    static int __name(print_context_t *ctx, __type num) {\
+    int __name(print_context_t *ctx, __type num) {\
+        ctx->c2 = 0;\
         ctx->c4 = 1;\
         __type d = 1;\
         while (num / d >= ctx->fmt.base) { d *= ctx->fmt.base; ctx->c4++; }\
@@ -109,7 +82,7 @@ _U2S(uli2s, unsigned long int);
 #endif
 _U2S(ui2s, unsigned int);
 
-static int put_u2s(print_context_t *ctx, va_list va)
+static int print_u2s(print_context_t *ctx, va_list va)
 {
     FLAG_UNSET(SIGN);
 #if defined(SDB_SYS_SUPPORT_LONG)
@@ -126,7 +99,7 @@ static int put_u2s(print_context_t *ctx, va_list va)
 }
 
 #define _I2S(__name, __type) \
-    static int __name(print_context_t *ctx, __type num) {\
+    int __name(print_context_t *ctx, __type num) {\
         if (num < 0) { ctx->fmt.flag |= (SIGN | NEGATIVE_SIGN); num = -num; }\
         u##__name(ctx, num);\
     }
@@ -138,7 +111,7 @@ _I2S(li2s, long int);
 #endif
 _I2S(i2s, int);
 
-static int put_i2s(print_context_t *ctx, va_list va)
+static int print_i2s(print_context_t *ctx, va_list va)
 {
 #if defined(SDB_SYS_SUPPORT_LONG)
     if (FLAG_IS_SET(LONG_INT))
@@ -153,7 +126,7 @@ static int put_i2s(print_context_t *ctx, va_list va)
         return i2s(ctx, va_arg(va, unsigned int));
 }
 
-static int put_str(print_context_t *ctx, va_list va)
+static int print_str(print_context_t *ctx, va_list va)
 {
     unsigned char *s = va_arg(va, unsigned char *);
 
@@ -174,7 +147,7 @@ static int put_str(print_context_t *ctx, va_list va)
     return 0;
 }
 
-static int put_float(print_context_t *ctx, va_list va)
+static int print_float(print_context_t *ctx, va_list va)
 {
     /* Unsupported */
     ((void) ctx);
@@ -257,25 +230,25 @@ int vxprint(void *ptr, put_t put, const char *fmt, va_list va)
 #endif
         switch (ctx.c1) {                    /* Type */
             case 'o': ctx.fmt.base = 8;
-                      put_u2s(&ctx, va);
+                      print_u2s(&ctx, va);
                       break;
-            case 'f': put_float(&ctx, va);
+            case 'f': print_float(&ctx, va);
                       break;
             case 'u': ctx.fmt.base = 10;
-                      put_u2s(&ctx, va);
+                      print_u2s(&ctx, va);
                       break;
             case 'i':
             case 'd': ctx.fmt.base = 10;
-                      put_i2s(&ctx, va);
+                      print_i2s(&ctx, va);
                       break;
             case 'p': FLAG_SET(ALTERNATE_FORM);
             case 'x':
             case 'X': ctx.fmt.base = 16;
                       if (ctx.c1 == 'X')
                           FLAG_SET(CAPITAL_HEX);
-                      put_u2s(&ctx, va);
+                      print_u2s(&ctx, va);
                       break;
-            case 's': put_str(&ctx, va);
+            case 's': print_str(&ctx, va);
                       break;
             case 'c': ctx.c1 = (unsigned char)va_arg(va, unsigned int);
                       ctx.ret = put(ptr, (const char *)&ctx.c1, 1);

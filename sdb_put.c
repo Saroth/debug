@@ -7,32 +7,14 @@
 
 #if defined(SDB_ENABLE)
 
-typedef struct {                        /* 内部输出参数传递结构体 */
-    const sdb_config_t *cfg;            /* 配置结构体 */
-    const char *file;                   /* 文件名 */
-    const char *func;                   /* 函数名 */
-    unsigned int line;                  /* 行号 */
-    unsigned int flag;                  /* 输出标记定义, sdb_flag_t */
-#if defined(SDB_SYS_SUPPORT_STDERR)
-    int err;                            /* 错误码 */
-#endif
-    const char *fmt;                    /* 格式化字符串 */
-    va_list va;                         /* 参数列表 */
-} put_param_t;
-
-static inline  int cb_putx(void *p, const char *buf, unsigned int len)
+inline int cb_putx(void *p, const char *buf, unsigned int len)
 {
-    return bio_put(((const put_param_t *)p)->cfg,
-            ((put_param_t *)p)->flag, buf, len);
-}
-
-static inline int cb_put(void *p, const char *buf, unsigned int len)
-{
-    return bio_put((const sdb_config_t *)p, SDB_DATA_INFO, buf, len);
+    return bio_put(((bio_put_param_t *)p)->cfg,
+            ((bio_put_param_t *)p)->flag, buf, len);
 }
 
 #if defined(SDB_SYS_SUPPORT_ANSI_COLOR_SEQUENCES)
-static void set_color(unsigned int flag, const char **head, const char **end)
+void set_color(unsigned int flag, const char **head, const char **end)
 {
     unsigned int type = flag & SDB_TYPE_MASK;
     enum {
@@ -63,37 +45,44 @@ static void set_color(unsigned int flag, const char **head, const char **end)
 }
 #endif /* defined(SDB_SYS_SUPPORT_ANSI_COLOR_SEQUENCES) */
 
-#define BIO_PUTS(__data_flag, __buf, __len) do {\
-    if ((ret = bio_put(p->cfg, p->flag | __data_flag, __buf, __len)))\
-    return ret;\
-    if ((ret = bio_put(p->cfg, p->flag | SDB_DATA_BLANK, " ", 1)))\
-    return ret;\
-} while (0)
+int put_i2s(bio_put_param_t *p, int num)
+{
+    print_context_t ctx;
+
+    ctx.ptr             = p;
+    ctx.put             = cb_putx;
+    ctx.fmt.base        = 10;
+    ctx.fmt.flag        = 0;
+    ctx.fmt.width       = 0;
+    ctx.fmt.precision   = 0;
+
+    return (int)i2s(&ctx, num);
+}
 
 static int put_proc(put_param_t *p)
 {
-    int ret = 0;
+    int ret;
 #if defined(SDB_SYS_SUPPORT_ANSI_COLOR_SEQUENCES)
     const char *head;
     const char *end;
 #endif
 
-    p->flag &= SDB_TYPE_MASK;
-    BIO_PUTS(SDB_DATA_FILE, p->file, 0);
-    BIO_PUTS(SDB_DATA_FUNC, p->func, 0);
-    BIO_PUTS(SDB_DATA_LINE, "_line_", p->line);
+    p->bio.flag &= SDB_TYPE_MASK;
+    PUT_STR_BLK(&p->bio, SDB_DATA_FILE, p->file, 0);
+    PUT_STR_BLK(&p->bio, SDB_DATA_FUNC, p->func, 0);
+    PUT_NUM_BLK(&p->bio, SDB_DATA_LINE, p->line);
 
     if (p->fmt) {
 #if defined(SDB_SYS_SUPPORT_ANSI_COLOR_SEQUENCES)
-        set_color(p->flag, &head, &end);
-        BIO_PUTS(SDB_DATA_COLOR, head, 0);
+        set_color(p->bio.flag, &head, &end);
+        PUT_STR(&p->bio, SDB_DATA_COLOR, head, 0);
 #endif
-        p->flag |= SDB_DATA_INFO;
-        if ((ret = vxprint((void *)p, cb_putx, p->fmt, p->va)) < 0)
+        p->bio.flag |= SDB_DATA_INFO;
+        if ((ret = vxprint((void *)&p->bio, cb_putx, p->fmt, p->va)) < 0)
             return ret;
-        p->flag &= SDB_TYPE_MASK;
+        p->bio.flag &= SDB_TYPE_MASK;
 #if defined(SDB_SYS_SUPPORT_ANSI_COLOR_SEQUENCES)
-        BIO_PUTS(SDB_DATA_COLOR, end, 0);
+        PUT_STR_BLK(&p->bio, SDB_DATA_COLOR, end, 0);
 #endif
     }
 #if defined(SDB_SYS_SUPPORT_STDERR)
@@ -101,12 +90,15 @@ static int put_proc(put_param_t *p)
         errno = 0;
 #if defined(SDB_SYS_SUPPORT_ANSI_COLOR_SEQUENCES)
         set_color(SDB_TYPE_ERR, &head, &end);
-        BIO_PUTS(SDB_DATA_COLOR, head, 0);
+        PUT_STR(&p->bio, SDB_DATA_COLOR, head, 0);
 #endif
-        BIO_PUTS(SDB_DATA_STDERR_STR, strerror(p->err), 0);
-        BIO_PUTS(SDB_DATA_STDERR_NUM, "_errno_", p->err);
+        PUT_STR(&p->bio, SDB_DATA_STDERR, "  [", 3);
+        PUT_STR(&p->bio, SDB_DATA_STDERR, strerror(p->err), 0);
+        PUT_STR(&p->bio, SDB_DATA_STDERR, "(", 1);
+        PUT_NUM(&p->bio, SDB_DATA_STDERR, p->err);
+        PUT_STR(&p->bio, SDB_DATA_STDERR, ")]", 2);
 #if defined(SDB_SYS_SUPPORT_ANSI_COLOR_SEQUENCES)
-        BIO_PUTS(SDB_DATA_COLOR, end, 0);
+        PUT_STR_BLK(&p->bio, SDB_DATA_COLOR, end, 0);
 #endif
     }
 #endif
@@ -125,20 +117,23 @@ int sdb_putx(const sdb_config_t *cfg, int flag,
 #if defined(SDB_SYS_SUPPORT_STDERR)
     p.err           = errno;
 #endif
-    p.cfg           = cfg;
-    p.flag          = flag;
+    p.bio.cfg       = cfg;
+    p.bio.flag      = flag;
     p.file          = file;
     p.func          = func;
     p.line          = line;
     p.fmt           = fmt;
 
-    bio_put(cfg, flag | SDB_DATA_PEND, "^", 0);
+    PUT_PEND(&p.bio);
     va_start(p.va, fmt);
     ret = put_proc(&p);
     va_end(p.va);
-    if (flag != SDB_TYPE_INPUT_NUM && flag != SDB_TYPE_INPUT_STR)
-        bio_put(cfg, flag | SDB_DATA_WRAP, "\n", 0);
-    bio_put(cfg, flag | SDB_DATA_POST, "$", 0);
+    if (ret)
+        return ret;
+    if (flag != SDB_TYPE_INPUT_NUM && flag != SDB_TYPE_INPUT_STR) {
+        PUT_WRAP(&p.bio);
+    }
+    PUT_POST(&p.bio);
 
     return ret;
 }
@@ -147,12 +142,18 @@ int sdb_put_bare(const sdb_config_t *cfg, const char *fmt, ...)
 {
     int ret;
     va_list va;
+    bio_put_param_t bio;
 
-    bio_put(cfg, SDB_TYPE_INFO | SDB_DATA_PEND, "^", 1);
+    bio.cfg = cfg;
+    bio.flag = SDB_TYPE_INFO;
+
+    PUT_PEND(&bio);
     va_start(va, fmt);
-    ret = vxprint((void *)cfg, cb_put, fmt, va);
+    ret = vxprint((void *)&bio, cb_putx, fmt, va);
     va_end(va);
-    bio_put(cfg, SDB_TYPE_INFO | SDB_DATA_POST, "$", 1);
+    if (ret)
+        return ret;
+    PUT_POST(&bio);
 
     return ret;
 }

@@ -1,4 +1,6 @@
 # CC = colorg++
+# CC = arm-none-linux-gnueabi-gcc
+# CC = arm-elf-gcc
 CFLAGS = -Wall -Os # -std=c89
 OBJ_FILE = sdb_print.o sdb_bio.o sdb_put.o sdb_get.o sdb_dump.o sdb_menu.o
 HEAD_FILE = libsdb.h sdb_config.h sdb_internal.h

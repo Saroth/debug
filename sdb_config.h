@@ -11,7 +11,7 @@
 #define SDB_MDL_GET_ENABLE
 
 /** 启用数据导出 */
-// #define SDB_MDL_DUMP_ENABLE
+#define SDB_MDL_DUMP_ENABLE
 
 /** 启用测试菜单 */
 // #define SDB_MDL_MENU_ENABLE
@@ -52,23 +52,25 @@
 /** 内部获取数值的输入缓存 */
 #define SDB_CONF_BUFFER_SIZE_GETNUM 32
 
+// #define SDB_CONF_INPUT_PROMPT
+
 /// 输出颜色定义
-#define SDB_COLOR_RES           "\33[0m"    //!< 恢复: normal
-#define SDB_COLOR_WARN          "\33[1;36m" //!< 警告高亮: blue, bold
-#define SDB_COLOR_ERR           "\33[1;31m" //!< 错误高亮: red, bold
-#define SDB_COLOR_INPUT         "\33[1;32m" //!< 输入和反馈标记高亮: green, bold
-#define SDB_COLOR_HL            "\33[1m"    //!< 特殊标记高亮: bold
-#define SDB_COLOR_TITLE         "\33[7m"    //!< 标题高亮: inverse
-#define SDB_COLOR_LABEL         "\33[1;30m" //!< 标签高亮, black, bold
+#define SDB_COLOR_RES           "\33[0m"    /* 恢复: normal */
+#define SDB_COLOR_WARN          "\33[1;36m" /* 警告高亮: blue, bold */
+#define SDB_COLOR_ERR           "\33[1;31m" /* 错误高亮: red, bold */
+#define SDB_COLOR_INPUT         "\33[1;32m" /* 输入和反馈标记高亮: green, bold */
+#define SDB_COLOR_HL            "\33[1m"    /* 特殊标记高亮: bold */
+#define SDB_COLOR_TITLE         "\33[7m"    /* 标题高亮: inverse */
+#define SDB_COLOR_LABEL         "\33[1;30m" /* 标签高亮, black, bold */
 // 标记定义
-#define SDB_MARK_NONE           "    "      //!< 无标记
-#define SDB_MARK_INFO           " .  "      //!< 提示标记
-#define SDB_MARK_WARN           " !  "      //!< 警告标记
-#define SDB_MARK_ERR            " x  "      //!< 错误标记
-#define SDB_MARK_GETNUM         "I.n "      //!< 获取数值输入标记
-#define SDB_MARK_GETSTR         "I.s "      //!< 获取字符串输入标记
-#define SDB_MARK_ECHO           "I.e "      //!< 返回数值输出标记
-#define SDB_MARK_DUMP           "  | "      //!< 导出标记
+#define SDB_MARK_NONE           "    "      /* 无标记 */
+#define SDB_MARK_INFO           " .  "      /* 提示标记 */
+#define SDB_MARK_WARN           " !  "      /* 警告标记 */
+#define SDB_MARK_ERR            " x  "      /* 错误标记 */
+#define SDB_MARK_GETNUM         "I.n "      /* 获取数值输入标记 */
+#define SDB_MARK_GETSTR         "I.s "      /* 获取字符串输入标记 */
+#define SDB_MARK_ECHO           "I.e "      /* 返回数值输出标记 */
+#define SDB_MARK_DUMP           "  | "      /* 导出标记 */
 /** @} */
 
 /**
