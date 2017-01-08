@@ -169,9 +169,10 @@ int sdb_input(const sdb_config_t *cfg, int flag,
  * \param       ...         不定参数
  * \return      0:Success; <0:Error
  */
-int sdb_dump(const sdb_config_t *cfg, int opt,
+int sdb_dump(const sdb_config_t *cfg,
+        int opt, void *data, unsigned int len, unsigned long addr, 
         const char *file, const char *func, unsigned int line,
-        void *data, unsigned int len, void *addr, const char *fmt, ...);
+        const char *fmt, ...);
 
 int sdb_menu(const sdb_config_t *cfg,
         const char *file, const char *func, unsigned int line,
@@ -293,23 +294,23 @@ int sdb_nop(void);
 
 #if defined(SDB_ENABLE)
 #define SDB_DMP(__buf, __len)                   sdb_dump(__sdb_cfg,\
-        SDB_DUMP_NOCHAR,\
-        __FILE__, __func__, __LINE__, __buf, __len, 0, 0);
+        SDB_DUMP_NOCHAR, __buf, __len, 0,\
+        __FILE__, __func__, __LINE__, 0);
 #define SDB_DMP_C(__buf, __len)                 sdb_dump(__sdb_cfg,\
-        0,\
-        __FILE__, __func__, __LINE__, __buf, __len, 0, 0);
+        0, __buf, __len, 0,\
+        __FILE__, __func__, __LINE__, 0);
 #define SDB_DMP_CA(__buf, __len, __addr)        sdb_dump(__sdb_cfg,\
-        0,\
-        __FILE__, __func__, __LINE__, __buf, __len, __addr, 0);
+        0, __buf, __len, __addr,\
+        __FILE__, __func__, __LINE__, 0);
 #define SDB_DMP_I(__buf, __len, ...)            sdb_dump(__sdb_cfg,\
-        SDB_DUMP_NOCHAR,\
-        __FILE__, __func__, __LINE__, __buf, __len, 0, __VA_ARGS__);
+        SDB_DUMP_NOCHAR, __buf, __len, 0,\
+        __FILE__, __func__, __LINE__, __VA_ARGS__);
 #define SDB_DMP_CI(__buf, __len, ...)           sdb_dump(__sdb_cfg,\
-        0,\
-        __FILE__, __func__, __LINE__, __buf, __len, 0, __VA_ARGS__);
+        0, __buf, __len, 0,\
+        __FILE__, __func__, __LINE__, __VA_ARGS__);
 #define SDB_DMP_CAI(__buf, __len, __addr, ...)  sdb_dump(__sdb_cfg,\
-        0,\
-        __FILE__, __func__, __LINE__, __buf, __len, __addr, __VA_ARGS__);
+        0, __buf, __len, __addr,\
+        __FILE__, __func__, __LINE__, __VA_ARGS__);
 #else
 #define SDB_DMP(...)        sdb_nop()
 #define SDB_DMP_C(...)      sdb_nop()

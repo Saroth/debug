@@ -41,6 +41,9 @@
 /** 系统支持long long类型, 通常长度为8 */
 #define SDB_SYS_SUPPORT_LONG_LONG
 
+/** 系统有较大内存空间. 关闭后将减少栈空间使用, 并移除部分提示信息 */
+// #define SDB_SYS_SUPPORT_LARGE_MEM
+
 /** @} */
 
 /**
@@ -51,8 +54,6 @@
 
 /** 内部获取数值的输入缓存 */
 #define SDB_CONF_BUFFER_SIZE_GETNUM 32
-
-// #define SDB_CONF_INPUT_PROMPT
 
 /// 输出颜色定义
 #define SDB_COLOR_RES           "\33[0m"    /* 恢复: normal */

@@ -2,7 +2,8 @@
 # CC = arm-none-linux-gnueabi-gcc
 # CC = arm-elf-gcc
 CFLAGS = -Wall -Os # -std=c89
-OBJ_FILE = sdb_print.o sdb_bio.o sdb_put.o sdb_get.o sdb_dump.o sdb_menu.o
+OBJ_FILE = sdb_bio.o sdb_put.o sdb_get.o sdb_dump.o sdb_menu.o\
+		   sdb_print.o sdb_string.o sdb_utility.o
 HEAD_FILE = libsdb.h sdb_config.h sdb_internal.h
 
 all: libsdb.a sdb_selftest

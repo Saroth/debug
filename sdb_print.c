@@ -11,9 +11,13 @@
     if ((ctx->ret = ctx->put(ctx->ptr, (const char *)&ctx->c1, 1)))\
     return ctx->ret;\
 } while (0)
-#define FLAG_SET(__flag) ctx.fmt.flag |= (__flag)
-#define FLAG_IS_SET(__flag) (ctx->fmt.flag & (__flag))
-#define FLAG_UNSET(__flag) (ctx->fmt.flag &= ~(__flag))
+#define PUTS(_s, _l) do {\
+    if ((ctx->ret = ctx->put(ctx->ptr, _s, _l)))\
+    return ctx->ret;\
+} while (0)
+#define FLAG_SET(__flag) ctx.flag |= (__flag)
+#define FLAG_IS_SET(__flag) (ctx->flag & (__flag))
+#define FLAG_UNSET(__flag) (ctx->flag &= ~(__flag))
 
 static unsigned int s2u(const char **str, int base)
 {
@@ -43,35 +47,38 @@ static unsigned int s2u(const char **str, int base)
         ctx->c2 = 0;\
         ctx->c4 = 1;\
         __type d = 1;\
-        while (num / d >= ctx->fmt.base) { d *= ctx->fmt.base; ctx->c4++; }\
+        while (num / d >= ctx->base) { d *= ctx->base; ctx->c4++; }\
+        if (FLAG_IS_SET(SIGN)) { ctx->c4++; }\
         if (FLAG_IS_SET(ALTERNATE_FORM)) {\
-            if (ctx->fmt.base == 16) {\
-                ctx->c4 += 2;\
-                PUTC('0');\
-                if (FLAG_IS_SET(CAPITAL_HEX)) PUTC('X');\
-                else PUTC('x');\
+            if (ctx->base == 16) { ctx->c4 += 2; }\
+            else if (ctx->base == 8) { ctx->c4++; }\
+        }\
+        ctx->width = (ctx->width > ctx->c4) ? (ctx->width - ctx->c4) : 0;\
+        \
+        if (ctx->width && !FLAG_IS_SET(ALIGN_LEFT) && !FLAG_IS_SET(PAD_ZERO)) {\
+            while (ctx->width-- > 0) PUTS(" ", 1); }\
+        if (FLAG_IS_SET(SIGN) && FLAG_IS_SET(PAD_ZERO)) {\
+                PUTS(FLAG_IS_SET(NEGATIVE_SIGN) ? "-" : "+", 1); }\
+        if (FLAG_IS_SET(ALTERNATE_FORM)) {\
+            if (ctx->base == 16) {\
+                if (FLAG_IS_SET(CAPITAL_HEX)) PUTS("0X", 2);\
+                else PUTS("0x", 2);\
             }\
-            else if (ctx->fmt.base == 8) { ctx->c4++; PUTC('0'); }\
+            else if (ctx->base == 8) { PUTS("0", 1); }\
         }\
-        if (FLAG_IS_SET(SIGN)) {\
-            ctx->c4++;\
-            if (FLAG_IS_SET(PAD_ZERO)) {\
-                PUTC(FLAG_IS_SET(NEGATIVE_SIGN) ? '-' : '+'); }\
-        }\
-        ctx->fmt.width = (ctx->fmt.width > ctx->c4)\
-            ? (ctx->fmt.width - ctx->c4) : 0;\
-        if (ctx->fmt.width && !FLAG_IS_SET(ALIGN_LEFT))\
-        while (ctx->fmt.width-- > 0) PUTC(FLAG_IS_SET(PAD_ZERO) ? '0' : ' ');\
-        if (FLAG_IS_SET(SIGN)) PUTC(FLAG_IS_SET(NEGATIVE_SIGN) ? '-' : '+');\
+        if (ctx->width && !FLAG_IS_SET(ALIGN_LEFT) && FLAG_IS_SET(PAD_ZERO)) {\
+            while (ctx->width-- > 0) PUTS("0", 1); }\
+        if (FLAG_IS_SET(SIGN) && !FLAG_IS_SET(PAD_ZERO)) {\
+            PUTS(FLAG_IS_SET(NEGATIVE_SIGN) ? "-" : "+", 1); }\
         while (d > 0) {\
             ctx->ret = num / d;\
             num %= d;\
-            d /= ctx->fmt.base;\
+            d /= ctx->base;\
             PUTC(ctx->ret + (ctx->ret < 10 ? '0'\
                         : ((FLAG_IS_SET(CAPITAL_HEX) ? 'A' : 'a') - 10)));\
         }\
-        if (ctx->fmt.width && FLAG_IS_SET(ALIGN_LEFT))\
-        while (ctx->fmt.width-- > 0) PUTC(' ');\
+        if (ctx->width && FLAG_IS_SET(ALIGN_LEFT))\
+        while (ctx->width-- > 0) PUTS(" ", 1);\
         return 0;\
     }
 #if defined(SDB_SYS_SUPPORT_LONG_LONG)
@@ -100,7 +107,7 @@ static int print_u2s(print_context_t *ctx, va_list va)
 
 #define _I2S(__name, __type) \
     int __name(print_context_t *ctx, __type num) {\
-        if (num < 0) { ctx->fmt.flag |= (SIGN | NEGATIVE_SIGN); num = -num; }\
+        if (num < 0) { ctx->flag |= (SIGN | NEGATIVE_SIGN); num = -num; }\
         u##__name(ctx, num);\
     }
 #if defined(SDB_SYS_SUPPORT_LONG_LONG)
@@ -130,19 +137,19 @@ static int print_str(print_context_t *ctx, va_list va)
 {
     unsigned char *s = va_arg(va, unsigned char *);
 
-    if (ctx->fmt.width) {
+    if (ctx->width) {
         unsigned int l = 0;
         while (s[l++]);
-        ctx->fmt.width -= l - 1;
+        ctx->width -= l - 1;
         if (!FLAG_IS_SET(ALIGN_LEFT))
-            while (ctx->fmt.width--)
-                PUTC(' ');
+            while (ctx->width--)
+                PUTS(" ", 1);
     }
     if ((ctx->ret = ctx->put(ctx->ptr, s, 0)))
         return ctx->ret;
-    if (ctx->fmt.width && FLAG_IS_SET(ALIGN_LEFT))
-        while (ctx->fmt.width--)
-            PUTC(' ');
+    if (ctx->width && FLAG_IS_SET(ALIGN_LEFT))
+        while (ctx->width--)
+            PUTS(" ", 1);
 
     return 0;
 }
@@ -172,9 +179,9 @@ int vxprint(void *ptr, put_t put, const char *fmt, va_list va)
             ctx.ret = put(ptr, (const char *)&ctx.c1, 1);
             continue;
         }
-        ctx.fmt.flag = 0;
-        ctx.fmt.width = 0;
-        ctx.fmt.precision = 0;
+        ctx.flag = 0;
+        ctx.width = 0;
+        ctx.precision = 0;
         while ((ctx.c1 = *fmt++)) {          /* Flags */
             switch (ctx.c1) {
                 case '-': FLAG_SET(ALIGN_LEFT);     continue;
@@ -186,22 +193,22 @@ int vxprint(void *ptr, put_t put, const char *fmt, va_list va)
             break;
         }
         if (ctx.c1 == '*') {                 /* Width */
-            ctx.fmt.width = (unsigned char)va_arg(va, unsigned int);
+            ctx.width = (unsigned char)va_arg(va, unsigned int);
             ctx.c1 = *fmt++;
         }
         else if (ctx.c1 >= '0' && ctx.c1 <= '9') {
             fmt--;
-            ctx.fmt.width = (unsigned char)s2u(&fmt, 10);
+            ctx.width = (unsigned char)s2u(&fmt, 10);
             ctx.c1 = *fmt++;
         }
         if (ctx.c1 == '.') {                 /* Float */
             FLAG_SET(PAD_ZERO);
             ctx.c1 = *fmt++;
             if (ctx.c1 == '*')
-                ctx.fmt.precision = (unsigned char)va_arg(va, unsigned int);
+                ctx.precision = (unsigned char)va_arg(va, unsigned int);
             else {
                 fmt--;
-                ctx.fmt.precision = (unsigned char)s2u(&fmt, 10);
+                ctx.precision = (unsigned char)s2u(&fmt, 10);
             }
             ctx.c1 = *fmt++;
         }
@@ -229,21 +236,21 @@ int vxprint(void *ptr, put_t put, const char *fmt, va_list va)
         }
 #endif
         switch (ctx.c1) {                    /* Type */
-            case 'o': ctx.fmt.base = 8;
+            case 'o': ctx.base = 8;
                       print_u2s(&ctx, va);
                       break;
             case 'f': print_float(&ctx, va);
                       break;
-            case 'u': ctx.fmt.base = 10;
+            case 'u': ctx.base = 10;
                       print_u2s(&ctx, va);
                       break;
             case 'i':
-            case 'd': ctx.fmt.base = 10;
+            case 'd': ctx.base = 10;
                       print_i2s(&ctx, va);
                       break;
             case 'p': FLAG_SET(ALTERNATE_FORM);
             case 'x':
-            case 'X': ctx.fmt.base = 16;
+            case 'X': ctx.base = 16;
                       if (ctx.c1 == 'X')
                           FLAG_SET(CAPITAL_HEX);
                       print_u2s(&ctx, va);
@@ -253,15 +260,25 @@ int vxprint(void *ptr, put_t put, const char *fmt, va_list va)
             case 'c': ctx.c1 = (unsigned char)va_arg(va, unsigned int);
                       ctx.ret = put(ptr, (const char *)&ctx.c1, 1);
                       break;
-            default: ctx.c2 = '%';
-                     if ((ctx.ret = put(ptr, (const char *)&ctx.c2, 1)))
+            default: if ((ctx.ret = put(ptr, "%", 1)))
                          break;
-                     ctx.c2 = 0;
             case '%': ctx.ret = put(ptr, (const char *)&ctx.c1, 1);
                       break;
         }
     }
     return ctx.ret;
+}
+
+int xprint(void *ptr, put_t put, const char *fmt, ...)
+{
+    int ret;
+    va_list va;
+
+    va_start(va, fmt);
+    ret = vxprint(ptr, put, fmt, va);
+    va_end(va);
+
+    return ret;
 }
 
 #endif /* defined(SDB_ENABLE) */

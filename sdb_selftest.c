@@ -16,7 +16,8 @@ extern int vxprint(void *ptr, put_t put, const char *fmt, va_list va);
 
 int _put(void *p, const char *buf, unsigned int len)
 {
-    printf("[%04d]  ", sdb_get_stack());
+    // printf("[%04d]  ", sdb_get_stack());
+    sdb_get_stack();
     char b[64];
     if (len == 0)
         while (buf[len++]);
@@ -50,40 +51,40 @@ int sdb_selftest_printf(void *p)
     };
     unsigned int i;
 
-    sdb_set_stack();
     for (i = 0; i < 2; i++) {
+        sdb_set_stack();
         pp[i]("----\n");
         pp[i](
-                /* " 0 %%d:\t %%, %d, %d, %d, %d, %d, %d, %d, %d \n" */
-                /* " 1 %%i:\t %i, %i, %i, %i, %i, %i, %i, %i \n" */
-                /* " 2 %%x:\t %x, %x, %x, %x, %x, %x, %x, %x, %x \n" */
-                /* " 3 %%X:\t %X, %X, %X, %X, %X, %X, %X, %X, %X \n" */
-                /* " 4 %%x:\t %lx, %lx, %lx, %lx, %lx, %lx, %lx, %lx, %lx \n" */
-                /* " 5 %%o:\t %o, %o, %o, %o, %o, %o, %o, %o, %o \n" */
-                /* " 6 %%c:\t %c, %c, %c, %c, %c, %c, %c, %c, %c \n" */
-                /* " 7 %%?d:\t %08o, %-08d, %+8d, %04i, %08d, %8d, %+u, %+-8d, \n" */
-                /* " 8 %%?d:\t %#d, %#x, %p, %#o, %#X, %#i \n" */
-                /* " 9 %%?d:\t %#02d, %#08x, %08p, %#08o, %#08X, %#08i \n" */
-                /* "10 %%s:\t %s, %+s, %08s, %-08s, \n" */
-                /* "11 %%?:\t %a, %b, %O, %e, %#x \n" */
-                /* "12 %%f:\t %f, %f, %f, %#x, %f\n" */
+                // " 0 %%d:\t %%, %d, %d, %d, %d, %d, %d, %d, %d \n" 
+                // " 1 %%i:\t %i, %i, %i, %i, %i, %i, %i, %i \n" 
+                // " 2 %%x:\t %x, %x, %x, %x, %x, %x, %x, %x, %x \n" 
+                // " 3 %%X:\t %X, %X, %X, %X, %X, %X, %X, %X, %X \n" 
+                // " 4 %%x:\t %lx, %lx, %lx, %lx, %lx, %lx, %lx, %lx, %lx \n" 
+                // " 5 %%o:\t %o, %o, %o, %o, %o, %o, %o, %o, %o \n" 
+                // " 6 %%c:\t %c, %c, %c, %c, %c, %c, %c, %c, %c \n" 
+                // " 7 %%?d:\t %08o, %-08d, %+8d, %04i, %08d, %8d, %+u, %+-8d, \n" 
+                // " 8 %%?d:\t %#d, %#x, %p, %#o, %#X, %#i \n" 
+                // " 9 %%?d:\t %#02d, %#08x, %08p, %16p, %#08o, %#08X, %#08i \n" 
+                // "10 %%s:\t %s, %+s, %08s, %-08s, \n" 
+                // "11 %%?:\t %a, %b, %O, %e, %#x \n" 
+                // "12 %%f:\t %f, %f, %f, %#x, %f\n" 
                 "%s",
-                /* 0, 8, 32, 128, 80000, 0x7fffffff, -1, -0x123, */
-                /* 0, 8, 32, 128, 80000, 0x7fffffff, -1, -0x123, */
-                /* 0, 7, 8, 15, 0x00123abc, 0x7fffffff, 0xffffffff, -1, -0x123, */
-                /* 0, 7, 8, 15, 0x00123abc, 0x7fffffff, 0xffffffff, -1, -0x123, */
-                /* 0, 7, 8, 15, 0x00123abc, 0x7fffffff, 0xffffffff, -1, -0x123, */
-                /* 0, 7, 8, 15, 0x00123abc, 0x7fffffff, 0xffffffff, -1, -0x123, */
-                /* 0, ' ', 'S', '\b', 124, 0xf6, "123", -1, -0x20, */
-                /* 123, 123, 123, 123, -123, -123, 123, 123, */
-                /* 123, 123, 123, 123, 123, 123, */
-                /* 123, 123, 123, 123, 123, 123, */
-                /* "test1", "test2", "test3", "test4", */
-                /* 0x5f5f, */
-                /* 3.1415, 2.16, 1.234, 0x5a5a, 3.8, */
+                // 0, 8, 32, 128, 80000, 0x7fffffff, -1, -0x123, 
+                // 0, 8, 32, 128, 80000, 0x7fffffff, -1, -0x123, 
+                // 0, 7, 8, 15, 0x00123abc, 0x7fffffff, 0xffffffff, -1, -0x123, 
+                // 0, 7, 8, 15, 0x00123abc, 0x7fffffff, 0xffffffff, -1, -0x123, 
+                // 0, 7, 8, 15, 0x00123abc, 0x7fffffff, 0xffffffff, -1, -0x123, 
+                // 0, 7, 8, 15, 0x00123abc, 0x7fffffff, 0xffffffff, -1, -0x123, 
+                // 0, ' ', 'S', '\b', 124, 0xf6, "123", -1, -0x20, 
+                // 123, 123, 123, 123, -123, -123, 123, 123, 
+                // 123, 123, 123, 123, 123, 123, 
+                // 123, 123, 123, 123, 123, 123, 123, 
+                // "test1", "test2", "test3", "test4", 
+                // 0x5f5f, 
+                // 3.1415, 2.16, 1.234, 0x5a5a, 3.8, 
                 "[end]\n");
+        printf("Max stack: %d\n\n", sdb_get_stack_max());
     }
-    printf("Max stack: %d\n\n", sdb_get_stack_max());
 
     return 0;
 }
@@ -141,16 +142,31 @@ int sdb_selftest_put(void *p)
 
     sdb_set_stack();
     ((void) ret);
+    ret = SDB_OUT("bare<\\n>\n");
+    SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
+    SDB_OUT_I("Return: %d", ret);
+
+    sdb_set_stack();
+    ((void) ret);
     ret = SDB_OUT("bare, format put test:%s, %d, %#x, <\\n>\n",
             "123", 123, 123);
-    SDB_OUT_I("Return: %d", ret);
-    ret = SDB_OUT_I("information");
-    SDB_OUT_I("Return: %d", ret);
-    ret = SDB_OUT_W("warning");
-    SDB_OUT_I("Return: %d", ret);
-    ret = SDB_OUT_E("error");
-    SDB_OUT_I("Return: %d", ret);
     SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
+    SDB_OUT_I("Return: %d", ret);
+
+    sdb_set_stack();
+    ret = SDB_OUT_I("information");
+    SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
+    SDB_OUT_I("Return: %d", ret);
+
+    sdb_set_stack();
+    ret = SDB_OUT_W("warning");
+    SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
+    SDB_OUT_I("Return: %d", ret);
+
+    sdb_set_stack();
+    ret = SDB_OUT_E("error");
+    SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
+    SDB_OUT_I("Return: %d", ret);
     SDB_OUT("\n");
 
     return 0;
@@ -164,17 +180,26 @@ int sdb_selftest_put_stderr(void *p)
     ((void) ret);
     errno = 2;
     ret = SDB_OUT("bare<\\n>\n");
+    SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
     SDB_OUT_I("Return: %d (errno:%d)", ret, errno);
+
+    sdb_set_stack();
     errno = 3;
     ret = SDB_OUT_I("information");
+    SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
     SDB_OUT_I("Return: %d (errno:%d)", ret, errno);
+
+    sdb_set_stack();
     errno = 4;
     ret = SDB_OUT_W("warning");
+    SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
     SDB_OUT_I("Return: %d (errno:%d)", ret, errno);
+
+    sdb_set_stack();
     errno = 5;
     ret = SDB_OUT_E("error");
-    SDB_OUT_I("Return: %d (errno:%d)", ret, errno);
     SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
+    SDB_OUT_I("Return: %d (errno:%d)", ret, errno);
     SDB_OUT("\n");
 
     return 0;
@@ -192,30 +217,30 @@ int sdb_selftest_get(void *p)
     ((void) ret);
     SDB_OUT_I("get number(simple)");
     ret = SDB_IN_N(NULL);
-    SDB_OUT_I("return:%d", ret);
     SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
+    SDB_OUT_I("return:%d", ret);
 
     sdb_set_stack();
     SDB_OUT_I("get a number");
     ret = SDB_IN_N(&num);
-    SDB_OUT_I("return:%d, Get number:%d", ret, num);
     SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
+    SDB_OUT_I("return:%d, Get number:%d", ret, num);
 
     sdb_set_stack();
     SDB_OUT_I("get string");
     ret = SDB_IN_S(buf, 32, &num);
-    SDB_OUT_I("return:%d, Get string:%s(size:%d)", ret, buf, num);
     SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
+    SDB_OUT_I("return:%d, Get string:%s(size:%d)", ret, buf, num);
 
     sdb_set_stack();
     ret = SDB_IN_NI(&num, "get a number");
-    SDB_OUT_I("return:%d, Get number:%d", ret, num);
     SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
+    SDB_OUT_I("return:%d, Get number:%d", ret, num);
 
     sdb_set_stack();
     ret = SDB_IN_SI(buf, 32, &num, "get string");
-    SDB_OUT_I("return:%d, Get string:%s(size:%d)", ret, buf, num);
     SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
+    SDB_OUT_I("return:%d, Get string:%s(size:%d)", ret, buf, num);
 
     SDB_OUT("\n");
 
@@ -239,20 +264,54 @@ int sdb_selftest_dump(void *p)
         0x8A, 0x2F, 0x52, 0x2C, 0x46, 0x60, 0x2E, 0x6E,
         0xE3, 0x1E, 0xCA, 0xD5,
     };
-    unsigned char buf4[16] = {
+    unsigned char buf4[64] = {
         0xAC, 0x8B, 0x40, 0x2C, 0x9C, 0xC6, 0x56, 0xC2,
         0x49, 0x02, 0x94, 0xF7, 0x4C, 0x0C, 0x19, 0x63,
+
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     };
-    unsigned char buf5[68] = {
+    unsigned char buf5[208] = {
         0x42, 0x79, 0xA3, 0xDB, 0xD1, 0x03, 0xCD, 0x4B,
         0x32, 0xE4, 0x90, 0x06, 0x0C, 0xFC, 0xE4, 0xCD,
+
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+
         0xAC, 0x8B, 0x40, 0x2C, 0x9C, 0xC6, 0x56, 0xC2,
         0x49, 0x02, 0x94, 0xF7, 0x4C, 0x0C, 0x19, 0x63,
-        0xC4, 0x30, 0xB1, 0xCC, 0xD7, 0xB2, 0xAD, 0xDB,
+
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+
+        0x00, 0x30, 0xB1, 0xCC, 0xD7, 0xB2, 0xAD, 0xDB,
         0xE2, 0x2C, 0x4D, 0x26, 0x25, 0x01, 0x21, 0xD8,
+
+        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+
         0xF2, 0x8D, 0x83, 0xD4, 0xAD, 0x39, 0x5A, 0xFE,
         0x28, 0xE1, 0x53, 0x53, 0x17, 0x99, 0x8A, 0xC2,
-        0x17, 0x69, 0xA2, 0x44,
+        0x17, 0x69, 0xA2, 0x44, 0x84, 0x37, 0x27, 0x58,
+
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    };
+    unsigned char buf6[3] = {
+        'A', 'A', 'A',
     };
     struct test_a {
         char a;
@@ -279,41 +338,51 @@ int sdb_selftest_dump(void *p)
     sdb_set_stack();
     SDB_OUT_I("Dump buf1:");
     ret = SDB_DMP_C(buf1, sizeof(buf1));
-    SDB_OUT_I("Return: %d", ret);
     SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
+    SDB_OUT_I("Return: %d", ret);
 
     sdb_set_stack();
     SDB_OUT_I("Dump buf2:");
     ret = SDB_DMP(buf2, sizeof(buf2));
-    SDB_OUT_I("Return: %d", ret);
     SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
+    SDB_OUT_I("Return: %d", ret);
 
     sdb_set_stack();
     SDB_OUT_I("Dump buf3:");
-    ret = SDB_DMP_CA(buf3, sizeof(buf3), &buf3);
-    SDB_OUT_I("Return: %d", ret);
+    ret = SDB_DMP_CA(buf3, sizeof(buf3), (unsigned long)&buf3);
     SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
+    SDB_OUT_I("Return: %d", ret);
 
     sdb_set_stack();
     SDB_OUT_I("Dump buf4:");
-    ret = SDB_DMP_CA(buf4, sizeof(buf4), (void *)0x0200f0a3);
-    SDB_OUT_I("Return: %d", ret);
+    ret = SDB_DMP_CA(buf4, sizeof(buf4), 0x0200f0a3);
     SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
+    SDB_OUT_I("Return: %d", ret);
 
     sdb_set_stack();
     ret = SDB_DMP_CI(&a, sizeof(a), "Dump structure");
-    SDB_OUT_I("Return: %d", ret);
     SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
+    SDB_OUT_I("Return: %d", ret);
 
     sdb_set_stack();
     ret = SDB_DMP_CAI(buf5, sizeof(buf5), 0, "Dump buf5");
-    SDB_OUT_I("Return: %d", ret);
     SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
+    SDB_OUT_I("Return: %d", ret);
 
     sdb_set_stack();
-    ret = SDB_DMP_I("# This is a test.", 0x10000, "Dump string");
-    SDB_OUT_I("Return: %d", ret);
+    ret = SDB_DMP_CAI(buf6, sizeof(buf6), 0xe, "Dump buf6-1");
     SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
+    SDB_OUT_I("Return: %d", ret);
+
+    sdb_set_stack();
+    ret = SDB_DMP_CAI(buf6, sizeof(buf6), 0x5, "Dump buf6-2");
+    SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
+    SDB_OUT_I("Return: %d", ret);
+
+    // sdb_set_stack();
+    // ret = SDB_DMP_I("# This is a test.", 0x10000, "Dump string");
+    // SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
+    // SDB_OUT_I("Return: %d", ret);
 
     SDB_OUT("\n");
 
@@ -326,7 +395,7 @@ int sdb_selftest(void *p)
     /* sdb_color_demo(NULL); */
     sdb_selftest_put(NULL);
     sdb_selftest_put_stderr(NULL);
-    sdb_selftest_get(NULL);
+    // sdb_selftest_get(NULL);
     sdb_selftest_dump(NULL);
 
     /* SDB_MENU( */

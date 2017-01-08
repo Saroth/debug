@@ -16,24 +16,21 @@ typedef enum {
     LONG_LONG_INT           = 0x80,     /* unsigned long long int */
 } flag_t;
 typedef int (* put_t)(void *p, const char *buf, unsigned int len);
-typedef struct {                        /* 格式化输出解析参数结构体 */
-    unsigned char flag;                 /* 标记, flag_t */
-    unsigned char base;                 /* 进制 */
-    unsigned char width;                /* 输出宽度 */
-    unsigned char precision;            /* 小数精度 */
-} fmt_t;
 typedef struct {                        /* print 内部参数结构体 */
     unsigned char c1;                   /* 临时字符存放 */
     unsigned char c2;                   /* 结束符 / 备用临时字符存放 */
     unsigned char c3;                   /* 结束符 */
     unsigned char c4;                   /* 临时计数 */
-    int ret;                            /* 返回值  (_U2S中临时复用) */
 
+    unsigned char flag;                 /* 标记, flag_t */
+    unsigned char base;                 /* 进制 */
+    unsigned char width;                /* 输出宽度 */
+    unsigned char precision;            /* 小数精度 */
+
+    int ret;                            /* 返回值  (_U2S中临时复用) */
     void *ptr;                          /* 外部指针传递 */
     put_t put;                          /* 输出处理函数指针 */
-    fmt_t fmt;                          /* 格式化输出解析参数结构体 */
 } print_context_t;
-
 typedef struct {                        /* 基本输出参数传递结构体 */
     const sdb_config_t *cfg;            /* 配置结构体 */
     unsigned int flag;                  /* 输出标记定义, sdb_flag_t */
@@ -50,6 +47,7 @@ typedef struct {                        /* 内部输出参数传递结构体 */
     va_list va;                         /* 参数列表 */
 } put_param_t;
 typedef struct {                        /* 内部数据导出参数传递结构体 */
+    bio_put_param_t bio;                /* 基本输出参数传递 */
     int opt;                            /* 数据导出控制选项, sdb_option_t */
     char *data;                         /* 数据 */
     unsigned int len;                   /* 数据长度 */
@@ -81,16 +79,16 @@ typedef struct {                        /* 内部数据导出参数传递结构�
     if ((ret = bio_put((__p)->cfg, (__p)->flag | __data_flag, __buf, __len)))\
     return ret;\
 } while (0)
-#define PUT_NUM_BLK(__p, __data_flag, __num) do {\
+#define PUT_NUM_BLK(__p, __data_flag, __base, __flag, __width, __num) do {\
     (__p)->flag |= __data_flag;\
-    if ((ret = put_i2s(__p, __num)))\
+    if ((ret = put_u2s(__p, __base, __flag, __width, __num)))\
     return ret;\
     (__p)->flag &= ~__data_flag;\
     PUT_BLANK(__p);\
 } while (0)
-#define PUT_NUM(__p, __data_flag, __num) do {\
+#define PUT_NUM(__p, __data_flag, __base, __flag, __width, __num) do {\
     (__p)->flag |= __data_flag;\
-    if ((ret = put_i2s(__p, __num)))\
+    if ((ret = put_u2s(__p, __base, __flag, __width, __num)))\
     return ret;\
     (__p)->flag &= ~__data_flag;\
 } while (0)
@@ -122,10 +120,12 @@ int bio_put(const sdb_config_t *cfg,
 int bio_get(const sdb_config_t *cfg,
         char *buf, unsigned int size, unsigned int *len);
 
-int put_i2s(bio_put_param_t *p, int num);
+int put_u2s(bio_put_param_t *p, unsigned char base, unsigned char flag,
+        unsigned char width, unsigned long num);
 int cb_putx(void *p, const char *buf, unsigned int len);
 void set_color(unsigned int flag, const char **head, const char **end);
 
+int xprint(void *ptr, put_t put, const char *fmt, ...);
 int vxprint(void *ptr, put_t put, const char *fmt, va_list va);
 #if defined(SDB_SYS_SUPPORT_LONG_LONG)
 int ulli2s(print_context_t *ctx, unsigned long long int num);

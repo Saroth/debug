@@ -43,20 +43,20 @@ static int std_put(void *ptr, sdb_flag_t flag,
         const char *buf, unsigned int len)
 {
     switch (flag & SDB_DATA_MASK) {
-#if 0
         case SDB_DATA_PEND: {
 #if defined(SDB_STACK_WATCH)
-            printf("[%04d]  ", sdb_get_stack());
+            // printf("[%04d]  ", sdb_get_stack());
 #endif
             break;
         }
-        case SDB_DATA_FILE: printf("%16s:", buf); break;
+        case SDB_DATA_POST:
+        case SDB_DATA_BLANK:
         case SDB_DATA_FUNC: break;
-        case SDB_DATA_LINE: printf("%04d  ", len); break;
-        case SDB_DATA_WRAP: printf("\n"); break;
-        case SDB_DATA_STDERR_STR: printf("  [%s", buf); break;
-        case SDB_DATA_STDERR_NUM: printf("(%d)]", len); break;
-#endif
+        case SDB_DATA_FILE: printf("%16s:", buf); break;
+        case SDB_DATA_LINE: printf("%04d  ", *((unsigned int *)buf)); break;
+        // case SDB_DATA_LINE:
+        case SDB_DATA_WRAP:
+        case SDB_DATA_STDERR:
         default: {
 #if defined(SDB_STACK_WATCH)
             // printf("[%04d]  ", sdb_get_stack());

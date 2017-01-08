@@ -1,125 +1,155 @@
 #include "sdb_config.h"
 
+#warning "@TODO: strcasecmp achieve"
+#include <string.h>
 #if defined(SDB_ENABLE) && defined(SDB_MDL_DUMP_ENABLE)
 
-#define SDB_SET_CONFIG p.ctx->cfg
+#define SDB_SET_CONFIG cfg
 
-static int dump_line(dump_param_t *p, unsigned int ofs, unsigned char sec)
-{
-    int ret;
-    int i;
-    int head = 0;
-    int end = sec;
-    int opt = p->opt & p->ctx->cfg->opt;
-    unsigned char *data = p->data + ofs;
-    unsigned int addr = (unsigned int)p->addr + ofs;
-    char *buf = p->ctx->buf;
-
-    if (addr % sec)
-        head -= addr % sec;
-    if (p->len + head - ofs < sec)
-        end = p->len + head - ofs;
-
-    if (~opt & SDB_DUMP_NONUM)
-        buf += sprintf(buf, (p->addr ? "%08x:" : "%04x:"), addr + head);
-    if (~opt & SDB_DUMP_NOHEX)
-        for (i = head; i < head + sec; i++) {
-            if ((addr + i) % 16 == 0)
-                *buf++ = ' ';
-            if (i >= 0 && i < end)
-                buf += sprintf(buf, "%02x ", *(data + i));
-            else
-                buf += sprintf(buf, "   ");
-        }
-    if (~opt & SDB_DUMP_NOCHAR)
-        for (i = head; i < end; i++, buf++) {
-            if ((addr + i) % 16 == 0)
-                *buf++ = ' ';
-            if (i >= 0) {
-                *buf = *(data + i);
-                if (*buf < 0x20 || *buf > 0x7e)
-                    *buf = '.';
-            }
-            else
-                *buf = ' ';
-        }
-    *buf++ = 0;
-    p->ctx->len = buf - p->ctx->buf - 1;
-    if ((ret = bio_output(p->ctx)))
-        return ret;
-
-    return end;
-}
-
-static int dump_proc(dump_param_t *p)
-{
-    int ret;
-    unsigned int count = 0;
-    unsigned char seg = 16;
-    unsigned char buf[SDB_CONF_BUFFER_SIZE];
-
-    p->ctx->buf = buf;
-    if (p->opt & SDB_DUMP_SEGADD16)
-        seg += 16;
-    if (p->opt & SDB_DUMP_SEGADD32)
-        seg += 32;
-    while (count < p->len) {
-        if ((ret = dump_line(p, count, seg)) < 0)
-            return ret;
-        count += ret;
-    }
-
-    return 0;
-}
-
-int sdb_dump(const sdb_config_t *cfg, int opt,
+int sdb_dump(const sdb_config_t *cfg,
+        int opt, void *data, unsigned int len, unsigned long addr, 
         const char *file, const char *func, unsigned int line,
-        void *data, unsigned int len, void *addr, const char *fmt, ...)
+        const char *fmt, ...)
 {
     int ret = 0;
-    va_list ap;
-    dump_param_t p;
-    sdb_bio_context_t ctx;
+    va_list va;
+    bio_put_param_t bp;
+    unsigned char seg = 16;
+    unsigned int count = 0;
+    int i;
+    int head = 0;
+    int end;
+    unsigned long a;
 
-    p.opt           = opt;
-    p.data          = data;
-    p.len           = len;
-    p.addr          = addr;
-    p.ctx           = &ctx;
-    ctx.cfg         = cfg;
-    ctx.flag        = SDB_FLG_LV_INFO | SDB_FLG_T_DUMP;
-    ctx.file        = file;
-    ctx.func        = func;
-    ctx.line        = line;
+    opt &= cfg->opt;
+    bp.cfg          = cfg;
+    bp.flag         = SDB_TYPE_DUMP;
 
     if (data == NULL)
         return SDB_RET_PARAM_ERR;
-    if (len < 0 || len > 0xFFFF) {
+    if (len > 0xFFFF) {
+#if defined(SDB_SYS_SUPPORT_LARGE_MEM) && defined(SDB_MDL_GET_ENABLE)
         SDB_OUT_W("Data length too large! len:%d(%#x)", len, len);
-#if defined(SDB_MDL_INPUT_ENABLE)
-        char in[32];
-        SDB_IN_SI(in, 32, NULL, "Dump it? (yes/no)");
+        char in[8];
+        SDB_IN_SI(in, 8, NULL, "Dump it? (yes/no)");
         if (strcasecmp(in, "yes"))
             return 0;
-#else
-        return SDB_RET_PARAM_ERR;
 #endif
     }
+    PUT_PEND(&bp);
     if (fmt) {
-        va_start(ap, fmt);
-        sdb_output_v(cfg, ctx.flag | SDB_FLG_NOWRAP,
-                file, func, line, fmt, ap);
-        va_end(ap);
-        sdb_output(cfg, ctx.flag | SDB_FLG_BARE,
-                file, func, line, " [len:%d]", p.len);
+        PUT_STR_BLK(&bp, SDB_DATA_FILE, file, 0);
+        PUT_STR_BLK(&bp, SDB_DATA_FUNC, func, 0);
+        PUT_STR_BLK(&bp, SDB_DATA_LINE, (const char *)&line, 1);
+        bp.flag |= SDB_DATA_INFO;
+        va_start(va, fmt);
+        ret = vxprint((void *)&bp, cb_putx, fmt, va);
+        va_end(va);
+        if (ret)
+            return ret;
+        bp.flag &= ~SDB_DATA_INFO;
+        PUT_STR(&bp, SDB_DATA_INFO, " [buf:", 6);
+        PUT_NUM(&bp, SDB_DATA_INFO, 16, ALTERNATE_FORM, 0, (unsigned long)data);
+        PUT_STR(&bp, SDB_DATA_INFO, ", len:", 6);
+        PUT_NUM(&bp, SDB_DATA_INFO, 10, 0, 0, len);
+        PUT_STR(&bp, SDB_DATA_INFO, "]", 6);
+        PUT_WRAP(&bp);
     }
-    return dump_proc(&p);
+    if (opt & SDB_DUMP_SEGADD16)
+        seg += 16;
+    if (opt & SDB_DUMP_SEGADD32)
+        seg += 32;
+
+    if (addr % seg)
+        head -= addr % seg;
+    while (1) {
+        end = (int)seg + head;
+        a = addr + count;
+        PUT_STR_BLK(&bp, SDB_DATA_FILE, file, 0);
+        PUT_STR_BLK(&bp, SDB_DATA_FUNC, func, 0);
+        PUT_STR_BLK(&bp, SDB_DATA_LINE, (const char *)&line, 1);
+        if (len - head - count < seg)
+            end = len - count;
+
+        if (end == seg && (*(unsigned char *)data == 0xFF
+                    || (*(unsigned char *)data == 0x00))) {
+            unsigned char c = *(unsigned char *)data;
+            i = 0;
+            while (1) {
+                if (*((unsigned char *)data + i++) != c)
+                    break;
+            }
+            if (i / seg > 1) {
+                end = (i / seg) * seg;
+                if (c == 0xFF)
+                    PUT_STR(&bp, SDB_DATA_INFO, "  ff ...", 8);
+                else if (c == 0)
+                    PUT_STR(&bp, SDB_DATA_INFO, "  00 ...", 8);
+                PUT_WRAP(&bp);
+                head = 0;
+                count += end;
+                data += end;
+                continue;
+            }
+        }
+
+        if (~opt & SDB_DUMP_NONUM) {
+            if (addr)
+                PUT_NUM(&bp, SDB_DATA_INFO, 16, PAD_ZERO, 8, a + head);
+            else
+                PUT_NUM(&bp, SDB_DATA_INFO, 16, PAD_ZERO, 4, a + head);
+            PUT_STR(&bp, SDB_DATA_INFO, ":", 1);
+        }
+        if (count >= len) {
+            PUT_WRAP(&bp);
+            break;
+        }
+        if (~opt & SDB_DUMP_NOHEX) {
+            for (i = head; i < head + seg; i++) {
+                if ((a + i) % 16 == 0)
+                    PUT_STR(&bp, SDB_DATA_INFO, " ", 1);
+                if (i >= 0 && i < end) {
+                    PUT_NUM(&bp, SDB_DATA_INFO, 16, PAD_ZERO, 2,
+                            *((unsigned char *)data + i));
+                    PUT_STR(&bp, SDB_DATA_INFO, " ", 1);
+                }
+                else
+                    PUT_STR(&bp, SDB_DATA_INFO, "   ", 1);
+            }
+        }
+        if (~opt & SDB_DUMP_NOCHAR) {
+            for (i = head; i < end; i++) {
+                if ((a + i) % 16 == 0)
+                    PUT_STR(&bp, SDB_DATA_INFO, " ", 1);
+                if (i >= 0) {
+                    unsigned char d[2];
+                    d[0] = *((unsigned char *)data + i);
+                    d[1] = 0;
+                    if (d[0] < 0x20 || d[0] > 0x7e)
+                        PUT_STR(&bp, SDB_DATA_INFO, ".", 1);
+                    else
+                        PUT_STR(&bp, SDB_DATA_INFO, d, 1);
+                }
+                else
+                    PUT_STR(&bp, SDB_DATA_INFO, " ", 1);
+            }
+        }
+        PUT_WRAP(&bp);
+        head = 0;
+        count += end;
+        data += end;
+        if (count >= len && end < seg)
+            break;
+    }
+    PUT_POST(&bp);
+    return 0;
 }
 
 #else
-inline int sdb_dump(const sdb_config_t *cfg, int opt,
+inline int sdb_dump(const sdb_config_t *cfg,
+        int opt, void *data, unsigned int len, unsigned long addr, 
         const char *file, const char *func, unsigned int line,
-        void *data, unsigned int len, void *addr, const char *fmt, ...)
+        const char *fmt, ...)
 {
     return 0;
 }
