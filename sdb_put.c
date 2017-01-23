@@ -60,8 +60,7 @@ void set_color(unsigned int flag, const char **head, const char **end)
 #endif /* defined(SDB_SYS_SUPPORT_ANSI_COLOR_SEQUENCES) */
 
 int sdb_putx(const sdb_config_t *cfg, int flag,
-        const char *file, const char *func, unsigned int line,
-        const char *fmt, ...)
+        const char *file, unsigned int line, const char *fmt, ...)
 {
     int ret;
     int err;
@@ -81,7 +80,6 @@ int sdb_putx(const sdb_config_t *cfg, int flag,
     PUT_PEND(&bio);
     bio.flag &= SDB_TYPE_MASK;
     PUT_STR_BLK(&bio, SDB_DATA_FILE, file, 0);
-    PUT_STR_BLK(&bio, SDB_DATA_FUNC, func, 0);
     PUT_STR_BLK(&bio, SDB_DATA_LINE, (const char *)&line, 1);
 
     if (fmt) {
@@ -154,8 +152,7 @@ int sdb_put_bare(const sdb_config_t *cfg, const char *fmt, ...)
 
 #else
 inline int sdb_putx(const sdb_config_t *cfg, int flag,
-        const char *file, const char *func, unsigned int line,
-        const char *fmt, ...)
+        const char *file, unsigned int line, const char *fmt, ...)
 {
     return 0;
 }

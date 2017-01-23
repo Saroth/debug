@@ -10,9 +10,9 @@
 
 #define SDB_SET_CONFIG cfg
 
-int sdb_get(const sdb_config_t *cfg, char *buf, unsigned int size, int *len,
-        const char *file, const char *func, unsigned int line,
-        unsigned flag, const char *fmt, ...)
+int sdb_get(char *buf, unsigned int size, int *len,
+        const sdb_config_t *cfg, unsigned flag,
+        const char *file, unsigned int line, const char *fmt, ...)
 {
     int ret;
     unsigned int l;
@@ -47,7 +47,6 @@ int sdb_get(const sdb_config_t *cfg, char *buf, unsigned int size, int *len,
     bio.flag        = flag;
     PUT_PEND(&bio);
     PUT_STR_BLK(&bio, SDB_DATA_FILE, file, 0);
-    PUT_STR_BLK(&bio, SDB_DATA_FUNC, func, 0);
     PUT_STR_BLK(&bio, SDB_DATA_LINE, (const char *)&line, 1);
 #if defined(SDB_SYS_SUPPORT_ANSI_COLOR_SEQUENCES)
     set_color(bio.flag, &head, &end);
@@ -88,7 +87,6 @@ int sdb_get(const sdb_config_t *cfg, char *buf, unsigned int size, int *len,
     bio.flag        = SDB_TYPE_INPUT_ECHO;
     PUT_PEND(&bio);
     PUT_STR_BLK(&bio, SDB_DATA_FILE, file, 0);
-    PUT_STR_BLK(&bio, SDB_DATA_FUNC, func, 0);
     PUT_STR_BLK(&bio, SDB_DATA_LINE, (const char *)&line, 1);
 #if defined(SDB_SYS_SUPPORT_ANSI_COLOR_SEQUENCES)
     set_color(bio.flag, &head, &end);
@@ -122,10 +120,9 @@ int sdb_get(const sdb_config_t *cfg, char *buf, unsigned int size, int *len,
 }
 
 #else
-inline int sdb_get(const sdb_config_t *cfg,
-        char *buf, unsigned int size, int *len,
-        const char *file, const char *func, unsigned int line,
-        unsigned flag, const char *fmt, ...)
+inline int sdb_get(char *buf, unsigned int size, int *len,
+        const sdb_config_t *cfg, unsigned flag,
+        const char *file, unsigned int line, const char *fmt, ...)
 {
     return 0;
 }

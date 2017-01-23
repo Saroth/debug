@@ -16,9 +16,10 @@ extern int vxprint(void *ptr, put_t put, const char *fmt, va_list va);
 
 int _put(void *p, const char *buf, unsigned int len)
 {
-    // printf("[%04d]  ", sdb_get_stack());
-    sdb_get_stack();
+    /* printf("[%04d]  ", sdb_get_stack()); */
     char b[64];
+
+    sdb_get_stack();
     if (len == 0)
         while (buf[len++]);
     if (len > 60)
@@ -55,33 +56,33 @@ int sdb_selftest_printf(void *p)
         sdb_set_stack();
         pp[i]("----\n");
         pp[i](
-                // " 0 %%d:\t %%, %d, %d, %d, %d, %d, %d, %d, %d \n" 
-                // " 1 %%i:\t %i, %i, %i, %i, %i, %i, %i, %i \n" 
-                // " 2 %%x:\t %x, %x, %x, %x, %x, %x, %x, %x, %x \n" 
-                // " 3 %%X:\t %X, %X, %X, %X, %X, %X, %X, %X, %X \n" 
-                // " 4 %%x:\t %lx, %lx, %lx, %lx, %lx, %lx, %lx, %lx, %lx \n" 
-                // " 5 %%o:\t %o, %o, %o, %o, %o, %o, %o, %o, %o \n" 
-                // " 6 %%c:\t %c, %c, %c, %c, %c, %c, %c, %c, %c \n" 
-                // " 7 %%?d:\t %08o, %-08d, %+8d, %04i, %08d, %8d, %+u, %+-8d, \n" 
-                // " 8 %%?d:\t %#d, %#x, %p, %#o, %#X, %#i \n" 
-                // " 9 %%?d:\t %#02d, %#08x, %08p, %16p, %#08o, %#08X, %#08i \n" 
-                // "10 %%s:\t %s, %+s, %08s, %-08s, \n" 
-                // "11 %%?:\t %a, %b, %O, %e, %#x \n" 
-                // "12 %%f:\t %f, %f, %f, %#x, %f\n" 
+                "0 d:\t%%,%d,%d,%d,%d,%d,%d,%d,%d\n"
+                "1 i:\t%i,%i,%i,%i,%i,%i,%i,%i\n"
+                "2 x:\t%x,%x,%x,%x,%x,%x,%x,%x,%x\n"
+                "3 X:\t%X,%X,%X,%X,%X,%X,%X,%X,%X\n"
+                "4 x:\t%lx,%lx,%lx,%lx,%lx,%lx,%lx,%lx,%lx\n"
+                "5 o:\t%o,%o,%o,%o,%o,%o,%o,%o,%o\n"
+                "6 c:\t%c,%c,%c,%c,%c,%c,%c,%c,%c\n"
+                "7 ?d:\t%08o,%-08d,%+8d,%04i,%08d,%8d,%+u,%+-8d,\n"
+                "8 ?d:\t%#d,%#x,%p,%#o,%#X,%#i\n"
+                "9 ?d:\t%#02d,%#08x,%08p,%16p,%#08o,%#08X,%#08i\n"
+                "a s:\t%s,%+s,%08s,%-08s,%s,%8s,\n"
+                "b ?:\t%a,%b,%O,%e,%#x\n"
+                "c f:\t%f,%f,%f,%#x,%f\n"
                 "%s",
-                // 0, 8, 32, 128, 80000, 0x7fffffff, -1, -0x123, 
-                // 0, 8, 32, 128, 80000, 0x7fffffff, -1, -0x123, 
-                // 0, 7, 8, 15, 0x00123abc, 0x7fffffff, 0xffffffff, -1, -0x123, 
-                // 0, 7, 8, 15, 0x00123abc, 0x7fffffff, 0xffffffff, -1, -0x123, 
-                // 0, 7, 8, 15, 0x00123abc, 0x7fffffff, 0xffffffff, -1, -0x123, 
-                // 0, 7, 8, 15, 0x00123abc, 0x7fffffff, 0xffffffff, -1, -0x123, 
-                // 0, ' ', 'S', '\b', 124, 0xf6, "123", -1, -0x20, 
-                // 123, 123, 123, 123, -123, -123, 123, 123, 
-                // 123, 123, 123, 123, 123, 123, 
-                // 123, 123, 123, 123, 123, 123, 123, 
-                // "test1", "test2", "test3", "test4", 
-                // 0x5f5f, 
-                // 3.1415, 2.16, 1.234, 0x5a5a, 3.8, 
+                0, 8, 32, 128, 80000, 0x7fffffff, -1, -0x123,
+                0, 8, 32, 128, 80000, 0x7fffffff, -1, -0x123,
+                0, 7, 8, 15, 0x00123abc, 0x7fffffff, 0xffffffff, -1, -0x123,
+                0, 7, 8, 15, 0x00123abc, 0x7fffffff, 0xffffffff, -1, -0x123,
+                0, 7, 8, 15, 0x00123abc, 0x7fffffff, 0xffffffff, -1, -0x123,
+                0, 7, 8, 15, 0x00123abc, 0x7fffffff, 0xffffffff, -1, -0x123,
+                0, ' ', 'S', '\b', 124, 0xf6, "123", -1, -0x20,
+                123, 123, 123, 123, -123, -123, 123, 123,
+                123, 123, 123, 123, 123, 123,
+                123, 123, 123, 123, 123, 123, 123,
+                "test1", "test2", "test3", "test4", NULL, NULL,
+                0x5f5f,
+                3.1415, 2.16, 1.234, 0x5a5a, 3.8,
                 "[end]\n");
         printf("Max stack: %d\n\n", sdb_get_stack_max());
     }
@@ -275,7 +276,7 @@ int sdb_selftest_dump(void *p)
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     };
-    unsigned char buf5[208] = {
+    unsigned char buf5[368] = {
         0x42, 0x79, 0xA3, 0xDB, 0xD1, 0x03, 0xCD, 0x4B,
         0x32, 0xE4, 0x90, 0x06, 0x0C, 0xFC, 0xE4, 0xCD,
 
@@ -289,6 +290,22 @@ int sdb_selftest_dump(void *p)
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 
         0x00, 0x30, 0xB1, 0xCC, 0xD7, 0xB2, 0xAD, 0xDB,
         0xE2, 0x2C, 0x4D, 0x26, 0x25, 0x01, 0x21, 0xD8,
@@ -297,6 +314,11 @@ int sdb_selftest_dump(void *p)
         0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
         0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
         0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 
         0xF2, 0x8D, 0x83, 0xD4, 0xAD, 0x39, 0x5A, 0xFE,
         0x28, 0xE1, 0x53, 0x53, 0x17, 0x99, 0x8A, 0xC2,
@@ -379,10 +401,10 @@ int sdb_selftest_dump(void *p)
     SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
     SDB_OUT_I("Return: %d", ret);
 
-    // sdb_set_stack();
-    // ret = SDB_DMP_I("# This is a test.", 0x10000, "Dump string");
-    // SDB_OUT_I("Max stack: %d", sdb_get_stack_max());
-    // SDB_OUT_I("Return: %d", ret);
+    /* sdb_set_stack(); */
+    /* ret = SDB_DMP_I("# This is a test.", 0x10000, "Dump string"); */
+    /* SDB_OUT_I("Max stack: %d", sdb_get_stack_max()); */
+    /* SDB_OUT_I("Return: %d", ret); */
 
     SDB_OUT("\n");
 
@@ -395,7 +417,7 @@ int sdb_selftest(void *p)
     /* sdb_color_demo(NULL); */
     sdb_selftest_put(NULL);
     sdb_selftest_put_stderr(NULL);
-    // sdb_selftest_get(NULL);
+    /* sdb_selftest_get(NULL); */
     sdb_selftest_dump(NULL);
 
     /* SDB_MENU( */

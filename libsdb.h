@@ -19,7 +19,7 @@ typedef enum {                                              /* 调试配置选�
     SDB_DUMP_NOHEX          = (1 << 2),                     /* 不输出16进制 */
     SDB_DUMP_NOCHAR         = (1 << 3),                     /* 不输出字符 */
     SDB_DUMP_SEGADD16       = (1 << 4),                     /* 每行增加16字节 */
-    SDB_DUMP_SEGADD32       = (1 << 5),                     /* 每行增加32字节 */
+    SDB_DUMP_SEGADD32       = (1 << 5)                      /* 每行增加32字节 */
 } sdb_option_t;
 
 typedef enum {                                              /* 输出标记定义 */
@@ -45,7 +45,7 @@ typedef enum {                                              /* 输出标记定�
     SDB_DATA_WRAP           = (0x09 << SDB_DATA_OFS),       /* 换行 */
     SDB_DATA_COLOR          = (0x0a << SDB_DATA_OFS),       /* 颜色控制序列 */
     SDB_DATA_BLANK          = (0x0b << SDB_DATA_OFS),       /* 空白 */
-    SDB_DATA_MASK           = (0x0f << SDB_DATA_OFS),       /* 掩码 */
+    SDB_DATA_MASK           = (0x0f << SDB_DATA_OFS)        /* 掩码 */
 } sdb_flag_t;
 
 typedef enum {                                              /* 返回值定义 */
@@ -53,7 +53,7 @@ typedef enum {                                              /* 返回值定义 *
     SDB_RET_PARAM_ERR       = -0x0a,                        /* 参数错误 */
     SDB_RET_NO_INPUT        = -0x0b,                        /* 无输入 */
     SDB_RET_UNKNOWN_INPUT   = -0x0c,                        /* 未知输入 */
-    SDB_RET_PROCESS_ERR     = -0x0d,                        /* 处理错误 */
+    SDB_RET_PROCESS_ERR     = -0x0d                         /* 处理错误 */
 } sdb_ret_t;
 
 typedef struct sdb_config_t sdb_config_t;
@@ -108,15 +108,13 @@ int sdb_get_stack_max(void);
  * \param       cfg         配置结构体
  * \param       flag        输出标记, sdb_flag_t
  * \param       file        __FILE__
- * \param       func        __func__
  * \param       line        __LINE__
  * \param       fmt         格式化输出
  * \param       ...         不定参数
  * \return      0:Success; <0:Error
  */
 int sdb_putx(const sdb_config_t *cfg, int flag,
-        const char *file, const char *func, unsigned int line,
-        const char *fmt, ...);
+        const char *file, unsigned int line, const char *fmt, ...);
 /**
  * \brief       调试输出控制
  * \param       cfg         配置结构体
@@ -126,41 +124,15 @@ int sdb_putx(const sdb_config_t *cfg, int flag,
  */
 int sdb_put_bare(const sdb_config_t *cfg, const char *fmt, ...);
 
-int sdb_get(const sdb_config_t *cfg, char *buf, unsigned int size, int *len,
-        const char *file, const char *func, unsigned int line,
-        unsigned flag, const char *fmt, ...);
-int sdb_get_num(const sdb_config_t *cfg, int *num,
-        const char *file, const char *func, unsigned int line);
-
-/**
- * \brief       调试输入控制
- * \param       cfg         配置结构体
- * \param       flag        输出标记, sdb_flag_t
- * \param       file        __FILE__
- * \param       func        __func__
- * \param       line        __LINE__
- * \param       buf         SDB_FLG_T_INPUT_STR: 输出缓存，可以为0
- *                          SDB_FLG_T_INPUT_NUM: 不使用
- * \param       bufsize     SDB_FLG_T_INPUT_STR: 输出缓存大小
- *                          SDB_FLG_T_INPUT_NUM: 不使用
- * \param       pnum        SDB_FLG_T_INPUT_STR: 输出长度
- *                          SDB_FLG_T_INPUT_NUM: 数值
- *                          可以为0
- * \param       fmt         格式化输出
- * \param       ...         不定参数
- * \return      SDB_FLG_T_INPUT_STR:    0:Success; <0:Error
- *              SDB_FLG_T_INPUT_NUM:    ~:输入的数值 sdb_ret_t:Error;
- */
-int sdb_input(const sdb_config_t *cfg, int flag,
-        const char *file, const char *func, unsigned int line,
-        char *buf, unsigned int bufsize, int *pnum, const char *fmt, ...);
+int sdb_get(char *buf, unsigned int size, int *len,
+        const sdb_config_t *cfg, unsigned flag,
+        const char *file, unsigned int line, const char *fmt, ...);
 
 /**
  * \brief       数据导出控制
  * \param       cfg         配置结构体
  * \param       opt         数据导出控制选项, sdb_option_t
  * \param       file        __FILE__
- * \param       func        __func__
  * \param       line        __LINE__
  * \param       buf         数据
  * \param       len         数据长度
@@ -169,14 +141,12 @@ int sdb_input(const sdb_config_t *cfg, int flag,
  * \param       ...         不定参数
  * \return      0:Success; <0:Error
  */
-int sdb_dump(const sdb_config_t *cfg,
-        int opt, void *data, unsigned int len, unsigned long addr, 
-        const char *file, const char *func, unsigned int line,
-        const char *fmt, ...);
+int sdb_dump(void *data, unsigned int len, unsigned long addr,
+        const sdb_config_t *cfg, int opt,
+        const char *file, unsigned int line, const char *fmt, ...);
 
-int sdb_menu(const sdb_config_t *cfg,
-        const char *file, const char *func, unsigned int line,
-        sdb_item_t *list, unsigned int num);
+int sdb_menu(sdb_item_t *list, unsigned int num,
+        const sdb_config_t *cfg, const char *file, unsigned int line);
 
 /**
  * \brief       内联空实现
@@ -217,12 +187,12 @@ int sdb_nop(void);
 
 #if defined(SDB_ENABLE)
 #define SDB_OUT(...)        sdb_put_bare(__sdb_cfg, __VA_ARGS__)
-#define SDB_OUT_I(...)      sdb_putx(__sdb_cfg, SDB_TYPE_INFO,\
-        __FILE__, __func__, __LINE__, __VA_ARGS__)
-#define SDB_OUT_W(...)      sdb_putx(__sdb_cfg, SDB_TYPE_WARN,\
-        __FILE__, __func__, __LINE__, __VA_ARGS__)
-#define SDB_OUT_E(...)      sdb_putx(__sdb_cfg, SDB_TYPE_ERR,\
-        __FILE__, __func__, __LINE__, __VA_ARGS__)
+#define SDB_OUT_I(...) \
+    sdb_putx(__sdb_cfg, SDB_TYPE_INFO, __FILE__, __LINE__, __VA_ARGS__)
+#define SDB_OUT_W(...) \
+    sdb_putx(__sdb_cfg, SDB_TYPE_WARN, __FILE__, __LINE__, __VA_ARGS__)
+#define SDB_OUT_E(...) \
+    sdb_putx(__sdb_cfg, SDB_TYPE_ERR, __FILE__, __LINE__, __VA_ARGS__)
 #else
 #define SDB_OUT(...)        sdb_nop()
 #define SDB_OUT_I(...)      sdb_nop()
@@ -247,22 +217,18 @@ int sdb_nop(void);
 #endif
 
 #if defined(SDB_ENABLE)
-#define SDB_IN_N(__pnum)                        ({\
-        sdb_get(__sdb_cfg, 0, 0, __pnum,\
-                __FILE__, __func__, __LINE__, SDB_TYPE_INPUT_NUM, NULL);\
-        })
-#define SDB_IN_S(__buf, __size, __plen)         ({\
-        sdb_get(__sdb_cfg, __buf, __size, (int *)(__plen),\
-                __FILE__, __func__, __LINE__, SDB_TYPE_INPUT_STR, NULL);\
-        })
-#define SDB_IN_NI(__pnum, ...)                  ({\
-        sdb_get(__sdb_cfg, 0, 0, __pnum,\
-                __FILE__, __func__, __LINE__, SDB_TYPE_INPUT_NUM, __VA_ARGS__);\
-        })
-#define SDB_IN_SI(__buf, __size, __plen, ...)   ({\
-        sdb_get(__sdb_cfg, __buf, __size, (int *)(__plen),\
-                __FILE__, __func__, __LINE__, SDB_TYPE_INPUT_STR, __VA_ARGS__);\
-        })
+#define SDB_IN_N(__pnum) \
+    sdb_get(0, 0, __pnum,\
+            __sdb_cfg, SDB_TYPE_INPUT_NUM, __FILE__, __LINE__, 0)
+#define SDB_IN_S(__buf, __size, __plen) \
+    sdb_get(__buf, __size, (int *)(__plen),\
+            __sdb_cfg, SDB_TYPE_INPUT_STR, __FILE__, __LINE__, 0)
+#define SDB_IN_NI(__pnum, ...) \
+    sdb_get(0, 0, __pnum,\
+            __sdb_cfg, SDB_TYPE_INPUT_NUM, __FILE__, __LINE__, __VA_ARGS__)
+#define SDB_IN_SI(__buf, __size, __plen, ...) \
+    sdb_get(__buf, __size, (int *)(__plen),\
+            __sdb_cfg, SDB_TYPE_INPUT_STR, __FILE__, __LINE__, __VA_ARGS__)
 #else
 #define SDB_IN_N(...)       sdb_nop()
 #define SDB_IN_S(...)       sdb_nop()
@@ -293,24 +259,24 @@ int sdb_nop(void);
 #endif
 
 #if defined(SDB_ENABLE)
-#define SDB_DMP(__buf, __len)                   sdb_dump(__sdb_cfg,\
-        SDB_DUMP_NOCHAR, __buf, __len, 0,\
-        __FILE__, __func__, __LINE__, 0);
-#define SDB_DMP_C(__buf, __len)                 sdb_dump(__sdb_cfg,\
-        0, __buf, __len, 0,\
-        __FILE__, __func__, __LINE__, 0);
-#define SDB_DMP_CA(__buf, __len, __addr)        sdb_dump(__sdb_cfg,\
-        0, __buf, __len, __addr,\
-        __FILE__, __func__, __LINE__, 0);
-#define SDB_DMP_I(__buf, __len, ...)            sdb_dump(__sdb_cfg,\
-        SDB_DUMP_NOCHAR, __buf, __len, 0,\
-        __FILE__, __func__, __LINE__, __VA_ARGS__);
-#define SDB_DMP_CI(__buf, __len, ...)           sdb_dump(__sdb_cfg,\
-        0, __buf, __len, 0,\
-        __FILE__, __func__, __LINE__, __VA_ARGS__);
-#define SDB_DMP_CAI(__buf, __len, __addr, ...)  sdb_dump(__sdb_cfg,\
-        0, __buf, __len, __addr,\
-        __FILE__, __func__, __LINE__, __VA_ARGS__);
+#define SDB_DMP(__buf, __len) \
+    sdb_dump(__buf, __len, 0,\
+            __sdb_cfg, SDB_DUMP_NOCHAR, __FILE__, __LINE__, 0);
+#define SDB_DMP_C(__buf, __len) \
+    sdb_dump(__buf, __len, 0,\
+            __sdb_cfg, 0, __FILE__, __LINE__, 0);
+#define SDB_DMP_CA(__buf, __len, __addr) \
+    sdb_dump(__buf, __len, __addr,\
+            __sdb_cfg, 0, __FILE__, __LINE__, 0);
+#define SDB_DMP_I(__buf, __len, ...) \
+    sdb_dump(__buf, __len, 0,\
+            __sdb_cfg, SDB_DUMP_NOCHAR, __FILE__, __LINE__, __VA_ARGS__);
+#define SDB_DMP_CI(__buf, __len, ...) \
+    sdb_dump(__buf, __len, 0,\
+            __sdb_cfg, 0, __FILE__, __LINE__, __VA_ARGS__);
+#define SDB_DMP_CAI(__buf, __len, __addr, ...) \
+    sdb_dump(__buf, __len, __addr,\
+            __sdb_cfg, 0, __FILE__, __LINE__, __VA_ARGS__);
 #else
 #define SDB_DMP(...)        sdb_nop()
 #define SDB_DMP_C(...)      sdb_nop()
@@ -330,7 +296,7 @@ int sdb_nop(void);
 #if defined(SDB_ENABLE)
 #define SDB_MENU(...) {\
     sdb_item_t __sdb_item_list[] = { __VA_ARGS__ }; \
-    sdb_menu(__sdb_cfg, __FILE__, __func__, __LINE__,\
+    sdb_menu(__sdb_cfg, __FILE__, __LINE__,\
             __sdb_item_list, sizeof(__sdb_item_list) / sizeof(sdb_item_t));\
 }
 #else

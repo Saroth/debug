@@ -137,6 +137,8 @@ static int print_str(print_context_t *ctx, va_list va)
 {
     unsigned char *s = va_arg(va, unsigned char *);
 
+    if (s == 0)
+        s = "(null)";
     if (ctx->width) {
         unsigned int l = 0;
         while (s[l++]);
