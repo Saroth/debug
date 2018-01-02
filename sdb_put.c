@@ -5,9 +5,9 @@
 #include <string.h>
 #endif
 
-#if defined(SDB_ENABLE)
+#if 0 /* defined(SDB_ENABLE) */
 
-inline int cb_putx(void *p, const char *buf, unsigned int len)
+int cb_putx(void *p, const char *buf, unsigned int len)
 {
     return bio_put(((bio_put_param_t *)p)->cfg,
             ((bio_put_param_t *)p)->flag, buf, len);
@@ -151,12 +151,12 @@ int sdb_put_bare(const sdb_config_t *cfg, const char *fmt, ...)
 }
 
 #else
-inline int sdb_putx(const sdb_config_t *cfg, int flag,
+int sdb_putx(const sdb_config_t *cfg, int flag,
         const char *file, unsigned int line, const char *fmt, ...)
 {
     return 0;
 }
-inline int sdb_put_bare(const sdb_config_t *cfg, const char *fmt, ...)
+int sdb_put_bare(const sdb_config_t *cfg, const char *fmt, ...)
 {
     return 0;
 }

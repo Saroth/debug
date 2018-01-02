@@ -1,125 +1,101 @@
 #include "sdb_config.h"
 
-inline int sdb_nop(void)
-{
-    return 0;
-}
+int sdb_nop(void) { return 0; }
 
 #if defined(SDB_STACK_WATCH)
-char *gstack_head = 0;
-unsigned long gstack_max = 0;
+static unsigned long stack_top = 0;
+static unsigned long stack_max = 0;
 
 void sdb_set_stack(void)
 {
     char i;
-    gstack_head = &i;
-    gstack_max = 0;
+
+    stack_top = &i;
+    stack_max = 0;
 }
 
-int sdb_get_stack(void)
+long sdb_get_stack(void)
 {
-    char i;
-    unsigned long p = (unsigned long)(gstack_head - &i);
-    if (p > gstack_max)
-        gstack_max = p;
+    unsigned long p = (unsigned long)(stack_top - &p);
+
+    if (p > stack_max) {
+        stack_max = p;
+    }
+
     return (int)p;
 }
 
-int sdb_get_stack_max(void)
+long sdb_get_stack_max(void)
 {
-    return gstack_max;
+    return stack_max;
 }
 
 #else
-inline void sdb_set_stack(void) { }
-inline int sdb_get_stack(void) { return 0; }
+void sdb_set_stack(void)        { }
+long sdb_get_stack(void)        { return 0; }
+long sdb_get_stack_max(void)    { return 0; }
 #endif
 
 #if defined(SDB_ENABLE)
 
-#if defined(SDB_SYS_SUPPORT_STDIO)
+#if defined(SDB_ENV_STDIO)
 #include <stdio.h>
-static int std_put(void *ptr, sdb_flag_t flag,
-        const char *buf, unsigned int len)
+
+static int std_puts(sdb_bio_puts_param_t *p)
 {
-    switch (flag & SDB_DATA_MASK) {
-        case SDB_DATA_PEND: {
 #if defined(SDB_STACK_WATCH)
-            // printf("[%04d]  ", sdb_get_stack());
+    printf("%04d ", sdb_get_stack());
 #endif
-            break;
-        }
-        case SDB_DATA_POST:
-        case SDB_DATA_BLANK:
-        case SDB_DATA_FUNC: break;
-        case SDB_DATA_FILE: printf("%16s:", buf); break;
-        case SDB_DATA_LINE: printf("%04d  ", *((unsigned int *)buf)); break;
-        // case SDB_DATA_LINE:
-        case SDB_DATA_WRAP:
-        case SDB_DATA_STDERR:
-        default: {
-#if defined(SDB_STACK_WATCH)
-            // printf("[%04d]  ", sdb_get_stack());
-            sdb_get_stack();
-#endif
-            // char b[64];
-            // if (len > 60 && buf == NULL)
-            //     break;
-            // memmove(b, buf, len);
-            // b[len] = 0;
-            printf("%s", buf);
-            break;
-        }
-    }
-    fflush(stdout);
+    printf("%16s:%04d %s\r\n", p->file, p->line, p->str);
 
     return 0;
 }
 
-static int std_get(void *ptr, char *buf, unsigned int size, unsigned int *len)
+static int std_gets(sdb_bio_gets_param_t *p)
 {
     int c = 0;
     unsigned int i = 0;
 
+#if defined(SDB_STACK_WATCH)
     sdb_get_stack();
-    while (buf) {
-        if ((c = getchar()) == EOF)
+#endif
+    while (p->buf) {
+        if ((c = getchar()) == EOF) {
             break;
-        if ((buf[i++] = c) == '\n' || (size > 0 && i >= size - 1))
+        }
+        if ((p->buf[i++] = c) == '\n' || (p->size > 0 && i >= p->size - 1)) {
             break;
+        }
     }
-    if (len)
-        *len = i;
 
     return 0;
 }
 
 const sdb_config_t sdb_cfg_std = {
     .opt        = 0,
-    .put        = std_put,
-    .get        = std_get,
+    .puts       = std_puts,
+    .gets       = std_gets,
     .ptr        = 0,
 };
-#endif /* defined(SDB_SYS_SUPPORT_STDIO) */
+#endif /* defined(SDB_ENV_STDIO) */
 
-int bio_put(const sdb_config_t *cfg, unsigned int flag,
-        const char *buf, unsigned int len)
+int bio_put(bio_put_param_t *p)
 {
-    if (cfg && cfg->put) {
-        if (len == 0 && buf)
-            while (buf[len++]);
-        return cfg->put(cfg->ptr, flag, buf, len);
+    if (p->cfg && p->cfg->puts) {
+        return p->cfg->puts(p->p);
     }
+
     return 0;
 }
 
-int bio_get(const sdb_config_t *cfg,
-        char *buf, unsigned int size, unsigned int *len)
+int bio_get(bio_get_param_t *p)
 {
-    if (buf == 0)
-        return SDB_RET_PARAM_ERR;
-    if (cfg && cfg->get)
-        return cfg->get(cfg->ptr, buf, size, len);
+    if (p->cfg && p->cfg->gets) {
+        if (p->p->buf == 0) {
+            return SDB_RET_PARAM_ERR;
+        }
+        return p->cfg->gets(p->p);
+    }
 
     return 0;
 }

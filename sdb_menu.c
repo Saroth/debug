@@ -28,7 +28,7 @@ int sdb_menu(sdb_item_t *list, unsigned int num,
 }
 
 #else
-inline int sdb_menu(sdb_item_t *list, unsigned int num,
+int sdb_menu(sdb_item_t *list, unsigned int num,
         const sdb_config_t *cfg, const char *file, unsigned int line)
 {
     return 0;

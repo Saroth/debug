@@ -6,14 +6,14 @@
 #include "sdb_config.h"
 
 typedef enum {
-    PAD_ZERO                = 0x01,     /* 填充0 */
-    ALIGN_LEFT              = 0x02,     /* 左对齐 */
-    CAPITAL_HEX             = 0x04,     /* 字母大写 */
-    ALTERNATE_FORM          = 0x08,     /* 数值格式, %#x => 0xff */
-    SIGN                    = 0x10,     /* 显示正负号 */
-    NEGATIVE_SIGN           = 0x20,     /* 显示为负号 */
+    PAD_ZERO                = 0x01,     /* padding with '0' */
+    ALIGN_LEFT              = 0x02,     /* left align */
+    CAPITAL_HEX             = 0x04,     /* upper case letter */
+    ALTERNATE_FORM          = 0x08,     /* number form, %#x => 0xff */
+    SIGN                    = 0x10,     /* display sign, +/- */
+    NEGATIVE_SIGN           = 0x20,     /* display negative sign */
     LONG_INT                = 0x40,     /* unsigned long int */
-    LONG_LONG_INT           = 0x80,     /* unsigned long long int */
+    LONG_LONG_INT           = 0x80      /* unsigned long long int */
 } flag_t;
 typedef int (* put_t)(void *p, const char *buf, unsigned int len);
 typedef struct {                        /* print 内部参数结构体 */
@@ -31,10 +31,14 @@ typedef struct {                        /* print 内部参数结构体 */
     void *ptr;                          /* 外部指针传递 */
     put_t put;                          /* 输出处理函数指针 */
 } print_context_t;
-typedef struct {                        /* 基本输出参数传递结构体 */
-    const sdb_config_t *cfg;            /* 配置结构体 */
-    unsigned int flag;                  /* 输出标记定义, sdb_flag_t */
+typedef struct {
+    const sdb_config_t *cfg;
+    sdb_bio_puts_param_t *p;
 } bio_put_param_t;
+typedef struct {
+    const sdb_config_t *cfg;
+    sdb_bio_gets_param_t *p;
+} bio_get_param_t;
 typedef struct {                        /* 内部输出参数传递结构体 */
     bio_put_param_t bio;                /* 基本输出参数传递 */
     const char *file;                   /* 文件名 */
@@ -97,28 +101,8 @@ typedef struct {                        /* 内部数据导出参数传递结构�
 extern "C" {
 #endif
 
-/**
- * \brief       基本输出接口
- * \param       cfg         配置结构体
- * \param       flag        输出控制, sdb_flag_t
- * \param       buf         输出缓存
- * \param       len         输出长度
- * \return      0:Success; <0:SDB_RET_T
- */
-int bio_put(const sdb_config_t *cfg,
-        unsigned int flag, const char *buf, unsigned int len);
-
-/**
- * \brief       基本输入接口
- * \param       cfg         配置结构体
- * \param       buf         获取输入数据的缓存
- * \param       size        缓存大小, 0:无限制
- * \param       len         获取输入数据长度的指针，可能为NULL
- * \return      0:Success; <0:SDB_RET_T
- * \detail      以回车或^D结束，返回结果包含换行符
- */
-int bio_get(const sdb_config_t *cfg,
-        char *buf, unsigned int size, unsigned int *len);
+int bio_put(bio_put_param_t *p);
+int bio_get(bio_get_param_t *p);
 
 int put_u2s(bio_put_param_t *p, unsigned char base, unsigned char flag,
         unsigned char width, unsigned long num);

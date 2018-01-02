@@ -12,14 +12,14 @@
 #ifndef __SDB_H__
 #define __SDB_H__
 
-#define __sdb_cfg SDB_SET_CONFIG                            /* 调试配置宏 */
+#define __sdb_cfg SDB_SET_CONFIG        /* 调试配置宏 */
 
-typedef enum {                                              /* 调试配置选项定义 */
-    SDB_DUMP_NONUM          = (1 << 1),                     /* 不输出计数或地址 */
-    SDB_DUMP_NOHEX          = (1 << 2),                     /* 不输出16进制 */
-    SDB_DUMP_NOCHAR         = (1 << 3),                     /* 不输出字符 */
-    SDB_DUMP_SEGADD16       = (1 << 4),                     /* 每行增加16字节 */
-    SDB_DUMP_SEGADD32       = (1 << 5)                      /* 每行增加32字节 */
+typedef enum {                                               /* debug options */
+    SDB_DUMP_NONUM      = (1 << 1),  /* do not display line number or address */
+    SDB_DUMP_NOHEX      = (1 << 2),                   /* do not dump hex data */
+    SDB_DUMP_NOCHAR     = (1 << 3),             /* do not dump charactor data */
+    SDB_DUMP_SEGADD16   = (1 << 4),                  /* add 16 bytes per line */
+    SDB_DUMP_SEGADD32   = (1 << 5)                   /* add 32 bytes per line */
 } sdb_option_t;
 
 typedef enum {                                              /* 输出标记定义 */
@@ -48,50 +48,50 @@ typedef enum {                                              /* 输出标记定�
     SDB_DATA_MASK           = (0x0f << SDB_DATA_OFS)        /* 掩码 */
 } sdb_flag_t;
 
-typedef enum {                                              /* 返回值定义 */
-    SDB_RET_OK              = 0,                            /* 成功 */
-    SDB_RET_PARAM_ERR       = -0x0a,                        /* 参数错误 */
-    SDB_RET_NO_INPUT        = -0x0b,                        /* 无输入 */
-    SDB_RET_UNKNOWN_INPUT   = -0x0c,                        /* 未知输入 */
-    SDB_RET_PROCESS_ERR     = -0x0d                         /* 处理错误 */
+typedef enum {                                                /* return codes */
+    SDB_RET_OK              = 0,                                   /* success */
+    SDB_RET_PARAM_ERR       = -0x0a,                         /* bad parameter */
+    SDB_RET_NO_INPUT        = -0x0b,      /* nothing input before press Enter */
+    SDB_RET_UNKNOWN_INPUT   = -0x0c                     /* unknown input data */
 } sdb_ret_t;
 
 typedef struct sdb_config_t sdb_config_t;
-typedef struct sdb_item_t sdb_item_t;
+typedef struct {                    /* structure of parameter for output */
+    void *ptr;                      /* external parameter */
+    const char *file;               /* file name */
+    unsigned int line;              /* line number */
+    const char *str;                /* a line of message */
+} sdb_bio_puts_param_t;
 /**
- * \brief       输出接口函数类型
- * \param       ptr         输出接口传递参数
- * \param       flag        输出标记, sdb_flag_t
- * \param       buf         数据缓存
- * \param       len         数据长度
+ * \brief       Type of function of base output interface
+ * \param       p           pointer of structure sdb_bio_puts_param_t
  * \return      0:Success; <0:Error
  */
-typedef int (* sdb_bio_put_t)(void *ptr, sdb_flag_t flag,
-        const char *buf, unsigned int len);
+typedef int (* sdb_bio_puts_func_t)(sdb_bio_puts_param_t *p);
+typedef struct {                    /* structure of parameter for input */
+    void *ptr;                      /* external parameter */
+    const char *file;               /* file name */
+    unsigned int line;              /* line number */
+    unsigned int size;              /* buffer size */
+    char *buf;                      /* buffer holding the input data */
+} sdb_bio_gets_param_t;
 /**
- * \brief       输入接口函数类型
- * \param       cfg         配置结构体
- * \param       buf         获取输入数据的缓存
- * \param       size        缓存大小, 0:无限制
- * \param       len         获取输入数据长度的指针
+ * \brief       Type of function of base input interface
+ * \param       p           pointer of structure sdb_bio_gets_param_t
  * \return      0:Success; <0:Error
- * \detail      输入过程不退出，直到收到回车或缓存超出才返回
- *              可包含或不包含换行符
- *              数据末尾会补充结束符，因此当len等于size时，最后一字节将丢弃
  */
-typedef int (* sdb_bio_get_t)(void *ptr,
-        char *buf, unsigned int size, unsigned int *len);
-struct sdb_config_t {                   /* 配置结构体 */
-    unsigned int opt;                   /* 调试项目选项, sdb_option_t */
-    sdb_bio_put_t put;                  /* 输出接口函数 */
-    sdb_bio_get_t get;                  /* 输入接口函数 */
-    void *ptr;                          /* 输出接口传递参数 */
+typedef int (* sdb_bio_gets_func_t)(sdb_bio_gets_param_t *p);
+struct sdb_config_t {               /* structure of external configurations */
+    unsigned int opt;               /* debug options, sdb_option_t */
+    sdb_bio_puts_func_t puts;
+    sdb_bio_gets_func_t gets;
+    void *ptr;                      /* external parameter */
 };
-struct sdb_item_t {                     /* 调试菜单项目结构体 */
-    char *info;                         /* 项目显示信息 */
-    void *param;                        /* 参数 */
-    int (*func)(void *);                /* 函数 */
-};
+typedef struct {                    /* structure of menu item */
+    char *info;                     /* item information */
+    void *param;                    /* parameter */
+    int (*func)(void *);            /* function */
+} sdb_item_t;
 
 #ifdef __cplusplus
 extern "C" {
@@ -99,9 +99,11 @@ extern "C" {
 /**\brief       标准输入输出，SDB_SYS_HAVE_STDIO启用时有效 */
 extern const sdb_config_t sdb_cfg_std;
 
+int sdb_nop(void);
+
 void sdb_set_stack(void);
-int sdb_get_stack(void);
-int sdb_get_stack_max(void);
+long sdb_get_stack(void);
+long sdb_get_stack_max(void);
 
 /**
  * \brief       调试输出控制
@@ -148,10 +150,6 @@ int sdb_dump(void *data, unsigned int len, unsigned long addr,
 int sdb_menu(sdb_item_t *list, unsigned int num,
         const sdb_config_t *cfg, const char *file, unsigned int line);
 
-/**
- * \brief       内联空实现
- */
-int sdb_nop(void);
 #ifdef __cplusplus
 }
 #endif
