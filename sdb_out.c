@@ -1,13 +1,13 @@
 #include "sdb_config.h"
 
-#if defined(SDB_SYS_SUPPORT_STDERR)
+#if defined(SDB_SYSTEM_HAS_STDERR)
 #include <errno.h>
 #include <string.h>
 #endif
 
-#if 0 /* defined(SDB_ENABLE) */
+#if defined(SDB_MODULE_OUT)
 
-int cb_putx(void *p, const char *buf, unsigned int len)
+inline int cb_putx(void *p, const char *buf, unsigned int len)
 {
     return bio_put(((bio_put_param_t *)p)->cfg,
             ((bio_put_param_t *)p)->flag, buf, len);
@@ -150,13 +150,19 @@ int sdb_put_bare(const sdb_config_t *cfg, const char *fmt, ...)
     return ret;
 }
 
+int sdb_out(unsigned int flag, const char *file, unsigned int line,
+        const char *fmt, ...)
+{
+    return ret;
+}
+
 #else
-int sdb_putx(const sdb_config_t *cfg, int flag,
+inline int sdb_out(const sdb_config_t *cfg, int flag,
         const char *file, unsigned int line, const char *fmt, ...)
 {
     return 0;
 }
-int sdb_put_bare(const sdb_config_t *cfg, const char *fmt, ...)
+inline int sdb_out_bare(const sdb_config_t *cfg, const char *fmt, ...)
 {
     return 0;
 }

@@ -12,160 +12,78 @@
 #ifndef __SDB_H__
 #define __SDB_H__
 
-#define __sdb_cfg SDB_SET_CONFIG        /* 调试配置宏 */
+inline int sdb_nop(void) { return 0; }
 
-typedef enum {                                               /* debug options */
-    SDB_DUMP_NONUM      = (1 << 1),  /* do not display line number or address */
-    SDB_DUMP_NOHEX      = (1 << 2),                   /* do not dump hex data */
-    SDB_DUMP_NOCHAR     = (1 << 3),             /* do not dump charactor data */
-    SDB_DUMP_SEGADD16   = (1 << 4),                  /* add 16 bytes per line */
-    SDB_DUMP_SEGADD32   = (1 << 5)                   /* add 32 bytes per line */
+typedef enum {                                          /* 调试配置选项定义 */
+    SDB_DUMP_NONUM          = (1 << 1),                 /* 不输出计数或地址 */
+    SDB_DUMP_NOHEX          = (1 << 2),                 /* 不输出16进制 */
+    SDB_DUMP_NOCHAR         = (1 << 3),                 /* 不输出字符 */
+    SDB_DUMP_SEGADD16       = (1 << 4),                 /* 每行增加16字节 */
+    SDB_DUMP_SEGADD32       = (1 << 5)                  /* 每行增加32字节 */
 } sdb_option_t;
 
-typedef enum {                                              /* 输出标记定义 */
+typedef enum {                                          /* 输出标记定义 */
     /* 消息类型 */
-    SDB_TYPE_OFS            = 0,                            /* 偏移 */
-    SDB_TYPE_ERR            = (0x01 << SDB_TYPE_OFS),       /* 错误 */
-    SDB_TYPE_WARN           = (0x02 << SDB_TYPE_OFS),       /* 警告 */
-    SDB_TYPE_INFO           = (0x03 << SDB_TYPE_OFS),       /* 普通消息 */
-    SDB_TYPE_INPUT_NUM      = (0x04 << SDB_TYPE_OFS),       /* 输入数值 */
-    SDB_TYPE_INPUT_STR      = (0x05 << SDB_TYPE_OFS),       /* 输入字符 */
-    SDB_TYPE_INPUT_ECHO     = (0x06 << SDB_TYPE_OFS),       /* 输入反馈 */
-    SDB_TYPE_DUMP           = (0x07 << SDB_TYPE_OFS),       /* 导出数据 */
-    SDB_TYPE_MASK           = (0x0f << SDB_TYPE_OFS),       /* 掩码 */
+    SDB_TYPE_OFS            = 0,                        /* 偏移 */
+    SDB_TYPE_ERR            = (0x01 << SDB_TYPE_OFS),   /* 错误 */
+    SDB_TYPE_WARN           = (0x02 << SDB_TYPE_OFS),   /* 警告 */
+    SDB_TYPE_INFO           = (0x03 << SDB_TYPE_OFS),   /* 普通消息 */
+    SDB_TYPE_INPUT_NUM      = (0x04 << SDB_TYPE_OFS),   /* 输入数值 */
+    SDB_TYPE_INPUT_STR      = (0x05 << SDB_TYPE_OFS),   /* 输入字符 */
+    SDB_TYPE_INPUT_ECHO     = (0x06 << SDB_TYPE_OFS),   /* 输入反馈 */
+    SDB_TYPE_DUMP           = (0x07 << SDB_TYPE_OFS),   /* 导出数据 */
+    SDB_TYPE_MASK           = (0x0f << SDB_TYPE_OFS),   /* 掩码 */
     /* 数据类型 */
-    SDB_DATA_OFS            = 4,                            /* 偏移 */
-    SDB_DATA_PEND           = (0x01 << SDB_DATA_OFS),       /* 挂起(输出开始) */
-    SDB_DATA_POST           = (0x02 << SDB_DATA_OFS),       /* 释放(输出结束) */
-    SDB_DATA_FILE           = (0x03 << SDB_DATA_OFS),       /* 文件名 */
-    SDB_DATA_FUNC           = (0x04 << SDB_DATA_OFS),       /* 函数名 */
-    SDB_DATA_LINE           = (0x05 << SDB_DATA_OFS),       /* 行号 */
-    SDB_DATA_INFO           = (0x06 << SDB_DATA_OFS),       /* 消息数据 */
-    SDB_DATA_STDERR         = (0x07 << SDB_DATA_OFS),       /* 标准错误信息 */
-    SDB_DATA_WRAP           = (0x09 << SDB_DATA_OFS),       /* 换行 */
-    SDB_DATA_COLOR          = (0x0a << SDB_DATA_OFS),       /* 颜色控制序列 */
-    SDB_DATA_BLANK          = (0x0b << SDB_DATA_OFS),       /* 空白 */
-    SDB_DATA_MASK           = (0x0f << SDB_DATA_OFS)        /* 掩码 */
+    SDB_DATA_OFS            = 4,                        /* 偏移 */
+    SDB_DATA_PEND           = (0x01 << SDB_DATA_OFS),   /* 挂起(输出开始) */
+    SDB_DATA_POST           = (0x02 << SDB_DATA_OFS),   /* 释放(输出结束) */
+    SDB_DATA_FILE           = (0x03 << SDB_DATA_OFS),   /* 文件名 */
+    SDB_DATA_FUNC           = (0x04 << SDB_DATA_OFS),   /* 函数名 */
+    SDB_DATA_LINE           = (0x05 << SDB_DATA_OFS),   /* 行号 */
+    SDB_DATA_INFO           = (0x06 << SDB_DATA_OFS),   /* 消息数据 */
+    SDB_DATA_STDERR         = (0x07 << SDB_DATA_OFS),   /* 标准错误信息 */
+    SDB_DATA_WRAP           = (0x09 << SDB_DATA_OFS),   /* 换行 */
+    SDB_DATA_COLOR          = (0x0a << SDB_DATA_OFS),   /* 颜色控制序列 */
+    SDB_DATA_BLANK          = (0x0b << SDB_DATA_OFS),   /* 空白 */
+    SDB_DATA_MASK           = (0x0f << SDB_DATA_OFS)    /* 掩码 */
 } sdb_flag_t;
 
-typedef enum {                                                /* return codes */
-    SDB_RET_OK              = 0,                                   /* success */
-    SDB_RET_PARAM_ERR       = -0x0a,                         /* bad parameter */
-    SDB_RET_NO_INPUT        = -0x0b,      /* nothing input before press Enter */
-    SDB_RET_UNKNOWN_INPUT   = -0x0c                     /* unknown input data */
+typedef enum {
+    SDB_ERR_BAD_PARAM       = -0x100,
+    SDB_ERR_NO_INPUT        = -0x101,
+    SDB_ERR_UNKNOWN_INPUT   = -0x102,
+    SDB_ERR_PROCESS_ERR     = -0x103
 } sdb_ret_t;
 
-typedef struct sdb_config_t sdb_config_t;
-typedef struct {                    /* structure of parameter for output */
-    void *ptr;                      /* external parameter */
-    const char *file;               /* file name */
-    unsigned int line;              /* line number */
-    const char *str;                /* a line of message */
-} sdb_bio_puts_param_t;
-/**
- * \brief       Type of function of base output interface
- * \param       p           pointer of structure sdb_bio_puts_param_t
- * \return      0:Success; <0:Error
- */
-typedef int (* sdb_bio_puts_func_t)(sdb_bio_puts_param_t *p);
-typedef struct {                    /* structure of parameter for input */
-    void *ptr;                      /* external parameter */
-    const char *file;               /* file name */
-    unsigned int line;              /* line number */
-    unsigned int size;              /* buffer size */
-    char *buf;                      /* buffer holding the input data */
-} sdb_bio_gets_param_t;
-/**
- * \brief       Type of function of base input interface
- * \param       p           pointer of structure sdb_bio_gets_param_t
- * \return      0:Success; <0:Error
- */
-typedef int (* sdb_bio_gets_func_t)(sdb_bio_gets_param_t *p);
-struct sdb_config_t {               /* structure of external configurations */
-    unsigned int opt;               /* debug options, sdb_option_t */
-    sdb_bio_puts_func_t puts;
-    sdb_bio_gets_func_t gets;
-    void *ptr;                      /* external parameter */
+typedef int (* sdb_bio_out_t)(void *p,
+        const char *file, unsigned int line, const char *str);
+typedef int (* sdb_bio_in_t)(void *p,
+        char *buf, unsigned int size, unsigned int *len);
+typedef struct sdb_item_t sdb_item_t;
+struct sdb_item_t {                     /* 调试菜单项目结构体 */
+    char *info;                         /* 项目显示信息 */
+    void *param;                        /* 参数 */
+    int (*func)(void *);                /* 函数 */
 };
-typedef struct {                    /* structure of menu item */
-    char *info;                     /* item information */
-    void *param;                    /* parameter */
-    int (*func)(void *);            /* function */
-} sdb_item_t;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-/**\brief       标准输入输出，SDB_SYS_HAVE_STDIO启用时有效 */
-extern const sdb_config_t sdb_cfg_std;
 
-int sdb_nop(void);
+unsigned long sdb_stack_mark(void);
+unsigned long sdb_stack_touch(void);
+unsigned long sdb_stack_max_usage(void);
 
-void sdb_set_stack(void);
-long sdb_get_stack(void);
-long sdb_get_stack_max(void);
+int sdb_bio_conf(sdb_bio_out_t out, sdb_bio_in_t in, void *p);
 
-/**
- * \brief       调试输出控制
- * \param       cfg         配置结构体
- * \param       flag        输出标记, sdb_flag_t
- * \param       file        __FILE__
- * \param       line        __LINE__
- * \param       fmt         格式化输出
- * \param       ...         不定参数
- * \return      0:Success; <0:Error
- */
-int sdb_putx(const sdb_config_t *cfg, int flag,
-        const char *file, unsigned int line, const char *fmt, ...);
-/**
- * \brief       调试输出控制
- * \param       cfg         配置结构体
- * \param       fmt         格式化输出
- * \param       ...         不定参数
- * \return      0:Success; <0:Error
- */
-int sdb_put_bare(const sdb_config_t *cfg, const char *fmt, ...);
-
-int sdb_get(char *buf, unsigned int size, int *len,
-        const sdb_config_t *cfg, unsigned flag,
-        const char *file, unsigned int line, const char *fmt, ...);
-
-/**
- * \brief       数据导出控制
- * \param       cfg         配置结构体
- * \param       opt         数据导出控制选项, sdb_option_t
- * \param       file        __FILE__
- * \param       line        __LINE__
- * \param       buf         数据
- * \param       len         数据长度
- * \param       addr        地址
- * \param       fmt         格式化输出
- * \param       ...         不定参数
- * \return      0:Success; <0:Error
- */
-int sdb_dump(void *data, unsigned int len, unsigned long addr,
-        const sdb_config_t *cfg, int opt,
-        const char *file, unsigned int line, const char *fmt, ...);
-
-int sdb_menu(sdb_item_t *list, unsigned int num,
-        const sdb_config_t *cfg, const char *file, unsigned int line);
+int sdb_out(unsigned int flag, const char *file, unsigned int line,
+        const char *fmt, ...);
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif /* __SDB_H__ */
-/** @} */
-/**
- * \block:      Config
- * @{ */
-#ifdef SDB_SET_CONFIG
-#undef SDB_SET_CONFIG
-#endif
-/*
- * \brief:  设置调试配置, 配置结构体为sdb_config_t
- * \usage:  #define SDB_SET_CONFIG (&<my_config>)
- */
 /** @} */
 /**
  * \block:      Output

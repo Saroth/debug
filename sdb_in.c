@@ -120,7 +120,7 @@ int sdb_get(char *buf, unsigned int size, int *len,
 }
 
 #else
-int sdb_get(char *buf, unsigned int size, int *len,
+inline int sdb_get(char *buf, unsigned int size, int *len,
         const sdb_config_t *cfg, unsigned flag,
         const char *file, unsigned int line, const char *fmt, ...)
 {

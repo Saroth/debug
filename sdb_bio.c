@@ -1,104 +1,89 @@
-#include "sdb_config.h"
+#include "sdb_internal.h"
 
-int sdb_nop(void) { return 0; }
-
-#if defined(SDB_STACK_WATCH)
-static unsigned long stack_top = 0;
-static unsigned long stack_max = 0;
-
-void sdb_set_stack(void)
-{
-    char i;
-
-    stack_top = &i;
-    stack_max = 0;
-}
-
-long sdb_get_stack(void)
-{
-    unsigned long p = (unsigned long)(stack_top - &p);
-
-    if (p > stack_max) {
-        stack_max = p;
-    }
-
-    return (int)p;
-}
-
-long sdb_get_stack_max(void)
-{
-    return stack_max;
-}
-
-#else
-void sdb_set_stack(void)        { }
-long sdb_get_stack(void)        { return 0; }
-long sdb_get_stack_max(void)    { return 0; }
-#endif
-
-#if defined(SDB_ENABLE)
-
-#if defined(SDB_ENV_STDIO)
+#if defined(SDB_SYSTEM_HAS_STDIO)
 #include <stdio.h>
-
-static int std_puts(sdb_bio_puts_param_t *p)
+static int std_out(void *p, const char *file, unsigned int line,
+        const char *str)
 {
-#if defined(SDB_STACK_WATCH)
-    printf("%04d ", sdb_get_stack());
-#endif
-    printf("%16s:%04d %s\r\n", p->file, p->line, p->str);
+    printf("%16s:%04d  %s\n", file, line, str);
+    fflush(stdout);
 
     return 0;
 }
 
-static int std_gets(sdb_bio_gets_param_t *p)
+static int std_in(void *p, char *buf, unsigned int size, unsigned int *len)
 {
-    int c = 0;
-    unsigned int i = 0;
+    sdb_stack_touch();
+    if (size == 0) {
+        return 0;
+    }
+    size--;
 
-#if defined(SDB_STACK_WATCH)
-    sdb_get_stack();
-#endif
-    while (p->buf) {
+    int c;
+    unsigned int i = 0;
+    while (buf && i < size) {
         if ((c = getchar()) == EOF) {
             break;
         }
-        if ((p->buf[i++] = c) == '\n' || (p->size > 0 && i >= p->size - 1)) {
+        if ((buf[i++] = c) == '\n') {
             break;
         }
     }
+    buf[i] = 0;
+    if (len) {
+        *len = i;
+    }
 
     return 0;
 }
+#endif /* defined(SDB_SYSTEM_HAS_STDIO) */
 
-const sdb_config_t sdb_cfg_std = {
-    .opt        = 0,
-    .puts       = std_puts,
-    .gets       = std_gets,
-    .ptr        = 0,
+
+struct sdb_bio_config_t {
+    void *p;
+    sdb_bio_out_t out;
+    sdb_bio_in_t in;
 };
-#endif /* defined(SDB_ENV_STDIO) */
+static struct sdb_bio_config_t bio_conf = {
+    .p      = 0,
+    .out    = 0,
+    .in     = 0,
+};
 
-int bio_put(bio_put_param_t *p)
+int sdb_bio_conf(sdb_bio_out_t out, sdb_bio_in_t in, void *p)
 {
-    if (p->cfg && p->cfg->puts) {
-        return p->cfg->puts(p->p);
-    }
+    bio_conf.out = out;
+    bio_conf.in = in;
+    bio_conf.p = p;
+}
 
+int bio_out(const char *file, unsigned int line, const char *str)
+{
+    if (bio_conf.out) {
+        return bio_conf.out(bio_conf.p, file, line, str);
+    }
+#if defined(SDB_SYSTEM_HAS_STDIO)
+    else {
+        return std_out(0, file, line, str);
+    }
+#endif /* defined(SDB_SYSTEM_HAS_STDIO) */
     return 0;
 }
 
-int bio_get(bio_get_param_t *p)
+int bio_in(char *buf, unsigned int size, unsigned int *len)
 {
-    if (p->cfg && p->cfg->gets) {
-        if (p->p->buf == 0) {
-            return SDB_RET_PARAM_ERR;
-        }
-        return p->cfg->gets(p->p);
+    if (buf == 0) {
+        return SDB_ERR_BAD_PARAM;
     }
+    if (bio_conf.in) {
+        return bio_conf.in(bio_conf.p, buf, size, len);
+    }
+#if defined(SDB_SYSTEM_HAS_STDIO)
+    else {
+        return std_in(0, buf, size, len);
+    }
+#endif /* defined(SDB_SYSTEM_HAS_STDIO) */
 
     return 0;
 }
-
-#endif /* defined(SDB_ENABLE) */
 

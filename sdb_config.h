@@ -1,85 +1,51 @@
 #ifndef __SDB_CONFIG_H__
 #define __SDB_CONFIG_H__
 
-/** Global switch */
 #define SDB_ENABLE
 
-/**
- * \block:      Modules
- * @{ */
-/* #define SDB_MDL_GET */
-/* #define SDB_MDL_DUMP */
-/* #define SDB_MDL_MENU */
-/* #define SDB_MDL_SELFTEST */
+#if defined(SDB_ENABLE)
+#define SDB_MODULE_OUT
+#define SDB_MODULE_IN
+#define SDB_MODULE_DUMP
+#define SDB_MODULE_MENU
+#define SDB_MODULE_STACK_WATCH
+#define SDB_MODULE_SELFTEST
+#endif
 
-/* #define SDB_STACK_WATCH */
-/** @} */
+#define SDB_SYSTEM_HAS_ANSI_COLOR_SEQUENCES
+#define SDB_SYSTEM_HAS_STDIO
+#define SDB_SYSTEM_HAS_STDERR
+#define SDB_SYSTEM_HAS_SIZE_T
+#define SDB_SYSTEM_HAS_LONG
+#define SDB_SYSTEM_HAS_LONG_LONG
+#define SDB_SYSTEM_HAS_LARGE_MEMORY
 
-/**
- * \block:      Platform environment
- * @{ */
-/**
- * Display text with color.
- * Need ANSI sequences support.
- */
-#define SDB_ENV_ANSI_SEQUENCES
+#define SDB_CONFIG_COLUMN_LIMIT         80
+#define SDB_CONFIG_OUTPUT_BUFFER_SIZE   288
+#define SDB_CONFIG_INPUT_BUFFER_SIZE    32
 
-/**
- * Assign standard functions in base I/O as default.
- * Require <stdio.h>: printf(), getchar()
- */
-#define SDB_ENV_STDIO
+#define SDB_COLOR_RECOVERY      "\33[0m"    /* 恢复: normal */
+#define SDB_COLOR_WARNING       "\33[1;36m" /* 警告高亮: blue, bold */
+#define SDB_COLOR_ERROR         "\33[1;31m" /* 错误高亮: red, bold */
+#define SDB_COLOR_INPUT         "\33[1;32m" /* 输入和反馈标记高亮: green, bold */
+#define SDB_COLOR_HIGHLIGHT     "\33[1m"    /* 特殊标记高亮: bold */
+#define SDB_COLOR_TITLE         "\33[7m"    /* 标题高亮: inverse */
+#define SDB_COLOR_LABEL         "\33[1;30m" /* 标签高亮, black, bold */
 
-/**
- * Display standard error messages.
- * Require <errno.h>: stderror(), errno
- */
-#define SDB_ENV_STDERR
-
-/** size_t */
-#define SDB_ENV_SIZE_T
-
-/** long */
-#define SDB_ENV_LONG
-
-/** long long */
-#define SDB_ENV_LONG_LONG
-/** @} */
+#define SDB_MARK_NONE           "    "      /* 无标记 */
+#define SDB_MARK_INFO           " .  "      /* 提示标记 */
+#define SDB_MARK_WARNING        " !  "      /* 警告标记 */
+#define SDB_MARK_ERROR          " x  "      /* 错误标记 */
+#define SDB_MARK_GETNUM         "I.n "      /* 获取数值输入标记 */
+#define SDB_MARK_GETSTRING      "I.s "      /* 获取字符串输入标记 */
+#define SDB_MARK_ECHO           "I.e "      /* 返回数值输出标记 */
+#define SDB_MARK_DUMP           "  | "      /* 导出标记 */
 
 /**
- * \block:      Configurations
- * @{ */
-/** Size of internal buffer for put a line of message. */
-#define SDB_CONF_BUFFER_SIZE    288
-
-/** Size of internal buffer for get a string of number. */
-#define SDB_CONF_BUFFER_SIZE_GETNUM 32
-
-/** Color definition */
-#define SDB_COLOR_RES           "\33[0m"    /* Resume */
-#define SDB_COLOR_WARN          "\33[1;36m" /* Warning messages */
-#define SDB_COLOR_ERR           "\33[1;31m" /* Error messages */
-#define SDB_COLOR_INPUT         "\33[1;32m" /* Input request */
-#define SDB_COLOR_HL            "\33[1m"    /* High light, bold */
-#define SDB_COLOR_TITLE         "\33[7m"    /* Title, inverse */
-#define SDB_COLOR_LABEL         "\33[1;30m" /* Label, dark, bold */
-
-/* Mark definition */
-#define SDB_MARK_NONE           "    "      /* None */
-#define SDB_MARK_INFO           " .  "      /* Prompt */
-#define SDB_MARK_WARN           " !  "      /* Warning */
-#define SDB_MARK_ERR            " x  "      /* Error */
-#define SDB_MARK_GETNUM         "I.n "      /* Input, get number */
-#define SDB_MARK_GETSTR         "I.s "      /* Input, get string */
-#define SDB_MARK_ECHO           "I.e "      /* Echo of input */
-#define SDB_MARK_DUMP           "  | "      /* Dump */
-/** @} */
-
-/**
- * Version format: 0x00AAIISS.
+ * 版本号格式: 0x00AAIISS.
  *      A:Major
  *      I:Minor
- *      S:Status, 0 .. 0xFE:Beta, 0xFF:Release
+ *      S:Status, 0..0xFE:Beta, 0xFF:Release
  */
 #define SDB_VERSION_NUMBER      0x00020001
 

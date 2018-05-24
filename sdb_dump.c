@@ -143,7 +143,7 @@ int sdb_dump(void *data, unsigned int len, unsigned long addr,
 }
 
 #else
-int sdb_dump(void *data, unsigned int len, unsigned long addr,
+inline int sdb_dump(void *data, unsigned int len, unsigned long addr,
         const sdb_config_t *cfg, int opt,
         const char *file, unsigned int line, const char *fmt, ...)
 {
