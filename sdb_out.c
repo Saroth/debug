@@ -9,7 +9,7 @@
 
 inline int cb_putx(void *p, const char *buf, unsigned int len)
 {
-    return bio_put(((bio_put_param_t *)p)->cfg,
+    return sdb_bio_out(((bio_put_param_t *)p)->cfg,
             ((bio_put_param_t *)p)->flag, buf, len);
 }
 

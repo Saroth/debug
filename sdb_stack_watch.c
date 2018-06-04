@@ -1,32 +1,33 @@
 #include "sdb_internal.h"
 
-/* ! 不支持多线程 */
 #if defined(SDB_MODULE_STACK_WATCH)
-static unsigned long *stack_mark = 0;
-static unsigned long stack_max_usage = 0;
 
-unsigned long sdb_stack_mark(void)
+size_t sdb_stack_mark(sdb_context *ctx)
 {
-    unsigned long i;
-    stack_mark = &i;
-    stack_max_usage = 0;
-    return (unsigned long)stack_mark;
+    size_t i;
+    ctx->stack_mark = &i;
+    ctx->stack_max_usage = 0;
+    return (size_t)ctx->stack_mark;
 }
-
-unsigned long sdb_stack_touch(void)
+size_t sdb_stack_touch(sdb_context *ctx)
 {
-    unsigned long p;
-    p = (unsigned long)(stack_mark - &p);
-    if (p > stack_max_usage) {
-        stack_max_usage = p;
+    size_t p;
+    ctx->stack_top = (size_t)(ctx->stack_mark - &p);
+    if (ctx->stack_top > ctx->stack_max_usage) {
+        ctx->stack_max_usage = ctx->stack_top;
     }
-    return p;
+    return ctx->stack_top;
+}
+size_t sdb_stack_max_usage(sdb_context *ctx)
+{
+    return ctx->stack_max_usage;
 }
 
-unsigned long sdb_stack_max_usage(void)
-{
-    return stack_max_usage;
-}
+#else
+
+size_t sdb_stack_mark(sdb_context *ctx) { return 0; }
+size_t sdb_stack_touch(sdb_context *ctx) { return 0; }
+size_t sdb_stack_max_usage(sdb_context *ctx) { return 0; }
 
 #endif /* defined(SDB_MODULE_STACK_WATCH) */
 

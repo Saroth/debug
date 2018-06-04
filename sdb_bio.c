@@ -57,7 +57,7 @@ int sdb_bio_conf(sdb_bio_out_t out, sdb_bio_in_t in, void *p)
     bio_conf.p = p;
 }
 
-int bio_out(const char *file, unsigned int line, const char *str)
+int sdb_bio_out(const char *file, unsigned int line, const char *str)
 {
     if (bio_conf.out) {
         return bio_conf.out(bio_conf.p, file, line, str);
@@ -70,7 +70,7 @@ int bio_out(const char *file, unsigned int line, const char *str)
     return 0;
 }
 
-int bio_in(char *buf, unsigned int size, unsigned int *len)
+int sdb_bio_in(char *buf, unsigned int size, unsigned int *len)
 {
     if (buf == 0) {
         return SDB_ERR_BAD_PARAM;

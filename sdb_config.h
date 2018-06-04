@@ -15,10 +15,10 @@
 #define SDB_SYSTEM_HAS_ANSI_COLOR_SEQUENCES
 #define SDB_SYSTEM_HAS_STDIO
 #define SDB_SYSTEM_HAS_STDERR
+#define SDB_SYSTEM_HAS_LARGE_MEMORY
 #define SDB_SYSTEM_HAS_SIZE_T
 #define SDB_SYSTEM_HAS_LONG
 #define SDB_SYSTEM_HAS_LONG_LONG
-#define SDB_SYSTEM_HAS_LARGE_MEMORY
 
 #define SDB_CONFIG_COLUMN_LIMIT         80
 #define SDB_CONFIG_OUTPUT_BUFFER_SIZE   288
@@ -48,9 +48,6 @@
  *      S:Status, 0..0xFE:Beta, 0xFF:Release
  */
 #define SDB_VERSION_NUMBER      0x00020001
-
-#include "libsdb.h"
-#include "sdb_internal.h"
 
 #endif /* __SDB_CONFIG_H__ */
 
