@@ -1,17 +1,6 @@
 #ifndef __SDB_CONFIG_H__
 #define __SDB_CONFIG_H__
 
-#define SDB_ENABLE
-
-#if defined(SDB_ENABLE)
-#define SDB_MODULE_OUT
-#define SDB_MODULE_IN
-#define SDB_MODULE_DUMP
-#define SDB_MODULE_MENU
-#define SDB_MODULE_STACK_WATCH
-#define SDB_MODULE_SELFTEST
-#endif
-
 #define SDB_SYSTEM_HAS_ANSI_COLOR_SEQUENCES
 #define SDB_SYSTEM_HAS_STDIO
 #define SDB_SYSTEM_HAS_STDERR

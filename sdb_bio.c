@@ -2,25 +2,28 @@
 
 #if defined(SDB_SYSTEM_HAS_STDIO)
 #include <stdio.h>
-static int std_out(void *p, const char *file, unsigned int line,
-        const char *str)
+#include <string.h>
+
+static int std_out(void *p, const char *file, size_t line, const char *str)
 {
-    printf("%16s:%04d  %s\n", file, line, str);
+    sdb_stack_touch((sdb_context *)p);
+    printf("%16s:%04d  %s\n", strrchr(file, '/') ? strrchr(file, '/') + 1
+            : strrchr(file, '\\') ? strrchr(file, '\\') + 1 : file, line, str);
     fflush(stdout);
 
     return 0;
 }
 
-static int std_in(void *p, char *buf, unsigned int size, unsigned int *len)
+static int std_in(void *p, char *buf, size_t size, size_t *len)
 {
-    sdb_stack_touch();
+    sdb_stack_touch((sdb_context *)p);
     if (size == 0) {
         return 0;
     }
     size--;
 
     int c;
-    unsigned int i = 0;
+    size_t i = 0;
     while (buf && i < size) {
         if ((c = getchar()) == EOF) {
             break;
@@ -38,52 +41,39 @@ static int std_in(void *p, char *buf, unsigned int size, unsigned int *len)
 }
 #endif /* defined(SDB_SYSTEM_HAS_STDIO) */
 
-
-struct sdb_bio_config_t {
-    void *p;
-    sdb_bio_out_t out;
-    sdb_bio_in_t in;
-};
-static struct sdb_bio_config_t bio_conf = {
-    .p      = 0,
-    .out    = 0,
-    .in     = 0,
-};
-
-int sdb_bio_conf(sdb_bio_out_t out, sdb_bio_in_t in, void *p)
+void sdb_config_bio(sdb_context *ctx,
+        func_sdb_bio_out out, func_sdb_bio_in in, void *p)
 {
-    bio_conf.out = out;
-    bio_conf.in = in;
-    bio_conf.p = p;
+    ctx->bio_out = out;
 }
 
-int sdb_bio_out(const char *file, unsigned int line, const char *str)
+int sdb_bio_out(sdb_context *ctx,
+        const char *file, size_t line, const char *str)
 {
-    if (bio_conf.out) {
-        return bio_conf.out(bio_conf.p, file, line, str);
+    if (ctx->bio_out) {
+        return ctx->bio_out(ctx->bio_param, file, line, str);
     }
 #if defined(SDB_SYSTEM_HAS_STDIO)
     else {
-        return std_out(0, file, line, str);
+        return std_out(ctx, file, line, str);
     }
 #endif /* defined(SDB_SYSTEM_HAS_STDIO) */
     return 0;
 }
 
-int sdb_bio_in(char *buf, unsigned int size, unsigned int *len)
+int sdb_bio_in(sdb_context *ctx, char *buf, size_t size, size_t *len)
 {
     if (buf == 0) {
         return SDB_ERR_BAD_PARAM;
     }
-    if (bio_conf.in) {
-        return bio_conf.in(bio_conf.p, buf, size, len);
+    if (ctx->bio_in) {
+        return ctx->bio_in(ctx->bio_param, buf, size, len);
     }
 #if defined(SDB_SYSTEM_HAS_STDIO)
     else {
-        return std_in(0, buf, size, len);
+        return std_in(ctx, buf, size, len);
     }
 #endif /* defined(SDB_SYSTEM_HAS_STDIO) */
-
     return 0;
 }
 

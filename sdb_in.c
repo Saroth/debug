@@ -6,9 +6,7 @@
 #include <errno.h>
 #endif
 
-#if defined(SDB_ENABLE) && defined(SDB_MDL_GET_ENABLE)
-
-#define SDB_SET_CONFIG cfg
+#if 0
 
 int sdb_get(char *buf, unsigned int size, int *len,
         const sdb_config_t *cfg, unsigned flag,
@@ -119,12 +117,5 @@ int sdb_get(char *buf, unsigned int size, int *len,
     return 0;
 }
 
-#else
-inline int sdb_get(char *buf, unsigned int size, int *len,
-        const sdb_config_t *cfg, unsigned flag,
-        const char *file, unsigned int line, const char *fmt, ...)
-{
-    return 0;
-}
-#endif /* defined(SDB_ENABLE) && defined(SDB_MDL_GET_ENABLE) */
+#endif
 

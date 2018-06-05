@@ -4,21 +4,20 @@
 extern "C" {
 #endif
 
-#include <stdio.h>
-#include <stdarg.h>
 #include "sdb_config.h"
+#include "libsdb.h"
+
+int sdb_bio_out(sdb_context *ctx,
+        const char *file, size_t line, const char *str);
+int sdb_bio_in(sdb_context *ctx, char *buf, size_t size, size_t *len);
 
 typedef struct {
-#if defined(SDB_MODULE_STACK_WATCH)
-    size_t *stack_mark;
-    size_t stack_top;
-    size_t stack_max_usage;
-#endif
-} sdb_context;
-
-size_t sdb_stack_mark(sdb_context *ctx);
-size_t sdb_stack_touch(sdb_context *ctx);
-size_t sdb_stack_max_usage(sdb_context *ctx);
+    sdb_context *ctx;
+    unsigned int mode;
+    const char *file;
+    size_t line;
+} sdb_xprintf_context;
+int sdb_vxprintf(sdb_xprintf_context *ctx, const char *fmt, va_list va);
 
 #ifdef __cplusplus
 }
