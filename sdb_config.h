@@ -10,7 +10,7 @@
 #define SDB_SYSTEM_HAS_LONG_LONG
 
 #define SDB_CONFIG_COLUMN_LIMIT         80
-#define SDB_CONFIG_OUTPUT_BUFFER_SIZE   288
+#define SDB_CONFIG_OUTPUT_BUFFER_SIZE   (SDB_CONFIG_COLUMN_LIMIT + 36)
 #define SDB_CONFIG_INPUT_BUFFER_SIZE    32
 
 #define SDB_COLOR_RECOVERY      "\33[0m"    /* 恢复: normal */
@@ -25,9 +25,9 @@
 #define SDB_MARK_INFO           " .  "      /* 提示标记 */
 #define SDB_MARK_WARNING        " !  "      /* 警告标记 */
 #define SDB_MARK_ERROR          " x  "      /* 错误标记 */
-#define SDB_MARK_GETNUM         "I.n "      /* 获取数值输入标记 */
-#define SDB_MARK_GETSTRING      "I.s "      /* 获取字符串输入标记 */
-#define SDB_MARK_ECHO           "I.e "      /* 返回数值输出标记 */
+#define SDB_MARK_GETNUM         "i.n "      /* 获取数值输入标记 */
+#define SDB_MARK_GETSTRING      "i.s "      /* 获取字符串输入标记 */
+#define SDB_MARK_ECHO           "i.e "      /* 返回数值输出标记 */
 #define SDB_MARK_DUMP           "  | "      /* 导出标记 */
 
 /**

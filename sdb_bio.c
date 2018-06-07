@@ -7,11 +7,18 @@
 static int std_out(void *p, const char *file, size_t line, const char *str)
 {
     sdb_stack_touch((sdb_context *)p);
-    printf("%16s:%04d  %s\n", strrchr(file, '/') ? strrchr(file, '/') + 1
-            : strrchr(file, '\\') ? strrchr(file, '\\') + 1 : file, line, str);
+    int ret;
+    if (file) {
+        ret = printf("%16s:%04d  %s\n", strrchr(file, '/')
+                ? strrchr(file, '/') + 1 : strrchr(file, '\\')
+                ? strrchr(file, '\\') + 1 : file, line, str);
+    }
+    else {
+        ret = printf("%s", str);
+    }
     fflush(stdout);
 
-    return 0;
+    return ret;
 }
 
 static int std_in(void *p, char *buf, size_t size, size_t *len)

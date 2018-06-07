@@ -45,26 +45,17 @@ void sdb_config_bio(sdb_context *ctx,
         func_sdb_bio_out out, func_sdb_bio_in in, void *p);
 
 int sdb_vsnprintf(char *buf, size_t size, const char *fmt, va_list va);
-inline int sdb_vsprintf(char *buf, const char *fmt, va_list va) {
-    sdb_vsnprintf(buf, 0xFFFFFFFF, fmt, va);
-}
+#define sdb_vsprintf(_b, _f, _v) sdb_vsnprintf(_b, 0xFFFFFFFF, _f, _v);
 int sdb_vprintf(sdb_context *ctx, const char *fmt, va_list va);
 inline int sdb_snprintf(char *buf, size_t size, const char *fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
-    int ret = sdb_vsnprintf(buf, 0xFFFFFFFF, fmt, va);
+    int ret = sdb_vsnprintf(buf, size, fmt, va);
     va_end(va);
     return ret;
 }
-inline int sdb_sprintf(char *buf, const char *fmt, ...)
-{
-    va_list va;
-    va_start(va, fmt);
-    int ret = sdb_vsprintf(buf, fmt, va);
-    va_end(va);
-    return ret;
-}
+#define sdb_sprintf(_b, _f, ...) sdb_snprintf(_b, 0xFFFFFFFF, _f, __VA_ARGS__)
 inline int sdb_printf(sdb_context *ctx, const char *fmt, ...)
 {
     va_list va;
@@ -74,15 +65,8 @@ inline int sdb_printf(sdb_context *ctx, const char *fmt, ...)
     return ret;
 }
 
-inline int sdb_out_bare(sdb_context *ctx, const char *fmt, ...)
-{
-    va_list va;
-    va_start(va, fmt);
-    int ret = sdb_vprintf(ctx, fmt, va);
-    va_end(va);
-    return ret;
-}
-int sdb_out(sdb_context *ctx, size_t mode,
+#define sdb_out_bare sdb_printf
+int sdb_out(sdb_context *ctx, unsigned int mode,
         const char *file, size_t line, const char *fmt, ...);
 
 #ifdef __cplusplus
