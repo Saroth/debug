@@ -11,24 +11,20 @@ int sdb_bio_out(sdb_context *ctx,
         const char *file, size_t line, const char *str);
 int sdb_bio_in(sdb_context *ctx, char *buf, size_t size, size_t *len);
 
-enum {
-    OUT_STATE_NONE = 0,
-    OUT_STATE_FINAL,
-    OUT_STATE_STDERR,
+typedef enum {
+    SDB_OUT_NONE = 0,
+    SDB_OUT_FINAL,
+    SDB_OUT_STDERR,
+} sdb_out_state;
+typedef struct sdb_xprintf_context_t sdb_xprintf_context;
+typedef int (*func_sdb_vxprintf)(void *, const char *, sdb_out_state);
+struct sdb_xprintf_context_t {
+    func_sdb_vxprintf f_out;
+    void *p_out;
+    const char *fmt;
+    va_list va;
 };
-typedef struct {
-    sdb_context *ctx;
-    unsigned int mode;
-    const char *file;
-    size_t line;
-    char *buf;
-    size_t len;
-#if defined(SDB_SYSTEM_HAS_STDERR)
-    int err;
-#endif
-    size_t counter;
-} sdb_xprintf_context;
-int sdb_vxprintf(sdb_xprintf_context *ctx, const char *fmt, va_list va);
+int sdb_vxprintf(sdb_xprintf_context *ctx);
 
 #ifdef __cplusplus
 }

@@ -4,57 +4,116 @@
 #include <errno.h>
 #include <string.h>
 #endif
-static int cb_out(sdb_xprintf_context *ctx, const char *str,
-        unsigned int state)
+
+typedef struct {
+    char *buf;
+    size_t size;
+    size_t len;
+} output_to_buffer_param;
+static int output_to_buffer(void *p_out, const char *str, sdb_out_state state)
 {
+    output_to_buffer_param *p = (output_to_buffer_param *)p_out;
+    while (*str && p->len < p->size) {
+        p->buf[p->len++] = *str++;
+    }
+    if (p->len == p->size) {
+        p->buf[p->len] = 0;
+    }
+    if (state != SDB_OUT_NONE) {
+        return p->len;
+    }
+    return 0;
+}
+
+int sdb_vsnprintf(char *buf, size_t size, const char *fmt, va_list va)
+{
+    output_to_buffer_param param = {
+        .buf            = buf,
+        .size           = size,
+        .len            = 0,
+    };
+    sdb_xprintf_context xctx = {
+        .f_out          = output_to_buffer,
+        .p_out          = (void *)&param,
+        .fmt            = fmt,
+    };
+    va_copy(xctx.va, va);
+    return sdb_vxprintf(&xctx);
+}
+
+typedef struct {
+    sdb_context *ctx;
+    unsigned int mode;
+    const char *file;
+    size_t line;
+#if defined(SDB_SYSTEM_HAS_STDERR)
+    int err;
+#endif
+    char *line_buf;
+    size_t line_buf_size;
+    size_t line_buf_len;
+    size_t counter;
+} output_line_param;
+static int output_line(void *p_out, const char *str, sdb_out_state state)
+{
+    output_line_param *p = (output_line_param *)p_out;
     do {
-        if (ctx->len == 0) {
-            /* + color + mark + color */
+        if (p->line_buf_len == 0) {
+#warning "TODO: + color, + mark"
         }
-        while (*str && ctx->len < SDB_CONFIG_COLUMN_LIMIT) {
-            ctx->buf[ctx->len++] = *str++;
+        while (*str && p->line_buf_len < SDB_CONFIG_COLUMN_LIMIT) {
+            p->line_buf[p->line_buf_len++] = *str++;
         }
 #if defined(SDB_SYSTEM_HAS_STDERR)
-        if (state == OUT_STATE_FINAL && ctx->err) {
-            /* + color */
-            str = strerror(ctx->err);
-            state = OUT_STATE_STDERR;
+        if (state == SDB_OUT_FINAL && p->err) {
+// #warning "TODO: + color"
+            str = strerror(p->err);
+            state = SDB_OUT_STDERR;
             continue;
         }
 #endif
-        if (ctx->len == SDB_CONFIG_COLUMN_LIMIT || state != OUT_STATE_NONE) {
-            /* + color:rec */
-            ctx->buf[ctx->len] = 0;
-            int ret = sdb_bio_out(ctx->ctx, ctx->file, ctx->line, ctx->buf);
+        if (p->line_buf_len >= SDB_CONFIG_COLUMN_LIMIT
+                || state != SDB_OUT_NONE) {
+            if (p->line_buf_len > SDB_CONFIG_COLUMN_LIMIT) {
+                p->line_buf_len = SDB_CONFIG_COLUMN_LIMIT;
+            }
+// #warning "TODO: + color:rec"
+            p->line_buf[p->line_buf_len] = 0;
+            int ret = sdb_bio_out(p->ctx, p->file, p->line, p->line_buf);
             if (ret < 0) {
                 return ret;
             }
-            ctx->counter += ret;
-            ctx->len = 0;
+            p->counter += ret;
+            p->line_buf_len = 0;
+            return p->counter;
         }
     } while (*str);
     return 0;
 }
 
-int sdb_out(sdb_context *ctx, unsigned int mode,
-        const char *file, size_t line, const char *fmt, ...)
+int sdb_vmcout(sdb_context *ctx, unsigned int mode,
+        const char *file, size_t line, const char *fmt, va_list va)
 {
     char buf[SDB_CONFIG_OUTPUT_BUFFER_SIZE];
-    sdb_xprintf_context xctx = {
-        .ctx    = ctx,
-        .mode   = mode,
-        .file   = file,
-        .line   = line,
-        .buf    = buf,
-        .len    = 0,
+    output_line_param param = {
+        .ctx            = ctx,
+        .mode           = mode,
+        .file           = file,
+        .line           = line,
 #if defined(SDB_SYSTEM_HAS_STDERR)
-        .err    = errno,
+        .err            = errno,
 #endif
+        .line_buf       = buf,
+        .line_buf_size  = sizeof(buf),
+        .line_buf_len   = 0,
+        .counter        = 0,
     };
-    va_list va;
-    va_start(va, fmt);
-    int ret = sdb_vxprintf(&xctx, fmt, va);
-    va_end(va);
-    return ret;
+    sdb_xprintf_context xctx = {
+        .f_out          = output_line,
+        .p_out          = (void *)&param,
+        .fmt            = fmt,
+    };
+    va_copy(xctx.va, va);
+    return sdb_vxprintf(&xctx);
 }
 

@@ -1,10 +1,12 @@
-#include "sdb_config.h"
+#include "sdb_internal.h"
 
 #warning "@TODO: strtol achieve"
 #include <stdlib.h>
-#if defined(SDB_SYS_SUPPORT_STDERR)
-#include <errno.h>
-#endif
+
+int sdb_cin(sdb_context *ctx, char *buf, size_t size, size_t *len)
+{
+    return 0;
+}
 
 #if 0
 
