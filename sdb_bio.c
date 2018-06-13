@@ -10,8 +10,8 @@ static int std_out(void *p, const char *file, size_t line, const char *str)
     int ret;
     if (file) {
         ret = printf("%16s:%04d  %s\n", strrchr(file, '/')
-                ? strrchr(file, '/') + 1 : strrchr(file, '\\')
-                ? strrchr(file, '\\') + 1 : file, line, str);
+                ? (strrchr(file, '/') + 1) : strrchr(file, '\\')
+                ? (strrchr(file, '\\') + 1) : file, line, str);
     }
     else {
         ret = printf("%s", str);

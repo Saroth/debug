@@ -1,10 +1,22 @@
-#include "sdb_config.h"
+#include "sdb_internal.h"
 
 #warning "@TODO: strcasecmp achieve"
 #include <string.h>
-#if defined(SDB_ENABLE) && defined(SDB_MDL_DUMP_ENABLE)
 
-#define SDB_SET_CONFIG cfg
+int __sdb_vmdump(sdb_context *ctx, unsigned int mode,
+        const char *buf, size_t size, size_t addr,
+        const char *file, size_t line, const char *fmt, va_list va)
+{
+    return 0;
+}
+
+int __sdb_dump(sdb_context *ctx, const char *buf, size_t size)
+{
+    return 0;
+}
+
+
+#if 0
 
 int sdb_dump(void *data, unsigned int len, unsigned long addr,
         const sdb_config_t *cfg, int opt,
@@ -142,12 +154,5 @@ int sdb_dump(void *data, unsigned int len, unsigned long addr,
     return 0;
 }
 
-#else
-inline int sdb_dump(void *data, unsigned int len, unsigned long addr,
-        const sdb_config_t *cfg, int opt,
-        const char *file, unsigned int line, const char *fmt, ...)
-{
-    return 0;
-}
-#endif /* defined(SDB_ENABLE) && defined(SDB_MDL_DUMP_ENABLE) */
+#endif /* 0 */
 

@@ -16,10 +16,8 @@ static int output_to_buffer(void *p_out, const char *str, sdb_out_state state)
     while (*str && p->len < p->size) {
         p->buf[p->len++] = *str++;
     }
-    if (p->len == p->size) {
-        p->buf[p->len] = 0;
-    }
-    if (state != SDB_OUT_NONE) {
+    if (p->len == p->size || state != SDB_OUT_NONE) {
+        p->buf[(p->len == p->size) ? (p->len - 1) : p->len] = 0;
         return p->len;
     }
     return 0;
@@ -61,7 +59,7 @@ static int output_line(void *p_out, const char *str, sdb_out_state state)
         if (p->line_buf_len == 0) {
 #warning "TODO: + color, + mark"
         }
-        while (*str && p->line_buf_len < SDB_CONFIG_COLUMN_LIMIT) {
+        while (*str && p->line_buf_len < p->ctx->out_column_limit) {
             p->line_buf[p->line_buf_len++] = *str++;
         }
 #if defined(SDB_SYSTEM_HAS_STDERR)
@@ -72,10 +70,10 @@ static int output_line(void *p_out, const char *str, sdb_out_state state)
             continue;
         }
 #endif
-        if (p->line_buf_len >= SDB_CONFIG_COLUMN_LIMIT
+        if (p->line_buf_len >= p->ctx->out_column_limit
                 || state != SDB_OUT_NONE) {
-            if (p->line_buf_len > SDB_CONFIG_COLUMN_LIMIT) {
-                p->line_buf_len = SDB_CONFIG_COLUMN_LIMIT;
+            if (p->line_buf_len > p->ctx->out_column_limit) {
+                p->line_buf_len = p->ctx->out_column_limit;
             }
 // #warning "TODO: + color:rec"
             p->line_buf[p->line_buf_len] = 0;
@@ -91,10 +89,10 @@ static int output_line(void *p_out, const char *str, sdb_out_state state)
     return 0;
 }
 
-int sdb_vmcout(sdb_context *ctx, unsigned int mode,
+int __sdb_vmcout(sdb_context *ctx, unsigned int mode,
         const char *file, size_t line, const char *fmt, va_list va)
 {
-    char buf[SDB_CONFIG_OUTPUT_BUFFER_SIZE];
+    char buf[ctx->out_column_limit + SDB_CONFIG_OUTPUT_BUFFER_RESERVE];
     output_line_param param = {
         .ctx            = ctx,
         .mode           = mode,
