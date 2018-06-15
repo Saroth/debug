@@ -3,10 +3,64 @@
 #warning "@TODO: strcasecmp achieve"
 #include <string.h>
 
+typedef struct {
+    sdb_context *ctx;
+    unsigned int mode;
+    const char *file;
+    size_t line;
+#if defined(SDB_SYSTEM_HAS_STDERR)
+    int err;
+#endif
+    char *line_buf;
+    size_t line_buf_size;
+    size_t line_buf_len;
+    size_t counter;
+} dump_line_param;
+static int dump_line(void *p_out, const char *str, sdb_out_state state)
+{
+    dump_line_param *p = (dump_line_param *)p_out;
+    do {
+        if (p->line_buf_len == 0) {
+#warning "TODO: + color, + mark"
+        }
+        while (*str && p->line_buf_len < p->ctx->out_column_limit) {
+            p->line_buf[p->line_buf_len++] = *str++;
+        }
+#if defined(SDB_SYSTEM_HAS_STDERR)
+        if (state == SDB_OUT_FINAL && p->err) {
+// #warning "TODO: + color"
+            str = strerror(p->err);
+            state = SDB_OUT_STDERR;
+            continue;
+        }
+#endif
+        if (p->line_buf_len >= p->ctx->out_column_limit
+                || state != SDB_OUT_NONE) {
+            if (p->line_buf_len > p->ctx->out_column_limit) {
+                p->line_buf_len = p->ctx->out_column_limit;
+            }
+// #warning "TODO: + color:rec"
+            p->line_buf[p->line_buf_len] = 0;
+            int ret = sdb_bio_out(p->ctx, p->file, p->line, p->line_buf);
+            if (ret < 0) {
+                return ret;
+            }
+            p->counter += ret;
+            p->line_buf_len = 0;
+            return p->counter;
+        }
+    } while (*str);
+    return 0;
+}
+
 int __sdb_vmdump(sdb_context *ctx, unsigned int mode,
-        const char *buf, size_t size, size_t addr,
+        const void *buf, size_t size, void *addr,
         const char *file, size_t line, const char *fmt, va_list va)
 {
+    int ret = __sdb_vmcout(ctx, mode, file, line, (fmt == 0) ? "" : fmt, va);
+    if (ret < 0) {
+        return ret;
+    }
     return 0;
 }
 

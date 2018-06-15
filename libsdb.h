@@ -102,6 +102,22 @@ inline int __sdb_mcout(sdb_context *ctx, unsigned int mode,
     return ret;
 }
 #define __sdb_cout(_c, _f, ...) __sdb_mcout(_c, 0, 0, 0, _f, __VA_ARGS__)
+typedef struct {
+    sdb_context *ctx;
+    unsigned int mode;
+    const char *file;
+    size_t line;
+    int err;
+    char *line_buf;
+    size_t line_buf_size;
+    size_t line_buf_len;
+    size_t counter;
+} sdb_cout_context;
+void __sdb_vmcout_init(sdb_cout_context *ctx,
+        sdb_context *sdb_ctx, unsigned int mode, char *buf, size_t size,
+        const char *file, size_t line);
+int __sdb_vmcout_append(sdb_cout_context *ctx, const char *fmt, va_list va);
+int __sdb_vmcout_final(sdb_cout_context *ctx, const char *fmt, va_list va);
 
 int __sdb_vmcin(sdb_context *ctx, unsigned int mode,
         char *buf, size_t size, size_t *len,
@@ -119,10 +135,10 @@ inline int __sdb_mcin(sdb_context *ctx, unsigned int mode,
 int __sdb_cin(sdb_context *ctx, char *buf, size_t size, size_t *len);
 
 int __sdb_vmdump(sdb_context *ctx, unsigned int mode,
-        const char *buf, size_t size, size_t addr,
+        const void *buf, size_t size, void *addr,
         const char *file, size_t line, const char *fmt, va_list va);
 inline int __sdb_mdump(sdb_context *ctx, unsigned int mode,
-        const char *buf, size_t size, size_t addr,
+        const void *buf, size_t size, void *addr,
         const char *file, size_t line, const char *fmt, ...)
 {
     va_list va;

@@ -32,8 +32,8 @@ void sdb_config_out_column_limit(sdb_context *ctx, size_t limit)
 {
     if (limit < SDB_CONFIG_COLUMN_LIMIT_MINIMUM) {
         __sdb_mcout(ctx, SDB_MSG_WARNING, __FILE__, __LINE__,
-                "set column limit less than minimum(%d < %d),"
-                " reset to minimum.", limit, SDB_CONFIG_COLUMN_LIMIT_MINIMUM);
+                "column limit less than minimum(%d < %d), reset to minimum.",
+                limit, SDB_CONFIG_COLUMN_LIMIT_MINIMUM);
         limit = SDB_CONFIG_COLUMN_LIMIT_MINIMUM;
     }
 
@@ -43,9 +43,7 @@ void sdb_config_out_column_limit(sdb_context *ctx, size_t limit)
     min += 1 + ctx->dump_bytes_perline; /* space + ascii, e.g.: " 123..." */
     if (limit < min) {
         __sdb_mcout(ctx, SDB_MSG_WARNING, __FILE__, __LINE__,
-                "set column limit less than dump minimum(%d < %d),"
-                " reset to minimum.", limit, min);
-        limit = min;
+                "column limit less than dump minimum(%d < %d)", limit, min);
     }
 
     ctx->out_column_limit = limit;
@@ -55,9 +53,8 @@ void sdb_config_dump_bytes_perline(sdb_context *ctx, size_t size)
 {
     if (size < SDB_CONFIG_DUMP_BYTE_PERLINE_MINIMUM) {
         __sdb_mcout(ctx, SDB_MSG_WARNING, __FILE__, __LINE__,
-                "set dump bytes per-line less than minimum(%d < %d),"
-                " reset to minimum.", size,
-                SDB_CONFIG_DUMP_BYTE_PERLINE_MINIMUM);
+                "dump bytes per-line less than minimum(%d < %d), reset to"
+                " minimum.", size, SDB_CONFIG_DUMP_BYTE_PERLINE_MINIMUM);
         size = SDB_CONFIG_COLUMN_LIMIT_MINIMUM;
     }
 
@@ -67,12 +64,10 @@ void sdb_config_dump_bytes_perline(sdb_context *ctx, size_t size)
     limit /= 4;
     if (size > limit) {
         __sdb_mcout(ctx, SDB_MSG_WARNING, __FILE__, __LINE__,
-                "set dump bytes per-line large than limit(%d > %d(%d)), skip.",
+                "set dump bytes per-line large than limit(%d > %d(%d)).",
                 size, limit, ctx->out_column_limit);
     }
-    else {
-        ctx->dump_bytes_perline = size;
-    }
+    ctx->dump_bytes_perline = size;
 }
 
 void sdb_config_dump_format(sdb_context *ctx, unsigned int has_addr,
