@@ -78,3 +78,4 @@ void sdb_config_dump_format(sdb_context *ctx, unsigned int has_addr,
     ctx->dump_has_ascii = has_ascii ? 1 : 0;
 }
 
+

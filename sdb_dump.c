@@ -53,19 +53,39 @@ static int dump_line(void *p_out, const char *str, sdb_out_state state)
     return 0;
 }
 
-int __sdb_vmdump(sdb_context *ctx, unsigned int mode,
-        const void *buf, size_t size, void *addr,
+int __sdb_vmdump(sdb_context *ctx, const void *buf, size_t size, void *addr,
         const char *file, size_t line, const char *fmt, va_list va)
 {
-    int ret = __sdb_vmcout(ctx, mode, file, line, (fmt == 0) ? "" : fmt, va);
-    if (ret < 0) {
-        return ret;
+    int ret;
+    if (fmt) {
+        sdb_assert(__sdb_vmcout(ctx, SDB_MSG_DUMP, file, line, fmt, va));
     }
-    return 0;
-}
+    if (buf == 0) {
+        return __sdb_mcout(ctx, SDB_MSG_DUMP, __FILE__, __LINE__, buf);
+    }
+    if (size > 0xFFFF) {
+        sdb_assert(__sdb_mcout(ctx, SDB_MSG_WARNING, __FILE__, __LINE__,
+                "data size too large! length:%d(%#x)", size, size));
+        char in[8];
+        sdb_assert(__sdb_mcin(ctx, SDB_MSG_INPUT_STR, in, sizeof(in), 0,
+                __FILE__, __LINE__, "continue to dump? (y/N)"));
+        if (strcasecmp(in, "y")) {
+            return 0;
+        }
+    }
 
-int __sdb_dump(sdb_context *ctx, const char *buf, size_t size)
-{
+    char b[ctx->out_column_limit + SDB_CONFIG_OUTPUT_BUFFER_RESERVE];
+    size_t counter = 0;
+    size_t offset = 0;
+    char addr_str[20];
+    sdb_vsnprintf(addr_str, sizeof(addr_str), "%04x: ", addr);
+    sdb_cout_context param;
+    __sdb_mcout_init(&param, ctx, SDB_MSG_DUMP, b, sizeof(b), file, line);
+    while (size) {
+        // ...
+    }
+    __sdb_mcout_final(&param);
+
     return 0;
 }
 

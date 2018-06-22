@@ -12,7 +12,9 @@
 extern "C" {
 #endif
 
-#include <stdio.h>
+/* For size_t */
+#include <stddef.h>
+/* For va_list */
 #include <stdarg.h>
 
 typedef enum {
@@ -42,6 +44,7 @@ typedef struct {
 } sdb_context;
 
 inline int sdb_nop(void) { return 0; }
+#define sdb_assert(_f) do { if ((ret = _f) < 0) { return ret; } } while (0)
 
 size_t sdb_stack_mark(sdb_context *ctx);
 size_t sdb_stack_touch(sdb_context *ctx);
@@ -58,36 +61,43 @@ void sdb_config_dump_format(sdb_context *ctx, unsigned int has_addr,
 
 typedef enum {          /* 输出模式定义 */
     SDB_MSG_OFS         = 0,
-    SDB_MSG_LEVEL_8     = (0 << SDB_MSG_OFS),
-    SDB_MSG_LEVEL_7     = (1 << SDB_MSG_OFS),
-    SDB_MSG_LEVEL_6     = (2 << SDB_MSG_OFS),
-    SDB_MSG_LEVEL_5     = (3 << SDB_MSG_OFS),
-    SDB_MSG_LEVEL_4     = (4 << SDB_MSG_OFS),
-    SDB_MSG_LEVEL_3     = (5 << SDB_MSG_OFS),
-    SDB_MSG_LEVEL_2     = (6 << SDB_MSG_OFS),
-    SDB_MSG_LEVEL_1     = (7 << SDB_MSG_OFS),
+    SDB_MSG_LEVEL_16    = (0   << SDB_MSG_OFS),
+    SDB_MSG_LEVEL_15    = (1   << SDB_MSG_OFS),
+    SDB_MSG_LEVEL_14    = (2   << SDB_MSG_OFS),
+    SDB_MSG_LEVEL_13    = (3   << SDB_MSG_OFS),
+    SDB_MSG_LEVEL_12    = (4   << SDB_MSG_OFS),
+    SDB_MSG_LEVEL_11    = (5   << SDB_MSG_OFS),
+    SDB_MSG_LEVEL_10    = (6   << SDB_MSG_OFS),
+    SDB_MSG_LEVEL_9     = (7   << SDB_MSG_OFS),
+    SDB_MSG_LEVEL_8     = (8   << SDB_MSG_OFS),
+    SDB_MSG_LEVEL_7     = (9   << SDB_MSG_OFS),
+    SDB_MSG_LEVEL_6     = (10  << SDB_MSG_OFS),
+    SDB_MSG_LEVEL_5     = (11  << SDB_MSG_OFS),
+    SDB_MSG_LEVEL_4     = (12  << SDB_MSG_OFS),
+    SDB_MSG_LEVEL_3     = (13  << SDB_MSG_OFS),
+    SDB_MSG_LEVEL_2     = (14  << SDB_MSG_OFS),
+    SDB_MSG_LEVEL_1     = (15  << SDB_MSG_OFS),
     SDB_MSG_MASK        = (0xF << SDB_MSG_OFS),
 
     SDB_TYPE_OFS        = 4,
-    SDB_TYPE_INFO       = (0 << SDB_TYPE_OFS),
-    SDB_TYPE_WARNING    = (1 << SDB_TYPE_OFS),
-    SDB_TYPE_ERROR      = (2 << SDB_TYPE_OFS),
-    SDB_TYPE_DUMP       = (3 << SDB_TYPE_OFS),
-    SDB_TYPE_DUMP_ADDR  = (4 << SDB_TYPE_OFS),
-    SDB_TYPE_INPUT_STR  = (5 << SDB_TYPE_OFS),
-    SDB_TYPE_INPUT_NUM  = (6 << SDB_TYPE_OFS),
-    SDB_TYPE_INPUT_ECHO = (7 << SDB_TYPE_OFS),
-    SDB_TYPE_MENU       = (8 << SDB_TYPE_OFS),
+    SDB_TYPE_INFO       = (0   << SDB_TYPE_OFS),
+    SDB_TYPE_WARNING    = (1   << SDB_TYPE_OFS),
+    SDB_TYPE_ERROR      = (2   << SDB_TYPE_OFS),
+    SDB_TYPE_DUMP       = (3   << SDB_TYPE_OFS),
+    SDB_TYPE_INPUT_STR  = (4   << SDB_TYPE_OFS),
+    SDB_TYPE_INPUT_NUM  = (5   << SDB_TYPE_OFS),
+    SDB_TYPE_INPUT_ECHO = (6   << SDB_TYPE_OFS),
+    SDB_TYPE_MENU       = (7   << SDB_TYPE_OFS),
     SDB_TYPE_MASK       = (0xF << SDB_TYPE_OFS),
 
-    SDB_MSG_INFO        = (SDB_MSG_LEVEL_7 | SDB_TYPE_INFO),
-    SDB_MSG_WARNING     = (SDB_MSG_LEVEL_3 | SDB_TYPE_WARNING),
-    SDB_MSG_ERROR       = (SDB_MSG_LEVEL_1 | SDB_TYPE_ERROR),
-    SDB_MSG_INPUT_STR   = (SDB_MSG_LEVEL_2 | SDB_TYPE_INPUT_STR),
-    SDB_MSG_INPUT_NUM   = (SDB_MSG_LEVEL_2 | SDB_TYPE_INPUT_NUM),
-    SDB_MSG_INPUT_ECHO  = (SDB_MSG_LEVEL_2 | SDB_TYPE_INPUT_ECHO),
-    SDB_MSG_MENU        = (SDB_MSG_LEVEL_2 | SDB_TYPE_MENU),
-    SDB_MSG_DUMP        = (SDB_MSG_LEVEL_5 | SDB_TYPE_DUMP),
+    SDB_MSG_INFO        = (SDB_MSG_LEVEL_8  | SDB_TYPE_INFO),
+    SDB_MSG_WARNING     = (SDB_MSG_LEVEL_6  | SDB_TYPE_WARNING),
+    SDB_MSG_ERROR       = (SDB_MSG_LEVEL_2  | SDB_TYPE_ERROR),
+    SDB_MSG_INPUT_STR   = (SDB_MSG_LEVEL_4  | SDB_TYPE_INPUT_STR),
+    SDB_MSG_INPUT_NUM   = (SDB_MSG_LEVEL_4  | SDB_TYPE_INPUT_NUM),
+    SDB_MSG_INPUT_ECHO  = (SDB_MSG_LEVEL_4  | SDB_TYPE_INPUT_ECHO),
+    SDB_MSG_MENU        = (SDB_MSG_LEVEL_2  | SDB_TYPE_MENU),
+    SDB_MSG_DUMP        = (SDB_MSG_LEVEL_10 | SDB_TYPE_DUMP),
 } sdb_mode_type;
 int __sdb_vmcout(sdb_context *ctx, unsigned int mode,
         const char *file, size_t line, const char *fmt, va_list va);
@@ -113,11 +123,13 @@ typedef struct {
     size_t line_buf_len;
     size_t counter;
 } sdb_cout_context;
-void __sdb_vmcout_init(sdb_cout_context *ctx,
+void __sdb_mcout_init(sdb_cout_context *ctx,
         sdb_context *sdb_ctx, unsigned int mode, char *buf, size_t size,
         const char *file, size_t line);
-int __sdb_vmcout_append(sdb_cout_context *ctx, const char *fmt, va_list va);
-int __sdb_vmcout_final(sdb_cout_context *ctx, const char *fmt, va_list va);
+int __sdb_mcout_append_string(sdb_cout_context *ctx, const char *str);
+int __sdb_mcout_append(sdb_cout_context *ctx, const char *fmt, ...);
+int __sdb_mcout_append_va(sdb_cout_context *ctx, const char *fmt, va_list va);
+int __sdb_mcout_final(sdb_cout_context *ctx);
 
 int __sdb_vmcin(sdb_context *ctx, unsigned int mode,
         char *buf, size_t size, size_t *len,
@@ -134,16 +146,15 @@ inline int __sdb_mcin(sdb_context *ctx, unsigned int mode,
 }
 int __sdb_cin(sdb_context *ctx, char *buf, size_t size, size_t *len);
 
-int __sdb_vmdump(sdb_context *ctx, unsigned int mode,
-        const void *buf, size_t size, void *addr,
+int __sdb_vmdump(sdb_context *ctx, const void *buf, size_t size, void *addr,
         const char *file, size_t line, const char *fmt, va_list va);
-inline int __sdb_mdump(sdb_context *ctx, unsigned int mode,
+inline int __sdb_mdump(sdb_context *ctx,
         const void *buf, size_t size, void *addr,
         const char *file, size_t line, const char *fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
-    int ret = __sdb_vmdump(ctx, mode, buf, size, addr, file, line, fmt, va);
+    int ret = __sdb_vmdump(ctx, buf, size, addr, file, line, fmt, va);
     va_end(va);
     return ret;
 }

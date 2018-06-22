@@ -48,12 +48,6 @@ static int std_in(void *p, char *buf, size_t size, size_t *len)
 }
 #endif /* defined(SDB_SYSTEM_HAS_STDIO) */
 
-void sdb_config_bio(sdb_context *ctx,
-        func_sdb_bio_out out, func_sdb_bio_in in, void *p)
-{
-    ctx->bio_out = out;
-}
-
 int sdb_bio_out(sdb_context *ctx,
         const char *file, size_t line, const char *str)
 {

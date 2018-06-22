@@ -15,16 +15,18 @@ typedef enum {
     SDB_OUT_NONE = 0,
     SDB_OUT_INIT,
     SDB_OUT_FINAL,
+    SDB_OUT_LINE_END,
     SDB_OUT_STDERR,
 } sdb_out_state;
 typedef int (*func_sdb_vxprintf)(void *, const char *, sdb_out_state);
 typedef struct {
     func_sdb_vxprintf f_out;
     void *p_out;
+    unsigned int state;
     const char *fmt;
     va_list va;
 } sdb_xprintf_context;
-int sdb_vxprintf(sdb_xprintf_context *ctx, sdb_out_state state);
+int sdb_vxprintf(sdb_xprintf_context *ctx);
 
 #ifdef __cplusplus
 }

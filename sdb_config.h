@@ -1,6 +1,14 @@
 #ifndef __SDB_CONFIG_H__
 #define __SDB_CONFIG_H__
 
+/**
+ * 版本号格式: 0x00AAIIPP.
+ *      AA: Major
+ *      II: Minor
+ *      PP: Patch
+ */
+#define SDB_VERSION_NUMBER      0x00020001
+
 #define SDB_SYSTEM_HAS_ANSI_COLOR_SEQUENCES
 #define SDB_SYSTEM_HAS_STDIO
 #define SDB_SYSTEM_HAS_STDERR
@@ -15,6 +23,8 @@
 #define SDB_CONFIG_INPUT_BUFFER_SIZE            32
 #define SDB_CONFIG_DUMP_BYTE_PERLINE_DEF        16
 #define SDB_CONFIG_DUMP_BYTE_PERLINE_MINIMUM    4
+
+#define SDB_NULL_MARK           "(null)"
 
 #define SDB_COLOR_RECOVERY      "\33[0m"    /* 恢复: normal */
 #define SDB_COLOR_WARNING       "\33[1;36m" /* 警告高亮: blue, bold */
@@ -33,14 +43,6 @@
 #define SDB_MARK_ECHO           "i.e "      /* 返回数值输出标记 */
 #define SDB_MARK_DUMP           "  | "      /* 导出标记 */
 #define SDB_MARK_MENU           "   #"      /* 菜单标记 */
-
-/**
- * 版本号格式: 0x00AAIISS.
- *      A:Major
- *      I:Minor
- *      S:Status, 0..0xFE:Beta, 0xFF:Release
- */
-#define SDB_VERSION_NUMBER      0x00020001
 
 #endif /* __SDB_CONFIG_H__ */
 
