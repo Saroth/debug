@@ -8,44 +8,42 @@ int __sdb_vmcin(sdb_context *ctx, unsigned int mode,
         char *buf, size_t size, size_t *len,
         const char *file, size_t line, const char *fmt, va_list va)
 {
-    char b[SDB_CONFIG_INPUT_BUFFER_SIZE];
-    if (buf == 0) {
-        buf = b;
-        size = SDB_CONFIG_INPUT_BUFFER_SIZE;
+    size_t l = 0;
+    if (len == 0) {
+        len = &l;
     }
 
-    size_t l = 0;
     size_t count = 0;
-    int ret = __sdb_vmcout(ctx, mode, file, line, (fmt == 0) ? "" : fmt, va);
-    if (ret < 0) {
-        return ret;
-    }
+    int ret;
+    sdb_assert(__sdb_vmcout(ctx, mode, file, line, (fmt == 0) ? "" : fmt, va));
     count += ret;
-    if ((ret = sdb_bio_in(ctx, buf, size, &l)) != 0) {
-        return ret;
-    }
-    if (l == 0) {
-        __sdb_mcout(ctx, SDB_MSG_WARNING, __FILE__, __LINE__, "No input.");
+    sdb_assert(sdb_bio_in(ctx, buf, size, len));
+    if (*len == 0) {
+        sdb_assert(__sdb_mcout(ctx, SDB_MSG_WARNING,
+                    __FILE__, __LINE__, "No input."));
         return SDB_ERR_NO_INPUT;
     }
-    if ((ret = __sdb_mcout(ctx, SDB_MSG_INPUT_ECHO, file, line, buf)) < 0) {
-        return ret;
-    }
+    sdb_assert(__sdb_mcout(ctx, SDB_MSG_INPUT_ECHO, file, line, buf));
     count += ret;
+    return count;
+}
 
-    if (len != 0) {
-        *len = l;
-        if ((mode & SDB_TYPE_MASK) == SDB_MSG_INPUT_NUM) {
-            *len = strtol(buf, 0, 0);
-            if (*len == 0 || strlen(buf) != '0') {
-                __sdb_mcout(ctx, SDB_MSG_WARNING, __FILE__, __LINE__,
-                        "Unrecognizable input.");
-                return SDB_ERR_UNKNOWN_INPUT;
-            }
+int __sdb_vnmcin(sdb_context *ctx, int *num,
+        const char *file, size_t line, const char *fmt, va_list va)
+{
+    int ret;
+    char in[SDB_CONFIG_INPUT_BUFFER_SIZE];
+    sdb_assert(__sdb_vmcin(ctx, SDB_MSG_INPUT_NUM, in, sizeof(in), 0,
+                file, line, fmt, va));
+    if (num) {
+        *num = strtol(in, 0, 0);
+        if (*num == 0 || in[0] != '0') {
+            sdb_assert(__sdb_mcout(ctx, SDB_MSG_WARNING,
+                        __FILE__, __LINE__, "Unrecognizable input."));
+            return SDB_ERR_UNKNOWN_INPUT;
         }
     }
-
-    return count;
+    return ret;
 }
 
 inline int __sdb_cin(sdb_context *ctx, char *buf, size_t size, size_t *len)

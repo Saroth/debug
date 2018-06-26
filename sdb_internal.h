@@ -15,8 +15,10 @@ typedef enum {
     SDB_OUT_NONE = 0,
     SDB_OUT_INIT,
     SDB_OUT_FINAL,
-    SDB_OUT_LINE_END,
-    SDB_OUT_STDERR,
+    SDB_OUT_END_LINE,
+    SDB_OUT_STDERR_HEAD,
+    SDB_OUT_STDERR_INFO,
+    SDB_OUT_STDERR_TAIL,
 } sdb_out_state;
 typedef int (*func_sdb_vxprintf)(void *, const char *, sdb_out_state);
 typedef struct {

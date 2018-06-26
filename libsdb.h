@@ -87,16 +87,21 @@ typedef enum {          /* 输出模式定义 */
     SDB_TYPE_INPUT_STR  = (4   << SDB_TYPE_OFS),
     SDB_TYPE_INPUT_NUM  = (5   << SDB_TYPE_OFS),
     SDB_TYPE_INPUT_ECHO = (6   << SDB_TYPE_OFS),
-    SDB_TYPE_MENU       = (7   << SDB_TYPE_OFS),
+    SDB_TYPE_MENU_LIST  = (7   << SDB_TYPE_OFS),
+    SDB_TYPE_MENU_FORM  = (8   << SDB_TYPE_OFS),
+    SDB_TYPE_MENU_CHAOS = (9   << SDB_TYPE_OFS),
     SDB_TYPE_MASK       = (0xF << SDB_TYPE_OFS),
 
+    SDB_MSG_NONE        = (SDB_MSG_LEVEL_12 | SDB_TYPE_INFO),
     SDB_MSG_INFO        = (SDB_MSG_LEVEL_8  | SDB_TYPE_INFO),
     SDB_MSG_WARNING     = (SDB_MSG_LEVEL_6  | SDB_TYPE_WARNING),
     SDB_MSG_ERROR       = (SDB_MSG_LEVEL_2  | SDB_TYPE_ERROR),
     SDB_MSG_INPUT_STR   = (SDB_MSG_LEVEL_4  | SDB_TYPE_INPUT_STR),
     SDB_MSG_INPUT_NUM   = (SDB_MSG_LEVEL_4  | SDB_TYPE_INPUT_NUM),
     SDB_MSG_INPUT_ECHO  = (SDB_MSG_LEVEL_4  | SDB_TYPE_INPUT_ECHO),
-    SDB_MSG_MENU        = (SDB_MSG_LEVEL_2  | SDB_TYPE_MENU),
+    SDB_MSG_MENU_LIST   = (SDB_MSG_LEVEL_2  | SDB_TYPE_MENU_LIST),
+    SDB_MSG_MENU_FORM   = (SDB_MSG_LEVEL_2  | SDB_TYPE_MENU_FORM),
+    SDB_MSG_MENU_CHAOS  = (SDB_MSG_LEVEL_2  | SDB_TYPE_MENU_CHAOS),
     SDB_MSG_DUMP        = (SDB_MSG_LEVEL_10 | SDB_TYPE_DUMP),
 } sdb_mode_type;
 int __sdb_vmcout(sdb_context *ctx, unsigned int mode,
@@ -129,6 +134,7 @@ void __sdb_mcout_init(sdb_cout_context *ctx,
 int __sdb_mcout_append_string(sdb_cout_context *ctx, const char *str);
 int __sdb_mcout_append(sdb_cout_context *ctx, const char *fmt, ...);
 int __sdb_mcout_append_va(sdb_cout_context *ctx, const char *fmt, va_list va);
+int __sdb_mcout_append_endline(sdb_cout_context *ctx);
 int __sdb_mcout_final(sdb_cout_context *ctx);
 
 int __sdb_vmcin(sdb_context *ctx, unsigned int mode,
@@ -141,6 +147,17 @@ inline int __sdb_mcin(sdb_context *ctx, unsigned int mode,
     va_list va;
     va_start(va, fmt);
     int ret = __sdb_vmcin(ctx, mode, buf, size, len, file, line, fmt, va);
+    va_end(va);
+    return ret;
+}
+int __sdb_vnmcin(sdb_context *ctx, int *num,
+        const char *file, size_t line, const char *fmt, va_list va);
+inline int __sdb_nmcin(sdb_context *ctx, int *num,
+        const char *file, size_t line, const char *fmt, ...)
+{
+    va_list va;
+    va_start(va, fmt);
+    int ret = __sdb_vnmcin(ctx, num, file, line, fmt, va);
     va_end(va);
     return ret;
 }
@@ -158,7 +175,15 @@ inline int __sdb_mdump(sdb_context *ctx,
     va_end(va);
     return ret;
 }
-int __sdb_dump(sdb_context *ctx, const char *buf, size_t size);
+#define __sdb_dump(_c, _b, _s) __sdb_mdump(_c, _b, _s, 0, 0, 0, 0)
+
+typedef struct {
+    const char *info;
+    int (*func)(void *);
+    void *param;
+} sdb_menu_list;
+int __sdb_menu(sdb_context *ctx, unsigned int mode,
+        const sdb_menu_list *list, size_t num, const char *file, size_t line);
 
 
 

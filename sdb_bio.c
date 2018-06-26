@@ -44,7 +44,7 @@ static int std_in(void *p, char *buf, size_t size, size_t *len)
         *len = i;
     }
 
-    return 0;
+    return i;
 }
 #endif /* defined(SDB_SYSTEM_HAS_STDIO) */
 

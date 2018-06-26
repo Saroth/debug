@@ -34,15 +34,15 @@
 #define SDB_COLOR_TITLE         "\33[7m"    /* 标题高亮: inverse */
 #define SDB_COLOR_LABEL         "\33[1;30m" /* 标签高亮, black, bold */
 
-#define SDB_MARK_NONE           "    "      /* 无标记 */
-#define SDB_MARK_INFO           " .  "      /* 提示标记 */
-#define SDB_MARK_WARNING        " !  "      /* 警告标记 */
-#define SDB_MARK_ERROR          " x  "      /* 错误标记 */
-#define SDB_MARK_GETNUM         "i.n "      /* 获取数值输入标记 */
-#define SDB_MARK_GETSTRING      "i.s "      /* 获取字符串输入标记 */
-#define SDB_MARK_ECHO           "i.e "      /* 返回数值输出标记 */
-#define SDB_MARK_DUMP           "  | "      /* 导出标记 */
-#define SDB_MARK_MENU           "   #"      /* 菜单标记 */
+#define SDB_MARK_NONE           "  "        /* 无标记 */
+#define SDB_MARK_INFO           ". "        /* 提示标记 */
+#define SDB_MARK_WARNING        "! "        /* 警告标记 */
+#define SDB_MARK_ERROR          "X "        /* 错误标记 */
+#define SDB_MARK_GETNUM         "N>"        /* 获取数值输入标记 */
+#define SDB_MARK_GETSTRING      "=>"        /* 获取字符串输入标记 */
+#define SDB_MARK_ECHO           "E>"        /* 返回数值输出标记 */
+#define SDB_MARK_DUMP           " |"        /* 导出标记 */
+#define SDB_MARK_MENU           " #"        /* 菜单标记 */
 
 #endif /* __SDB_CONFIG_H__ */
 
