@@ -24,14 +24,14 @@ int __sdb_vmdump(sdb_context *ctx, const void *data, size_t size, void *addr,
         }
     }
 
-    char b[ctx->out_column_limit + SDB_CONFIG_OUTPUT_BUFFER_RESERVE];
-    sdb_cout_context param;
-    __sdb_mcout_init(&param, ctx, SDB_MSG_DUMP, b, sizeof(b), file, line);
+    char buf[ctx->out_column_limit + SDB_CONFIG_OUTPUT_BUFFER_RESERVE];
+    sdb_cout_context cout;
+    __sdb_mcout_init(&cout, ctx, SDB_MSG_DUMP, buf, sizeof(buf), file, line);
     if (fmt) {
-        sdb_assert(__sdb_mcout_append_va(&param, fmt, va));
-        sdb_assert(__sdb_mcout_append(&param, " [data:%p, size:%d]",
+        sdb_assert(__sdb_mcout_append_va(&cout, fmt, va));
+        sdb_assert(__sdb_mcout_append(&cout, " [data:%p, size:%d]",
                     data, size));
-        sdb_assert(__sdb_mcout_append_endline(&param));
+        sdb_assert(__sdb_mcout_append_endline(&cout));
     }
 
     size_t offset = 0;
@@ -47,32 +47,32 @@ int __sdb_vmdump(sdb_context *ctx, const void *data, size_t size, void *addr,
         }
 
         if (ctx->dump_has_addr) {
-            sdb_assert(__sdb_mcout_append_string(&param, addr_str));
+            sdb_assert(__sdb_mcout_append_string(&cout, addr_str));
         }
         if (ctx->dump_has_hex) {
             if (blank) {
                 size_t j;
                 for (j = 0; j < blank; j++) {
-                    sdb_assert(__sdb_mcout_append_string(&param, " --"));
+                    sdb_assert(__sdb_mcout_append_string(&cout, " --"));
                 }
             }
             size_t i;
             for (i = 0; i < ctx->dump_bytes_perline; i++) {
                 if (offset + i < size) {
-                    sdb_assert(__sdb_mcout_append(&param, " %02x",
+                    sdb_assert(__sdb_mcout_append(&cout, " %02x",
                                 ((unsigned char *)data)[offset + i] & 0xff));
                 }
                 else {
-                    sdb_assert(__sdb_mcout_append_string(&param, "   "));
+                    sdb_assert(__sdb_mcout_append_string(&cout, "   "));
                 }
             }
         }
         if (ctx->dump_has_ascii) {
-            sdb_assert(__sdb_mcout_append_string(&param, "  "));
+            sdb_assert(__sdb_mcout_append_string(&cout, "  "));
             if (blank) {
                 size_t j;
                 for (j = 0; j < blank; j++) {
-                    sdb_assert(__sdb_mcout_append_string(&param, " "));
+                    sdb_assert(__sdb_mcout_append_string(&cout, " "));
                 }
             }
             size_t i;
@@ -80,23 +80,23 @@ int __sdb_vmdump(sdb_context *ctx, const void *data, size_t size, void *addr,
                 if (offset + i < size) {
                     char c = ((char *)data)[offset + i];
                     if (c >= 0x20 && c < 0x80) {
-                        sdb_assert(__sdb_mcout_append(&param, "%c", c));
+                        sdb_assert(__sdb_mcout_append(&cout, "%c", c));
                     }
                     else {
-                        sdb_assert(__sdb_mcout_append_string(&param, "."));
+                        sdb_assert(__sdb_mcout_append_string(&cout, "."));
                     }
                 }
                 else {
-                    sdb_assert(__sdb_mcout_append_string(&param, " "));
+                    sdb_assert(__sdb_mcout_append_string(&cout, " "));
                 }
             }
         }
-        sdb_assert(__sdb_mcout_append_endline(&param));
+        sdb_assert(__sdb_mcout_append_endline(&cout));
         size -= bytes;
         offset += bytes;
         blank = 0;
     }
-    sdb_assert(__sdb_mcout_final(&param));
+    sdb_assert(__sdb_mcout_final(&cout));
     counter += ret;
 
     return counter;

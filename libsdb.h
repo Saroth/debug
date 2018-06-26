@@ -61,36 +61,42 @@ void sdb_config_dump_format(sdb_context *ctx, unsigned int has_addr,
 
 typedef enum {          /* 输出模式定义 */
     SDB_MSG_OFS         = 0,
-    SDB_MSG_LEVEL_16    = (0   << SDB_MSG_OFS),
-    SDB_MSG_LEVEL_15    = (1   << SDB_MSG_OFS),
-    SDB_MSG_LEVEL_14    = (2   << SDB_MSG_OFS),
-    SDB_MSG_LEVEL_13    = (3   << SDB_MSG_OFS),
-    SDB_MSG_LEVEL_12    = (4   << SDB_MSG_OFS),
-    SDB_MSG_LEVEL_11    = (5   << SDB_MSG_OFS),
-    SDB_MSG_LEVEL_10    = (6   << SDB_MSG_OFS),
-    SDB_MSG_LEVEL_9     = (7   << SDB_MSG_OFS),
-    SDB_MSG_LEVEL_8     = (8   << SDB_MSG_OFS),
-    SDB_MSG_LEVEL_7     = (9   << SDB_MSG_OFS),
-    SDB_MSG_LEVEL_6     = (10  << SDB_MSG_OFS),
-    SDB_MSG_LEVEL_5     = (11  << SDB_MSG_OFS),
-    SDB_MSG_LEVEL_4     = (12  << SDB_MSG_OFS),
-    SDB_MSG_LEVEL_3     = (13  << SDB_MSG_OFS),
-    SDB_MSG_LEVEL_2     = (14  << SDB_MSG_OFS),
-    SDB_MSG_LEVEL_1     = (15  << SDB_MSG_OFS),
-    SDB_MSG_MASK        = (0xF << SDB_MSG_OFS),
+    SDB_MSG_LEVEL_16    = (0    << SDB_MSG_OFS),
+    SDB_MSG_LEVEL_15    = (1    << SDB_MSG_OFS),
+    SDB_MSG_LEVEL_14    = (2    << SDB_MSG_OFS),
+    SDB_MSG_LEVEL_13    = (3    << SDB_MSG_OFS),
+    SDB_MSG_LEVEL_12    = (4    << SDB_MSG_OFS),
+    SDB_MSG_LEVEL_11    = (5    << SDB_MSG_OFS),
+    SDB_MSG_LEVEL_10    = (6    << SDB_MSG_OFS),
+    SDB_MSG_LEVEL_9     = (7    << SDB_MSG_OFS),
+    SDB_MSG_LEVEL_8     = (8    << SDB_MSG_OFS),
+    SDB_MSG_LEVEL_7     = (9    << SDB_MSG_OFS),
+    SDB_MSG_LEVEL_6     = (10   << SDB_MSG_OFS),
+    SDB_MSG_LEVEL_5     = (11   << SDB_MSG_OFS),
+    SDB_MSG_LEVEL_4     = (12   << SDB_MSG_OFS),
+    SDB_MSG_LEVEL_3     = (13   << SDB_MSG_OFS),
+    SDB_MSG_LEVEL_2     = (14   << SDB_MSG_OFS),
+    SDB_MSG_LEVEL_1     = (15   << SDB_MSG_OFS),
+    SDB_MSG_MASK        = (0xF  << SDB_MSG_OFS),
 
     SDB_TYPE_OFS        = 4,
-    SDB_TYPE_INFO       = (0   << SDB_TYPE_OFS),
-    SDB_TYPE_WARNING    = (1   << SDB_TYPE_OFS),
-    SDB_TYPE_ERROR      = (2   << SDB_TYPE_OFS),
-    SDB_TYPE_DUMP       = (3   << SDB_TYPE_OFS),
-    SDB_TYPE_INPUT_STR  = (4   << SDB_TYPE_OFS),
-    SDB_TYPE_INPUT_NUM  = (5   << SDB_TYPE_OFS),
-    SDB_TYPE_INPUT_ECHO = (6   << SDB_TYPE_OFS),
-    SDB_TYPE_MENU_LIST  = (7   << SDB_TYPE_OFS),
-    SDB_TYPE_MENU_FORM  = (8   << SDB_TYPE_OFS),
-    SDB_TYPE_MENU_CHAOS = (9   << SDB_TYPE_OFS),
-    SDB_TYPE_MASK       = (0xF << SDB_TYPE_OFS),
+    SDB_TYPE_INFO       = (0    << SDB_TYPE_OFS),
+    SDB_TYPE_WARNING    = (1    << SDB_TYPE_OFS),
+    SDB_TYPE_ERROR      = (2    << SDB_TYPE_OFS),
+    SDB_TYPE_DUMP       = (3    << SDB_TYPE_OFS),
+    SDB_TYPE_INPUT_STR  = (4    << SDB_TYPE_OFS),
+    SDB_TYPE_INPUT_NUM  = (5    << SDB_TYPE_OFS),
+    SDB_TYPE_INPUT_ECHO = (6    << SDB_TYPE_OFS),
+    SDB_TYPE_MENU       = (7    << SDB_TYPE_OFS),
+    SDB_TYPE_MASK       = (0xF  << SDB_TYPE_OFS),
+
+    SDB_MENU_OFS        = 8,
+    SDB_MENU_LIST       = (0    << SDB_MENU_OFS),
+    SDB_MENU_FORM       = (1    << SDB_MENU_OFS),
+    SDB_MENU_CHAOS      = (2    << SDB_MENU_OFS),
+    SDB_MENU_MAX        = (3    << SDB_MENU_OFS),
+    SDB_MENU_MASK       = (0xF  << SDB_MENU_OFS),
+
 
     SDB_MSG_NONE        = (SDB_MSG_LEVEL_12 | SDB_TYPE_INFO),
     SDB_MSG_INFO        = (SDB_MSG_LEVEL_8  | SDB_TYPE_INFO),
@@ -99,9 +105,9 @@ typedef enum {          /* 输出模式定义 */
     SDB_MSG_INPUT_STR   = (SDB_MSG_LEVEL_4  | SDB_TYPE_INPUT_STR),
     SDB_MSG_INPUT_NUM   = (SDB_MSG_LEVEL_4  | SDB_TYPE_INPUT_NUM),
     SDB_MSG_INPUT_ECHO  = (SDB_MSG_LEVEL_4  | SDB_TYPE_INPUT_ECHO),
-    SDB_MSG_MENU_LIST   = (SDB_MSG_LEVEL_2  | SDB_TYPE_MENU_LIST),
-    SDB_MSG_MENU_FORM   = (SDB_MSG_LEVEL_2  | SDB_TYPE_MENU_FORM),
-    SDB_MSG_MENU_CHAOS  = (SDB_MSG_LEVEL_2  | SDB_TYPE_MENU_CHAOS),
+    SDB_MSG_MENU_LIST   = (SDB_MSG_LEVEL_2  | SDB_TYPE_MENU | SDB_MENU_LIST),
+    SDB_MSG_MENU_FORM   = (SDB_MSG_LEVEL_2  | SDB_TYPE_MENU | SDB_MENU_FORM),
+    SDB_MSG_MENU_CHAOS  = (SDB_MSG_LEVEL_2  | SDB_TYPE_MENU | SDB_MENU_CHAOS),
     SDB_MSG_DUMP        = (SDB_MSG_LEVEL_10 | SDB_TYPE_DUMP),
 } sdb_mode_type;
 int __sdb_vmcout(sdb_context *ctx, unsigned int mode,
@@ -204,10 +210,12 @@ inline int sdb_snprintf(char *buf, size_t size, const char *fmt, ...)
 #endif
 #endif /* __SDB_H__ */
 
-#define sdb_out()
-#define sdb_out_info()
-#define sdb_out_warn()
-#define sdb_out_err()
+#define SDB_CONTEXT 0
+
+#define sdb_out(...) __sdb_cout(SDB_CONTEXT, __VA_ARGS__)
+#define sdb_out_info(...) 
+#define sdb_out_warn(...)
+#define sdb_out_err(...)
 
 #define sdb_in()
 #define sdb_in_num()
@@ -219,6 +227,10 @@ inline int sdb_snprintf(char *buf, size_t size, const char *fmt, ...)
 #define sdb_dump_info()
 #define sdb_dump_addr()
 #define sdb_dump_addr_info()
+
+#define sdb_menu()
+#define sdb_menu_form()
+#define sdb_menu_chaos()
 
 
 /** @} */
