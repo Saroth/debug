@@ -2,6 +2,23 @@
 
 #include "sdb_internal.h"
 
+const sdb_context sdb_ctx_default = {
+    .stack_mark         = 0,
+    .stack_top          = 0,
+    .stack_max_usage    = 0,
+
+    .bio_out            = 0,
+    .bio_in             = 0,
+    .bio_param          = 0,
+
+    .out_column_limit   = SDB_CONFIG_COLUMN_LIMIT_DEF,
+    .dump_bytes_perline = SDB_CONFIG_DUMP_BYTE_PERLINE_DEF,
+    .out_has_color      = 1,
+    .dump_has_addr      = 1,
+    .dump_has_hex       = 1,
+    .dump_has_ascii     = 1,
+};
+
 void sdb_config_init(sdb_context *ctx)
 {
     memset(ctx, 0, sizeof(sdb_context));

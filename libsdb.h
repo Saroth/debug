@@ -21,6 +21,8 @@ typedef enum {
     SDB_ERR_BAD_PARAM       = -0x100,
     SDB_ERR_NO_INPUT        = -0x101,
     SDB_ERR_UNKNOWN_INPUT   = -0x102,
+
+    SDB_ERR_MAX             = -0x103
 } sdb_err_type;
 
 typedef int (*func_sdb_bio_out)(void *p, const char *file, size_t line,
@@ -48,7 +50,9 @@ inline int sdb_nop(void) { return 0; }
 
 size_t sdb_stack_mark(sdb_context *ctx);
 size_t sdb_stack_touch(sdb_context *ctx);
-size_t sdb_stack_max_usage(sdb_context *ctx);
+size_t sdb_stack_max_usage(const sdb_context *ctx);
+
+extern const sdb_context sdb_ctx_default;
 
 void sdb_config_init(sdb_context *ctx);
 void sdb_config_bio(sdb_context *ctx,
@@ -60,24 +64,24 @@ void sdb_config_dump_format(sdb_context *ctx, unsigned int has_addr,
         unsigned int has_hex, unsigned int has_ascii);
 
 typedef enum {          /* 输出模式定义 */
-    SDB_MSG_OFS         = 0,
-    SDB_MSG_LEVEL_16    = (0    << SDB_MSG_OFS),
-    SDB_MSG_LEVEL_15    = (1    << SDB_MSG_OFS),
-    SDB_MSG_LEVEL_14    = (2    << SDB_MSG_OFS),
-    SDB_MSG_LEVEL_13    = (3    << SDB_MSG_OFS),
-    SDB_MSG_LEVEL_12    = (4    << SDB_MSG_OFS),
-    SDB_MSG_LEVEL_11    = (5    << SDB_MSG_OFS),
-    SDB_MSG_LEVEL_10    = (6    << SDB_MSG_OFS),
-    SDB_MSG_LEVEL_9     = (7    << SDB_MSG_OFS),
-    SDB_MSG_LEVEL_8     = (8    << SDB_MSG_OFS),
-    SDB_MSG_LEVEL_7     = (9    << SDB_MSG_OFS),
-    SDB_MSG_LEVEL_6     = (10   << SDB_MSG_OFS),
-    SDB_MSG_LEVEL_5     = (11   << SDB_MSG_OFS),
-    SDB_MSG_LEVEL_4     = (12   << SDB_MSG_OFS),
-    SDB_MSG_LEVEL_3     = (13   << SDB_MSG_OFS),
-    SDB_MSG_LEVEL_2     = (14   << SDB_MSG_OFS),
-    SDB_MSG_LEVEL_1     = (15   << SDB_MSG_OFS),
-    SDB_MSG_MASK        = (0xF  << SDB_MSG_OFS),
+    SDB_LEVEL_OFS       = 0,
+    SDB_LEVEL_16        = (0    << SDB_LEVEL_OFS),
+    SDB_LEVEL_15        = (1    << SDB_LEVEL_OFS),
+    SDB_LEVEL_14        = (2    << SDB_LEVEL_OFS),
+    SDB_LEVEL_13        = (3    << SDB_LEVEL_OFS),
+    SDB_LEVEL_12        = (4    << SDB_LEVEL_OFS),
+    SDB_LEVEL_11        = (5    << SDB_LEVEL_OFS),
+    SDB_LEVEL_10        = (6    << SDB_LEVEL_OFS),
+    SDB_LEVEL_9         = (7    << SDB_LEVEL_OFS),
+    SDB_LEVEL_8         = (8    << SDB_LEVEL_OFS),
+    SDB_LEVEL_7         = (9    << SDB_LEVEL_OFS),
+    SDB_LEVEL_6         = (10   << SDB_LEVEL_OFS),
+    SDB_LEVEL_5         = (11   << SDB_LEVEL_OFS),
+    SDB_LEVEL_4         = (12   << SDB_LEVEL_OFS),
+    SDB_LEVEL_3         = (13   << SDB_LEVEL_OFS),
+    SDB_LEVEL_2         = (14   << SDB_LEVEL_OFS),
+    SDB_LEVEL_1         = (15   << SDB_LEVEL_OFS),
+    SDB_LEVEL_MASK      = (0xF  << SDB_LEVEL_OFS),
 
     SDB_TYPE_OFS        = 4,
     SDB_TYPE_INFO       = (0    << SDB_TYPE_OFS),
@@ -93,27 +97,27 @@ typedef enum {          /* 输出模式定义 */
     SDB_MENU_OFS        = 8,
     SDB_MENU_LIST       = (0    << SDB_MENU_OFS),
     SDB_MENU_FORM       = (1    << SDB_MENU_OFS),
-    SDB_MENU_CHAOS      = (2    << SDB_MENU_OFS),
+    SDB_MENU_PILE       = (2    << SDB_MENU_OFS),
     SDB_MENU_MAX        = (3    << SDB_MENU_OFS),
     SDB_MENU_MASK       = (0xF  << SDB_MENU_OFS),
 
 
-    SDB_MSG_NONE        = (SDB_MSG_LEVEL_12 | SDB_TYPE_INFO),
-    SDB_MSG_INFO        = (SDB_MSG_LEVEL_8  | SDB_TYPE_INFO),
-    SDB_MSG_WARNING     = (SDB_MSG_LEVEL_6  | SDB_TYPE_WARNING),
-    SDB_MSG_ERROR       = (SDB_MSG_LEVEL_2  | SDB_TYPE_ERROR),
-    SDB_MSG_INPUT_STR   = (SDB_MSG_LEVEL_4  | SDB_TYPE_INPUT_STR),
-    SDB_MSG_INPUT_NUM   = (SDB_MSG_LEVEL_4  | SDB_TYPE_INPUT_NUM),
-    SDB_MSG_INPUT_ECHO  = (SDB_MSG_LEVEL_4  | SDB_TYPE_INPUT_ECHO),
-    SDB_MSG_MENU_LIST   = (SDB_MSG_LEVEL_2  | SDB_TYPE_MENU | SDB_MENU_LIST),
-    SDB_MSG_MENU_FORM   = (SDB_MSG_LEVEL_2  | SDB_TYPE_MENU | SDB_MENU_FORM),
-    SDB_MSG_MENU_CHAOS  = (SDB_MSG_LEVEL_2  | SDB_TYPE_MENU | SDB_MENU_CHAOS),
-    SDB_MSG_DUMP        = (SDB_MSG_LEVEL_10 | SDB_TYPE_DUMP),
+    SDB_MSG_NONE        = (SDB_LEVEL_12 | SDB_TYPE_INFO),
+    SDB_MSG_INFO        = (SDB_LEVEL_8  | SDB_TYPE_INFO),
+    SDB_MSG_WARNING     = (SDB_LEVEL_6  | SDB_TYPE_WARNING),
+    SDB_MSG_ERROR       = (SDB_LEVEL_2  | SDB_TYPE_ERROR),
+    SDB_MSG_INPUT_STR   = (SDB_LEVEL_4  | SDB_TYPE_INPUT_STR),
+    SDB_MSG_INPUT_NUM   = (SDB_LEVEL_4  | SDB_TYPE_INPUT_NUM),
+    SDB_MSG_INPUT_ECHO  = (SDB_LEVEL_4  | SDB_TYPE_INPUT_ECHO),
+    SDB_MSG_MENU_LIST   = (SDB_LEVEL_2  | SDB_TYPE_MENU | SDB_MENU_LIST),
+    SDB_MSG_MENU_FORM   = (SDB_LEVEL_2  | SDB_TYPE_MENU | SDB_MENU_FORM),
+    SDB_MSG_MENU_PILE   = (SDB_LEVEL_2  | SDB_TYPE_MENU | SDB_MENU_PILE),
+    SDB_MSG_DUMP        = (SDB_LEVEL_10 | SDB_TYPE_DUMP),
 } sdb_mode_type;
-int __sdb_vmcout(sdb_context *ctx, unsigned int mode,
+int __sdb_vmcout(const sdb_context *ctx, unsigned int mode,
         const char *file, size_t line, const char *fmt, va_list va);
 #define __sdb_vcout(_c, _f, _v) __sdb_vmcout(_c, 0, 0, 0, _f, _v)
-inline int __sdb_mcout(sdb_context *ctx, unsigned int mode,
+inline int __sdb_mcout(const sdb_context *ctx, unsigned int mode,
         const char *file, size_t line, const char *fmt, ...)
 {
     va_list va;
@@ -124,7 +128,7 @@ inline int __sdb_mcout(sdb_context *ctx, unsigned int mode,
 }
 #define __sdb_cout(_c, _f, ...) __sdb_mcout(_c, 0, 0, 0, _f, __VA_ARGS__)
 typedef struct {
-    sdb_context *ctx;
+    const sdb_context *ctx;
     unsigned int mode;
     const char *file;
     size_t line;
@@ -134,8 +138,8 @@ typedef struct {
     size_t line_buf_len;
     size_t counter;
 } sdb_cout_context;
-void __sdb_mcout_init(sdb_cout_context *ctx,
-        sdb_context *sdb_ctx, unsigned int mode, char *buf, size_t size,
+void __sdb_mcout_init(sdb_cout_context *ctx, const sdb_context *sdb_ctx,
+        unsigned int mode, char *buf, size_t size,
         const char *file, size_t line);
 int __sdb_mcout_append_string(sdb_cout_context *ctx, const char *str);
 int __sdb_mcout_append(sdb_cout_context *ctx, const char *fmt, ...);
@@ -143,10 +147,10 @@ int __sdb_mcout_append_va(sdb_cout_context *ctx, const char *fmt, va_list va);
 int __sdb_mcout_append_endline(sdb_cout_context *ctx);
 int __sdb_mcout_final(sdb_cout_context *ctx);
 
-int __sdb_vmcin(sdb_context *ctx, unsigned int mode,
+int __sdb_vmcin(const sdb_context *ctx, unsigned int mode,
         char *buf, size_t size, size_t *len,
         const char *file, size_t line, const char *fmt, va_list va);
-inline int __sdb_mcin(sdb_context *ctx, unsigned int mode,
+inline int __sdb_mcin(const sdb_context *ctx, unsigned int mode,
         char *buf, size_t size, size_t *len,
         const char *file, size_t line, const char *fmt, ...)
 {
@@ -156,28 +160,39 @@ inline int __sdb_mcin(sdb_context *ctx, unsigned int mode,
     va_end(va);
     return ret;
 }
-int __sdb_vnmcin(sdb_context *ctx, int *num,
+int __sdb_vnmcin(const sdb_context *ctx, unsigned int mode, int *num,
         const char *file, size_t line, const char *fmt, va_list va);
-inline int __sdb_nmcin(sdb_context *ctx, int *num,
+inline int __sdb_nmcin(const sdb_context *ctx, unsigned int mode, int *num,
         const char *file, size_t line, const char *fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
-    int ret = __sdb_vnmcin(ctx, num, file, line, fmt, va);
+    int ret = __sdb_vnmcin(ctx, mode, num, file, line, fmt, va);
     va_end(va);
     return ret;
 }
-int __sdb_cin(sdb_context *ctx, char *buf, size_t size, size_t *len);
+inline int __sdb_rnmcin(const sdb_context *ctx, unsigned int mode,
+        const char *file, size_t line)
+{
+    int num = 0;
+    int ret = __sdb_nmcin(ctx, mode, &num, file, line, 0);
+    if (ret < SDB_ERR_BAD_PARAM && ret > SDB_ERR_MAX) {
+        return ret;
+    }
+    return num;
+}
+int __sdb_cin(const sdb_context *ctx, char *buf, size_t size, size_t *len);
 
-int __sdb_vmdump(sdb_context *ctx, const void *buf, size_t size, void *addr,
+int __sdb_vmdump(const sdb_context *ctx,
+        const void *data, size_t size, void *addr,
         const char *file, size_t line, const char *fmt, va_list va);
-inline int __sdb_mdump(sdb_context *ctx,
-        const void *buf, size_t size, void *addr,
+inline int __sdb_mdump(const sdb_context *ctx,
+        const void *data, size_t size, void *addr,
         const char *file, size_t line, const char *fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
-    int ret = __sdb_vmdump(ctx, buf, size, addr, file, line, fmt, va);
+    int ret = __sdb_vmdump(ctx, data, size, addr, file, line, fmt, va);
     va_end(va);
     return ret;
 }
@@ -188,7 +203,7 @@ typedef struct {
     int (*func)(void *);
     void *param;
 } sdb_menu_list;
-int __sdb_menu(sdb_context *ctx, unsigned int mode,
+int __sdb_menu(const sdb_context *ctx, unsigned int mode,
         const sdb_menu_list *list, size_t num, const char *file, size_t line);
 
 
@@ -210,28 +225,158 @@ inline int sdb_snprintf(char *buf, size_t size, const char *fmt, ...)
 #endif
 #endif /* __SDB_H__ */
 
-#define SDB_CONTEXT 0
+#if defined(SDB_ENABLE)
 
-#define sdb_out(...) __sdb_cout(SDB_CONTEXT, __VA_ARGS__)
-#define sdb_out_info(...) 
-#define sdb_out_warn(...)
-#define sdb_out_err(...)
+#ifdef sdb_out_bare
+#undef sdb_out_bare
+#endif
+#ifdef sdb_out
+#undef sdb_out
+#endif
+#ifdef sdb_out_info
+#undef sdb_out_info
+#endif
+#ifdef sdb_out_warn
+#undef sdb_out_warn
+#endif
+#ifdef sdb_out_err
+#undef sdb_out_err
+#endif
 
-#define sdb_in()
-#define sdb_in_num()
-#define sdb_in_str()
-#define sdb_in_num_info()
-#define sdb_in_str_info()
+#ifdef sdb_in_bare
+#undef sdb_in_bare
+#endif
+#ifdef sdb_in
+#undef sdb_in
+#endif
+#ifdef sdb_in_num
+#undef sdb_in_num
+#endif
+#ifdef sdb_in_str
+#undef sdb_in_str
+#endif
+#ifdef sdb_in_num_info
+#undef sdb_in_num_info
+#endif
+#ifdef sdb_in_str_info
+#undef sdb_in_str_info
+#endif
 
-#define sdb_dump()
-#define sdb_dump_info()
-#define sdb_dump_addr()
-#define sdb_dump_addr_info()
+#ifdef sdb_dump_bare
+#undef sdb_dump_bare
+#endif
+#ifdef sdb_dump
+#undef sdb_dump
+#endif
+#ifdef sdb_dump_info
+#undef sdb_dump_info
+#endif
+#ifdef sdb_dump_addr
+#undef sdb_dump_addr
+#endif
+#ifdef sdb_dump_addr_info
+#undef sdb_dump_addr_info
+#endif
 
-#define sdb_menu()
-#define sdb_menu_form()
-#define sdb_menu_chaos()
+#ifdef sdb_menu
+#undef sdb_menu
+#endif
+#ifdef sdb_menu_form
+#undef sdb_menu_form
+#endif
+#ifdef sdb_menu_pile
+#undef sdb_menu_pile
+#endif
 
+
+#ifndef SDB_CTX_GLOBAL
+#define SDB_CTX_GLOBAL sdb_ctx_default;
+#endif
+
+#define sdb_out_bare(...) \
+    __sdb_cout(SDB_CTX_GLOBAL, __VA_ARGS__)
+#define sdb_out(...) \
+    __sdb_mcout(SDB_CTX_GLOBAL, SDB_MSG_NONE,\
+            __FILE__, __LINE__, __VA_ARGS__)
+#define sdb_out_info(...) \
+    __sdb_mcout(SDB_CTX_GLOBAL, SDB_MSG_INFO,\
+            __FILE__, __LINE__, __VA_ARGS__)
+#define sdb_out_warn(...) \
+    __sdb_mcout(SDB_CTX_GLOBAL, SDB_MSG_WARNING,\
+            __FILE__, __LINE__, __VA_ARGS__)
+#define sdb_out_err(...) \
+    __sdb_mcout(SDB_CTX_GLOBAL, SDB_MSG_ERROR,\
+            __FILE__, __LINE__, __VA_ARGS__)
+
+#define sdb_in_bare(__buf, __size, __plen) \
+    __sdb_cin(SDB_CTX_GLOBAL, __buf, __size, __plen)
+#define sdb_in() \
+    __sdb_rnmcin(SDB_CTX_GLOBAL, SDB_MSG_INPUT_NUM,\
+            __FILE__, __LINE__, 0)
+#define sdb_in_num(__pnum) \
+    __sdb_nmcin(SDB_CTX_GLOBAL, SDB_MSG_INPUT_NUM, __pnum,\
+            __FILE__, __LINE__, 0)
+#define sdb_in_str(__buf, __size, __plen) \
+    __sdb_mcin(SDB_CTX_GLOBAL, SDB_MSG_INPUT_STR, __buf, __size, __plen,\
+            __FILE__, __LINE__, 0)
+#define sdb_in_num_info(__pnum, ...) \
+    __sdb_nmcin(SDB_CTX_GLOBAL, SDB_MSG_INPUT_NUM, __pnum,\
+            __FILE__, __LINE__, __VA_ARGS__)
+#define sdb_in_str_info(__buf, __size, __plen, ...) \
+    __sdb_mcin(SDB_CTX_GLOBAL, SDB_MSG_INPUT_STR, __buf, __size, __plen,\
+            __FILE__, __LINE__, __VA_ARGS__)
+
+#define sdb_dump_bare(__data, __size) \
+    __sdb_dump(SDB_CTX_GLOBAL, __data, __size)
+#define sdb_dump(__data, __size) \
+    __sdb_mdump(SDB_CTX_GLOBAL, __data, __size, 0,\
+            __FILE__, __LINE__, 0)
+#define sdb_dump_info(__data, __size, __fmt, ...) \
+    __sdb_mdump(SDB_CTX_GLOBAL, __data, __size, 0,\
+            __FILE__, __LINE__, __VA_ARGS__)
+#define sdb_dump_addr(__data, __size, __addr) \
+    __sdb_mdump(SDB_CTX_GLOBAL, __data, __size, __addr,\
+            __FILE__, __LINE__, 0)
+#define sdb_dump_addr_info(__data, __size, __addr, ...) \
+    __sdb_mdump(SDB_CTX_GLOBAL, __data, __size, __addr,\
+            __FILE__, __LINE__, __VA_ARGS__)
+
+#define sdb_menu(__list, __num) \
+    __sdb_menu(SDB_CTX_GLOBAL, SDB_MSG_MENU_LIST, __list, __num,\
+            __FILE__, __LINE__)
+#define sdb_menu_form(__list, __num) \
+    __sdb_menu(SDB_CTX_GLOBAL, SDB_MSG_MENU_FORM, __list, __num,\
+            __FILE__, __LINE__)
+#define sdb_menu_pile(__list, __num) \
+    __sdb_menu(SDB_CTX_GLOBAL, SDB_MSG_MENU_PILE, __list, __num,\
+            __FILE__, __LINE__)
+
+#else /* defined(SDB_ENABLE) */
+
+#define sdb_out_bare(...)                                   sdb_nop()
+#define sdb_out(...)                                        sdb_nop()
+#define sdb_out_info(...)                                   sdb_nop()
+#define sdb_out_warn(...)                                   sdb_nop()
+#define sdb_out_err(...)                                    sdb_nop()
+
+#define sdb_in_bare(__buf, __size, __plen)                  sdb_nop()
+#define sdb_in()                                            sdb_nop()
+#define sdb_in_num(__pnum)                                  sdb_nop()
+#define sdb_in_str(__buf, __size, __plen)                   sdb_nop()
+#define sdb_in_num_info(__pnum, ...)                        sdb_nop()
+#define sdb_in_str_info(__buf, __size, __plen, ...)         sdb_nop()
+
+#define sdb_dump_bare(__data, __size)                       sdb_nop()
+#define sdb_dump(__data, __size)                            sdb_nop()
+#define sdb_dump_info(__data, __size, __fmt, ...)           sdb_nop()
+#define sdb_dump_addr(__data, __size, __addr)               sdb_nop()
+#define sdb_dump_addr_info(__data, __size, __addr, ...)     sdb_nop()
+
+#define sdb_menu(__list, __num)                             sdb_nop()
+#define sdb_menu_form(__list, __num)                        sdb_nop()
+#define sdb_menu_pile(__list, __num)                        sdb_nop()
+
+#endif /* defined(SDB_ENABLE) */
 
 /** @} */
 

@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-int __sdb_vmcin(sdb_context *ctx, unsigned int mode,
+int __sdb_vmcin(const sdb_context *ctx, unsigned int mode,
         char *buf, size_t size, size_t *len,
         const char *file, size_t line, const char *fmt, va_list va)
 {
@@ -28,7 +28,7 @@ int __sdb_vmcin(sdb_context *ctx, unsigned int mode,
     return count;
 }
 
-int __sdb_vnmcin(sdb_context *ctx, int *num,
+int __sdb_vnmcin(const sdb_context *ctx, unsigned int mode, int *num,
         const char *file, size_t line, const char *fmt, va_list va)
 {
     int ret;
@@ -46,7 +46,8 @@ int __sdb_vnmcin(sdb_context *ctx, int *num,
     return ret;
 }
 
-inline int __sdb_cin(sdb_context *ctx, char *buf, size_t size, size_t *len)
+inline int __sdb_cin(const sdb_context *ctx,
+        char *buf, size_t size, size_t *len)
 {
     return sdb_bio_in(ctx, buf, size, len);
 }

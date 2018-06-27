@@ -3,7 +3,8 @@
 #warning "@TODO: strcasecmp achieve"
 #include <string.h>
 
-int __sdb_vmdump(sdb_context *ctx, const void *data, size_t size, void *addr,
+int __sdb_vmdump(const sdb_context *ctx,
+        const void *data, size_t size, void *addr,
         const char *file, size_t line, const char *fmt, va_list va)
 {
     int ret;

@@ -102,8 +102,8 @@ static int output_line(void *p_out, const char *str, sdb_out_state state)
     return 0;
 }
 
-void __sdb_mcout_init(sdb_cout_context *ctx,
-        sdb_context *sdb_ctx, unsigned int mode, char *buf, size_t size,
+void __sdb_mcout_init(sdb_cout_context *ctx, const sdb_context *sdb_ctx,
+        unsigned int mode, char *buf, size_t size,
         const char *file, size_t line)
 {
     ctx->ctx            = sdb_ctx;
@@ -160,7 +160,7 @@ int __sdb_mcout_final(sdb_cout_context *ctx)
     return output_line(ctx, "", SDB_OUT_FINAL);
 }
 
-int __sdb_vmcout(sdb_context *ctx, unsigned int mode,
+int __sdb_vmcout(const sdb_context *ctx, unsigned int mode,
         const char *file, size_t line, const char *fmt, va_list va)
 {
     char b[ctx->out_column_limit + SDB_CONFIG_OUTPUT_BUFFER_RESERVE];

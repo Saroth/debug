@@ -24,7 +24,7 @@ static int menu_form(sdb_cout_context *cout,
     return 0;
 }
 
-static int menu_chaos(sdb_cout_context *cout,
+static int menu_pile(sdb_cout_context *cout,
         const sdb_menu_list *list, size_t size)
 {
     return 0;
@@ -37,10 +37,10 @@ struct menu_type {
 static const struct menu_type menus[SDB_MENU_MAX >> SDB_MENU_OFS] = {
     { SDB_MENU_LIST, menu_list, },
     { SDB_MENU_FORM, menu_form, },
-    { SDB_MENU_CHAOS, menu_chaos, },
+    { SDB_MENU_PILE, menu_pile, },
 };
 
-int __sdb_menu(sdb_context *ctx, unsigned int mode,
+int __sdb_menu(const sdb_context *ctx, unsigned int mode,
         const sdb_menu_list *list, size_t size, const char *file, size_t line)
 {
     unsigned int menu_type = (mode & SDB_MENU_MASK) >> SDB_MENU_OFS;
@@ -58,7 +58,8 @@ int __sdb_menu(sdb_context *ctx, unsigned int mode,
         sdb_assert(__sdb_mcout_final(&cout));
 
         int num;
-        sdb_assert(__sdb_nmcin(ctx, &num, __FILE__, __LINE__, 0));
+        sdb_assert(__sdb_nmcin(ctx, SDB_MSG_INPUT_NUM, &num,
+                    __FILE__, __LINE__, 0));
         if (num == 0) {
             break;
         }

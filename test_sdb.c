@@ -2,13 +2,15 @@
 #include <string.h>
 #include <errno.h>
 
+#include <libsdb.h>
 #ifndef SDB_ENABLE
 #define SDB_ENABLE
 #endif
 #include <libsdb.h>
+#include <libsdb.h>
 #define SDB_SET_CONFIG (&sdb_cfg_std)
 
-#if defined(SDB_MDL_SELFTEST)
+#if 0 // defined(SDB_SELFTEST)
 
 #include <stdarg.h>
 typedef int (* put_t)(void *p, const char *buf, unsigned int len);
@@ -435,7 +437,7 @@ int sdb_selftest(void *p)
 
 #else
 int sdb_selftest(void *p) { return 0; }
-#endif /* defined(SDB_MDL_SELFTEST) */
+#endif /* defined(SDB_SELFTEST) */
 
 int main(int argc, char *argv[])
 {

@@ -18,7 +18,7 @@ size_t sdb_stack_touch(sdb_context *ctx)
     return ctx->stack_top;
 }
 
-size_t sdb_stack_max_usage(sdb_context *ctx)
+size_t sdb_stack_max_usage(const sdb_context *ctx)
 {
     return ctx->stack_max_usage;
 }

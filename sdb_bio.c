@@ -6,7 +6,7 @@
 
 static int std_out(void *p, const char *file, size_t line, const char *str)
 {
-    sdb_stack_touch((sdb_context *)p);
+    // sdb_stack_touch((sdb_context *)p);
     int ret;
     if (file) {
         ret = printf("%16s:%04d  %s\n", strrchr(file, '/')
@@ -23,7 +23,7 @@ static int std_out(void *p, const char *file, size_t line, const char *str)
 
 static int std_in(void *p, char *buf, size_t size, size_t *len)
 {
-    sdb_stack_touch((sdb_context *)p);
+    // sdb_stack_touch((sdb_context *)p);
     if (size == 0) {
         return 0;
     }
@@ -48,7 +48,7 @@ static int std_in(void *p, char *buf, size_t size, size_t *len)
 }
 #endif /* defined(SDB_SYSTEM_HAS_STDIO) */
 
-int sdb_bio_out(sdb_context *ctx,
+int sdb_bio_out(const sdb_context *ctx,
         const char *file, size_t line, const char *str)
 {
     if (ctx->bio_out) {
@@ -56,13 +56,13 @@ int sdb_bio_out(sdb_context *ctx,
     }
 #if defined(SDB_SYSTEM_HAS_STDIO)
     else {
-        return std_out(ctx, file, line, str);
+        return std_out(0, file, line, str);
     }
 #endif /* defined(SDB_SYSTEM_HAS_STDIO) */
     return 0;
 }
 
-int sdb_bio_in(sdb_context *ctx, char *buf, size_t size, size_t *len)
+int sdb_bio_in(const sdb_context *ctx, char *buf, size_t size, size_t *len)
 {
     if (buf == 0) {
         return SDB_ERR_BAD_PARAM;
@@ -72,7 +72,7 @@ int sdb_bio_in(sdb_context *ctx, char *buf, size_t size, size_t *len)
     }
 #if defined(SDB_SYSTEM_HAS_STDIO)
     else {
-        return std_in(ctx, buf, size, len);
+        return std_in(0, buf, size, len);
     }
 #endif /* defined(SDB_SYSTEM_HAS_STDIO) */
     return 0;

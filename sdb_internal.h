@@ -7,9 +7,9 @@ extern "C" {
 #include "sdb_config.h"
 #include "libsdb.h"
 
-int sdb_bio_out(sdb_context *ctx,
+int sdb_bio_out(const sdb_context *ctx,
         const char *file, size_t line, const char *str);
-int sdb_bio_in(sdb_context *ctx, char *buf, size_t size, size_t *len);
+int sdb_bio_in(const sdb_context *ctx, char *buf, size_t size, size_t *len);
 
 typedef enum {
     SDB_OUT_NONE = 0,
