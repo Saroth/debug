@@ -5,6 +5,7 @@ extern "C" {
 #endif
 
 #include "sdb_config.h"
+#define SDB_ENABLE
 #include "libsdb.h"
 
 int sdb_bio_out(const sdb_context *ctx,
@@ -20,7 +21,7 @@ typedef enum {
     SDB_OUT_STDERR_INFO,
     SDB_OUT_STDERR_TAIL,
 } sdb_out_state;
-typedef int (*func_sdb_vxprintf)(void *, const char *, sdb_out_state);
+typedef int (*func_sdb_vxprintf)(void *, const char *, size_t, sdb_out_state);
 typedef struct {
     func_sdb_vxprintf f_out;
     void *p_out;

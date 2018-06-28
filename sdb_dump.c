@@ -103,3 +103,14 @@ int __sdb_vmdump(const sdb_context *ctx,
     return counter;
 }
 
+int __sdb_mdump(const sdb_context *ctx,
+        const void *data, size_t size, void *addr,
+        const char *file, size_t line, const char *fmt, ...)
+{
+    va_list va;
+    va_start(va, fmt);
+    int ret = __sdb_vmdump(ctx, data, size, addr, file, line, fmt, va);
+    va_end(va);
+    return ret;
+}
+

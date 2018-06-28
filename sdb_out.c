@@ -10,7 +10,8 @@ typedef struct {
     size_t size;
     size_t len;
 } output_to_buffer_param;
-static int output_to_buffer(void *p_out, const char *str, sdb_out_state state)
+static int output_to_buffer(void *p_out, const char *str, size_t len,
+        sdb_out_state state)
 {
     output_to_buffer_param *p = (output_to_buffer_param *)p_out;
     if (state == SDB_OUT_INIT) {
@@ -19,7 +20,7 @@ static int output_to_buffer(void *p_out, const char *str, sdb_out_state state)
     if (!str) {
         str = SDB_NULL_MARK;
     }
-    while (*str && p->len < p->size) {
+    while (len-- && p->len < p->size) {
         p->buf[p->len++] = *str++;
     }
     if (p->len == p->size || state == SDB_OUT_FINAL) {
@@ -48,7 +49,18 @@ int sdb_vsnprintf(char *buf, size_t size, const char *fmt, va_list va)
     return sdb_vxprintf(&xctx);
 }
 
-static int output_line(void *p_out, const char *str, sdb_out_state state)
+int sdb_snprintf(char *buf, size_t size, const char *fmt, ...)
+{
+    va_list va;
+    va_start(va, fmt);
+    int ret = sdb_vsnprintf(buf, size, fmt, va);
+    va_end(va);
+    return ret;
+}
+
+
+static int output_line(void *p_out, const char *str, size_t len,
+        sdb_out_state state)
 {
     sdb_cout_context *p = (sdb_cout_context *)p_out;
     if (state == SDB_OUT_INIT) {
@@ -62,22 +74,26 @@ static int output_line(void *p_out, const char *str, sdb_out_state state)
         if (p->line_buf_len == 0) {
             // #warning "TODO: + color, + mark"
         }
-        while (*str && p->line_buf_len < p->ctx->out_column_limit) {
+        while (len && p->line_buf_len < p->ctx->out_column_limit) {
             p->line_buf[p->line_buf_len++] = *str++;
+            len--;
         }
 #if defined(SDB_SYSTEM_HAS_STDERR)
-        if (!*str && p->err) {
+        if (!len && p->err) {
             if (state == SDB_OUT_FINAL) {
                 // #warning "TODO: + color"
                 str = " [stderr: ";
+                len = 10;
                 state = SDB_OUT_STDERR_HEAD;
             }
             else if (state == SDB_OUT_STDERR_HEAD) {
                 str = strerror(p->err);
+                len = strlen(str);
                 state = SDB_OUT_STDERR_INFO;
             }
             else if (state == SDB_OUT_STDERR_INFO) {
                 str = "]";
+                len = 1;
                 state = SDB_OUT_STDERR_TAIL;
             }
             else if (state == SDB_OUT_STDERR_TAIL) {
@@ -87,7 +103,7 @@ static int output_line(void *p_out, const char *str, sdb_out_state state)
             }
         }
 #endif
-        if ((!*str && (state == SDB_OUT_FINAL || state == SDB_OUT_END_LINE))
+        if ((!len && (state == SDB_OUT_FINAL || state == SDB_OUT_END_LINE))
                 || p->line_buf_len >= p->ctx->out_column_limit) {
             // #warning "TODO: + color:rec"
             p->line_buf[p->line_buf_len] = 0;
@@ -95,7 +111,7 @@ static int output_line(void *p_out, const char *str, sdb_out_state state)
             p->counter += ret;
             p->line_buf_len = 0;
         }
-    } while (*str);
+    } while (len);
     if (state == SDB_OUT_FINAL) {
         return p->counter;
     }
@@ -120,11 +136,11 @@ void __sdb_mcout_init(sdb_cout_context *ctx, const sdb_context *sdb_ctx,
 #if defined(SDB_SYSTEM_HAS_STDERR)
     errno               = 0;
 #endif
-    output_line(ctx, 0, SDB_OUT_INIT);
+    output_line(ctx, 0, 0, SDB_OUT_INIT);
 }
 int __sdb_mcout_append_string(sdb_cout_context *ctx, const char *str)
 {
-    return output_line(ctx, str, SDB_OUT_NONE);
+    return output_line(ctx, str, strlen(str), SDB_OUT_NONE);
 }
 int __sdb_mcout_append(sdb_cout_context *ctx, const char *fmt, ...)
 {
@@ -153,11 +169,11 @@ int __sdb_mcout_append_va(sdb_cout_context *ctx, const char *fmt, va_list va)
 }
 int __sdb_mcout_append_endline(sdb_cout_context *ctx)
 {
-    return output_line(ctx, "", SDB_OUT_END_LINE);
+    return output_line(ctx, "", 0, SDB_OUT_END_LINE);
 }
 int __sdb_mcout_final(sdb_cout_context *ctx)
 {
-    return output_line(ctx, "", SDB_OUT_FINAL);
+    return output_line(ctx, "", 0, SDB_OUT_FINAL);
 }
 
 int __sdb_vmcout(const sdb_context *ctx, unsigned int mode,
@@ -190,4 +206,13 @@ int __sdb_vmcout(const sdb_context *ctx, unsigned int mode,
     return sdb_vxprintf(&xctx);
 }
 
+int __sdb_mcout(const sdb_context *ctx, unsigned int mode,
+        const char *file, size_t line, const char *fmt, ...)
+{
+    va_list va;
+    va_start(va, fmt);
+    int ret = __sdb_vmcout(ctx, mode, file, line, fmt, va);
+    va_end(va);
+    return ret;
+}
 

@@ -1,6 +1,6 @@
-#include <string.h>
-
 #include "sdb_internal.h"
+
+#include <string.h>
 
 const sdb_context sdb_ctx_default = {
     .stack_mark         = 0,

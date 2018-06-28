@@ -7,4 +7,4 @@
 .exvim.*/*
 backup/*
 
-test_sdb
+sdb_selftest

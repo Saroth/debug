@@ -1,98 +1,118 @@
+
+#if defined(SDB_SELFTEST)
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
 
-#include <libsdb.h>
 #ifndef SDB_ENABLE
 #define SDB_ENABLE
 #endif
 #include <libsdb.h>
-#include <libsdb.h>
-#define SDB_SET_CONFIG (&sdb_cfg_std)
+sdb_context sdb_ctx;
+#ifdef SDB_CTX_GLOBAL
+#undef SDB_CTX_GLOBAL
+#endif
+#define SDB_CTX_GLOBAL (&sdb_ctx)
 
-#if 0 // defined(SDB_SELFTEST)
 
-#include <stdarg.h>
-typedef int (* put_t)(void *p, const char *buf, unsigned int len);
-extern int vxprint(void *ptr, put_t put, const char *fmt, va_list va);
-
-int _put(void *p, const char *buf, unsigned int len)
-{
-    /* printf("[%04d]  ", sdb_get_stack()); */
-    char b[64];
-
-    sdb_get_stack();
-    if (len == 0)
-        while (buf[len++]);
-    if (len > 60)
-        len = 60;
-    memmove(b, buf, len);
-    b[len] = 0;
-    printf("%s", b);
-    fflush(stdout);
-
-    return 0;
-}
-
-int _printf(const char *fmt, ...)
+static int test_format_output_compare(const char *fmt, ...)
 {
     va_list va;
 
+    char buf_std[2048];
     va_start(va, fmt);
-    vxprint(NULL, _put, fmt, va);
+    int len_std = vsnprintf(buf_std, sizeof(buf_std), fmt, va);
     va_end(va);
+    if (len_std < 0) {
+        int err = errno;
+        printf("vsnprintf error, return:%d.\n", len_std);
+        printf("stderr: (%d)%s.\n", err, strerror(err));
+        return len_std;
+    }
+    printf("std:[%s]\n", buf_std);
 
-    return 0;
-}
+    char buf_vx[2048];
+    va_start(va, fmt);
+    int len_vx = sdb_vsnprintf(buf_vx, sizeof(buf_vx), fmt, va);
+    va_end(va);
+    if (len_vx < 0) {
+        int err = errno;
+        printf("sdb_vsnprintf error, return:%d.\n", len_vx);
+        printf("stderr: (%d)%s.\n", err, strerror(err));
+        return len_vx;
+    }
 
-int sdb_selftest_printf(void *p)
-{
-    typedef int (*print_t)(const char *, ...);
-    print_t pp[2] = {
-        printf,
-        _printf,
-    };
-    unsigned int i;
+    if (len_std != len_vx) {
+        printf("output length differ! vx:%d != std:%d\n", len_vx, len_std);
+        len_vx = len_vx > len_std ? len_vx : len_std;
+    }
+    if (memcmp(buf_vx, buf_std, len_vx)) {
+        int i;
+        char ch = 0;
+        for (i = 0; i < len_vx; i++) {
+            if ((ch = buf_vx[i]) != buf_std[i]) {
+                break;
+            }
+        }
+        printf("vx: [%s]\n", buf_vx);
 
-    for (i = 0; i < 2; i++) {
-        sdb_set_stack();
-        pp[i]("----\n");
-        pp[i](
-                "0 d:\t%%,%d,%d,%d,%d,%d,%d,%d,%d\n"
-                "1 i:\t%i,%i,%i,%i,%i,%i,%i,%i\n"
-                "2 x:\t%x,%x,%x,%x,%x,%x,%x,%x,%x\n"
-                "3 X:\t%X,%X,%X,%X,%X,%X,%X,%X,%X\n"
-                "4 x:\t%lx,%lx,%lx,%lx,%lx,%lx,%lx,%lx,%lx\n"
-                "5 o:\t%o,%o,%o,%o,%o,%o,%o,%o,%o\n"
-                "6 c:\t%c,%c,%c,%c,%c,%c,%c,%c,%c\n"
-                "7 ?d:\t%08o,%-08d,%+8d,%04i,%08d,%8d,%+u,%+-8d,\n"
-                "8 ?d:\t%#d,%#x,%p,%#o,%#X,%#i\n"
-                "9 ?d:\t%#02d,%#08x,%08p,%16p,%#08o,%#08X,%#08i\n"
-                "a s:\t%s,%+s,%08s,%-08s,%s,%8s,\n"
-                "b ?:\t%a,%b,%O,%e,%#x\n"
-                "c f:\t%f,%f,%f,%#x,%f\n"
-                "%s",
-                0, 8, 32, 128, 80000, 0x7fffffff, -1, -0x123,
-                0, 8, 32, 128, 80000, 0x7fffffff, -1, -0x123,
-                0, 7, 8, 15, 0x00123abc, 0x7fffffff, 0xffffffff, -1, -0x123,
-                0, 7, 8, 15, 0x00123abc, 0x7fffffff, 0xffffffff, -1, -0x123,
-                0, 7, 8, 15, 0x00123abc, 0x7fffffff, 0xffffffff, -1, -0x123,
-                0, 7, 8, 15, 0x00123abc, 0x7fffffff, 0xffffffff, -1, -0x123,
-                0, ' ', 'S', '\b', 124, 0xf6, "123", -1, -0x20,
-                123, 123, 123, 123, -123, -123, 123, 123,
-                123, 123, 123, 123, 123, 123,
-                123, 123, 123, 123, 123, 123, 123,
-                "test1", "test2", "test3", "test4", NULL, NULL,
-                0x5f5f,
-                3.1415, 2.16, 1.234, 0x5a5a, 3.8,
-                "[end]\n");
-        printf("Max stack: %d\n\n", sdb_get_stack_max());
+        memset(buf_vx, ' ', sizeof(buf_vx));
+        buf_vx[i] = '^';
+        snprintf(&buf_vx[i + 1], sizeof(buf_vx) - i - 1,
+                " (%d: %#x!=%#x)", i, ch, buf_std[i]);
+        printf("diff:%s\n", buf_vx);
+    }
+    else {
+        va_start(va, fmt);
+        __sdb_vmcout(&sdb_ctx, SDB_MSG_NONE, __FILE__, __LINE__, fmt, va);
+        va_end(va);
+        printf("==\n");
     }
 
     return 0;
 }
 
-int sdb_color_demo(void *p)
+static int test_check_format_output(void *p)
+{
+    test_format_output_compare("0 d:\t%%,%d,%d,%d,%d,%d,%d,%d,%d",
+            0, 8, 32, 128, 80000, 0x7fffffff, -1, -0x123);
+    test_format_output_compare("1 i:\t%i,%i,%i,%i,%i,%i,%i,%i",
+            0, 8, 32, 128, 80000, 0x7fffffff, -1, -0x123);
+    test_format_output_compare("2 x:\t%x,%x,%x,%x,%x,%x,%x,%x,%x",
+            0, 7, 8, 15, 0x00123abc, 0x7fffffff, 0xffffffff, -1, -0x123);
+    test_format_output_compare("3 X:\t%X,%X,%X,%X,%X,%X,%X,%X,%X",
+            0, 7, 8, 15, 0x00123abc, 0x7fffffff, 0xffffffff, -1, -0x123);
+    test_format_output_compare("4 x:\t%lx,%lx,%lx,%lx,%lx,%lx,%lx,%lx,%lx",
+            0, 7, 8, 15, 0x00123abc, 0x7fffffff, 0xffffffff, -1, -0x123);
+    test_format_output_compare("5 o:\t%o,%o,%o,%o,%o,%o,%o,%o,%o",
+            0, 7, 8, 15, 0x00123abc, 0x7fffffff, 0xffffffff, -1, -0x123);
+    test_format_output_compare("6 c:\t%c,%c,%c,%c,%c,%c,%c,%c,%c,%c",
+            1, ' ', 'S', '\b', 124, 0xf6, "123", -1, -0x20, 0x55);
+    test_format_output_compare(
+            "7 ?d:\t%08o,%-08d,%+8d,%04i,%08d,%8d,%+u,%+-8d,",
+            123, 123, 123, 123, -123, -123, 123, 123);
+    test_format_output_compare("8 #:\t%#d,%#x,%p,%#o,%#X,%#i",
+            123, 123, 123, 123, 123, 123);
+    test_format_output_compare(
+            "9 #0?:\t%#02d,%#08x,%08p,%16p,%#08o,%#08X,%#08i",
+            123, 123, 123, 123, 123, 123, 123);
+    test_format_output_compare("a s:\t%s,%+s,%08s,%-08s,%s,%8s,",
+            "test1",
+            "test2",
+            "test3",
+            "test4",
+            NULL, NULL);
+    test_format_output_compare("b ?:\t%a,%b,%O,%e,%#x",
+            0x5f5f);
+    test_format_output_compare("c f:\t%f,%f,%f,%#x,%f",
+            3.1415, 2.16, 1.234, 0x5a5a, 3.8);
+
+    return 0;
+}
+
+#if 0
+
+static int sdb_color_demo(void *p)
 {
     const char *fg[] = {
         "2",
@@ -139,7 +159,7 @@ int sdb_color_demo(void *p)
     return 0;
 }
 
-int sdb_selftest_put(void *p)
+static int sdb_selftest_put(void *p)
 {
     int ret = 0;
 
@@ -175,7 +195,7 @@ int sdb_selftest_put(void *p)
     return 0;
 }
 
-int sdb_selftest_put_stderr(void *p)
+static int sdb_selftest_put_stderr(void *p)
 {
     int ret = 0;
 
@@ -208,7 +228,7 @@ int sdb_selftest_put_stderr(void *p)
     return 0;
 }
 
-int sdb_selftest_get(void *p)
+static int sdb_selftest_get(void *p)
 {
     int ret = 0;
     int num = 0;
@@ -250,7 +270,7 @@ int sdb_selftest_get(void *p)
     return 0;
 }
 
-int sdb_selftest_dump(void *p)
+static int sdb_selftest_dump(void *p)
 {
     unsigned char buf1[16] = {
         0x00, 0x01, 0x1f, 0x20, 0x7e, 0x7f, 0x80, 0xff,
@@ -413,34 +433,39 @@ int sdb_selftest_dump(void *p)
     return 0;
 }
 
-int sdb_selftest(void *p)
-{
-    sdb_selftest_printf(NULL);
-    /* sdb_color_demo(NULL); */
-    sdb_selftest_put(NULL);
-    sdb_selftest_put_stderr(NULL);
-    /* sdb_selftest_get(NULL); */
-    sdb_selftest_dump(NULL);
+#endif /* 0 */
 
-    /* SDB_MENU( */
-            /* { "color demo", 0, sdb_color_demo, }, */
-            /* { "put", 0, sdb_selftest_put, }, */
-            /* { "put err", 0, sdb_selftest_put_stderr, }, */
-            /* { "get", 0, sdb_selftest_get, }, */
-            /* { "dump", 0, sdb_selftest_dump, }, */
-            /* { NULL, 0, sdb_selftest_put, }, */
-            /* { "NULL", 0, NULL, }, */
-            /* ); */
+static int sdb_selftest(void *p)
+{
+    test_check_format_output(NULL);
+    /* sdb_color_demo(NULL); */
+    // sdb_selftest_put(NULL);
+    // sdb_selftest_put_stderr(NULL);
+    // sdb_selftest_get(NULL);
+    // sdb_selftest_dump(NULL);
+
+    // SDB_MENU(
+    //         { "color demo", 0, sdb_color_demo, },
+    //         { "put", 0, sdb_selftest_put, },
+    //         { "put err", 0, sdb_selftest_put_stderr, },
+    //         { "get", 0, sdb_selftest_get, },
+    //         { "dump", 0, sdb_selftest_dump, },
+    //         { NULL, 0, sdb_selftest_put, },
+    //         { "NULL", 0, NULL, },
+    //         );
 
     return 0;
 }
-
-#else
-int sdb_selftest(void *p) { return 0; }
 #endif /* defined(SDB_SELFTEST) */
 
+#if defined(MAIN_ENTRY)
 int main(int argc, char *argv[])
 {
+    sdb_config_init(&sdb_ctx);
+#if defined(SDB_SELFTEST)
     return sdb_selftest(NULL);
+#endif
+    return 0;
 }
+#endif /* defined(MAIN_ENTRY) */
 

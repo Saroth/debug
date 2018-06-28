@@ -4,7 +4,7 @@
  * Slim Debugger, a simple code tracer for C/C++.
  */
 /**
- * \block:      Heads
+ * \block:      heads
  * @{ */
 #ifndef __SDB_H__
 #define __SDB_H__
@@ -48,11 +48,11 @@ typedef struct {
 inline int sdb_nop(void) { return 0; }
 #define sdb_assert(_f) do { if ((ret = _f) < 0) { return ret; } } while (0)
 
+extern const sdb_context sdb_ctx_default;
+
 size_t sdb_stack_mark(sdb_context *ctx);
 size_t sdb_stack_touch(sdb_context *ctx);
 size_t sdb_stack_max_usage(const sdb_context *ctx);
-
-extern const sdb_context sdb_ctx_default;
 
 void sdb_config_init(sdb_context *ctx);
 void sdb_config_bio(sdb_context *ctx,
@@ -117,16 +117,10 @@ typedef enum {          /* 输出模式定义 */
 int __sdb_vmcout(const sdb_context *ctx, unsigned int mode,
         const char *file, size_t line, const char *fmt, va_list va);
 #define __sdb_vcout(_c, _f, _v) __sdb_vmcout(_c, 0, 0, 0, _f, _v)
-inline int __sdb_mcout(const sdb_context *ctx, unsigned int mode,
-        const char *file, size_t line, const char *fmt, ...)
-{
-    va_list va;
-    va_start(va, fmt);
-    int ret = __sdb_vmcout(ctx, mode, file, line, fmt, va);
-    va_end(va);
-    return ret;
-}
+int __sdb_mcout(const sdb_context *ctx, unsigned int mode,
+        const char *file, size_t line, const char *fmt, ...);
 #define __sdb_cout(_c, _f, ...) __sdb_mcout(_c, 0, 0, 0, _f, __VA_ARGS__)
+
 typedef struct {
     const sdb_context *ctx;
     unsigned int mode;
@@ -150,81 +144,48 @@ int __sdb_mcout_final(sdb_cout_context *ctx);
 int __sdb_vmcin(const sdb_context *ctx, unsigned int mode,
         char *buf, size_t size, size_t *len,
         const char *file, size_t line, const char *fmt, va_list va);
-inline int __sdb_mcin(const sdb_context *ctx, unsigned int mode,
+int __sdb_mcin(const sdb_context *ctx, unsigned int mode,
         char *buf, size_t size, size_t *len,
-        const char *file, size_t line, const char *fmt, ...)
-{
-    va_list va;
-    va_start(va, fmt);
-    int ret = __sdb_vmcin(ctx, mode, buf, size, len, file, line, fmt, va);
-    va_end(va);
-    return ret;
-}
+        const char *file, size_t line, const char *fmt, ...);
 int __sdb_vnmcin(const sdb_context *ctx, unsigned int mode, int *num,
         const char *file, size_t line, const char *fmt, va_list va);
-inline int __sdb_nmcin(const sdb_context *ctx, unsigned int mode, int *num,
-        const char *file, size_t line, const char *fmt, ...)
-{
-    va_list va;
-    va_start(va, fmt);
-    int ret = __sdb_vnmcin(ctx, mode, num, file, line, fmt, va);
-    va_end(va);
-    return ret;
-}
-inline int __sdb_rnmcin(const sdb_context *ctx, unsigned int mode,
-        const char *file, size_t line)
-{
-    int num = 0;
-    int ret = __sdb_nmcin(ctx, mode, &num, file, line, 0);
-    if (ret < SDB_ERR_BAD_PARAM && ret > SDB_ERR_MAX) {
-        return ret;
-    }
-    return num;
-}
+int __sdb_nmcin(const sdb_context *ctx, unsigned int mode, int *num,
+        const char *file, size_t line, const char *fmt, ...);
+int __sdb_rnmcin(const sdb_context *ctx, unsigned int mode,
+        const char *file, size_t line);
 int __sdb_cin(const sdb_context *ctx, char *buf, size_t size, size_t *len);
 
 int __sdb_vmdump(const sdb_context *ctx,
         const void *data, size_t size, void *addr,
         const char *file, size_t line, const char *fmt, va_list va);
-inline int __sdb_mdump(const sdb_context *ctx,
+int __sdb_mdump(const sdb_context *ctx,
         const void *data, size_t size, void *addr,
-        const char *file, size_t line, const char *fmt, ...)
-{
-    va_list va;
-    va_start(va, fmt);
-    int ret = __sdb_vmdump(ctx, data, size, addr, file, line, fmt, va);
-    va_end(va);
-    return ret;
-}
+        const char *file, size_t line, const char *fmt, ...);
 #define __sdb_dump(_c, _b, _s) __sdb_mdump(_c, _b, _s, 0, 0, 0, 0)
 
 typedef struct {
     const char *info;
     int (*func)(void *);
     void *param;
-} sdb_menu_list;
+} sdb_menu_item;
 int __sdb_menu(const sdb_context *ctx, unsigned int mode,
-        const sdb_menu_list *list, size_t num, const char *file, size_t line);
-
+        const sdb_menu_item *list, size_t num, const char *file, size_t line);
 
 
 int sdb_vsnprintf(char *buf, size_t size, const char *fmt, va_list va);
 #define sdb_vsprintf(_b, _f, _v) sdb_vsnprintf(_b, 0xFFFFFFFF, _f, _v);
-inline int sdb_snprintf(char *buf, size_t size, const char *fmt, ...)
-{
-    va_list va;
-    va_start(va, fmt);
-    int ret = sdb_vsnprintf(buf, size, fmt, va);
-    va_end(va);
-    return ret;
-}
+int sdb_snprintf(char *buf, size_t size, const char *fmt, ...);
 #define sdb_sprintf(_b, _f, ...) sdb_snprintf(_b, 0xFFFFFFFF, _f, __VA_ARGS__)
 
 #ifdef __cplusplus
 }
 #endif
 #endif /* __SDB_H__ */
+/** @} */
 
+/**
+ * \block:      defines
+ * @{ */
 #if defined(SDB_ENABLE)
 
 #ifdef sdb_out_bare
@@ -281,6 +242,9 @@ inline int sdb_snprintf(char *buf, size_t size, const char *fmt, ...)
 #ifdef sdb_menu
 #undef sdb_menu
 #endif
+#ifdef sdb_menu_list
+#undef sdb_menu_list
+#endif
 #ifdef sdb_menu_form
 #undef sdb_menu_form
 #endif
@@ -290,7 +254,7 @@ inline int sdb_snprintf(char *buf, size_t size, const char *fmt, ...)
 
 
 #ifndef SDB_CTX_GLOBAL
-#define SDB_CTX_GLOBAL sdb_ctx_default;
+#define SDB_CTX_GLOBAL (&sdb_ctx_default)
 #endif
 
 #define sdb_out_bare(...) \
@@ -341,7 +305,13 @@ inline int sdb_snprintf(char *buf, size_t size, const char *fmt, ...)
     __sdb_mdump(SDB_CTX_GLOBAL, __data, __size, __addr,\
             __FILE__, __LINE__, __VA_ARGS__)
 
-#define sdb_menu(__list, __num) \
+#define sdb_menu(__type, ...) do {\
+    sdb_menu_item __list[] = { __VA_ARGS__ };\
+    __sdb_menu(SDB_CTX_GLOBAL, __type, __list,\
+            sizeof(__list) / sizeof(sdb_menu_item),\
+            __FILE__, __LINE__)\
+} while (0)
+#define sdb_menu_list(__list, __num) \
     __sdb_menu(SDB_CTX_GLOBAL, SDB_MSG_MENU_LIST, __list, __num,\
             __FILE__, __LINE__)
 #define sdb_menu_form(__list, __num) \
@@ -372,7 +342,8 @@ inline int sdb_snprintf(char *buf, size_t size, const char *fmt, ...)
 #define sdb_dump_addr(__data, __size, __addr)               sdb_nop()
 #define sdb_dump_addr_info(__data, __size, __addr, ...)     sdb_nop()
 
-#define sdb_menu(__list, __num)                             sdb_nop()
+#define sdb_menu(__type, ...)                               sdb_nop()
+#define sdb_menu_list(__list, __num)                        sdb_nop()
 #define sdb_menu_form(__list, __num)                        sdb_nop()
 #define sdb_menu_pile(__list, __num)                        sdb_nop()
 

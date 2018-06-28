@@ -1,7 +1,7 @@
 #include "sdb_internal.h"
 
 static int menu_list(sdb_cout_context *cout,
-        const sdb_menu_list *list, size_t size)
+        const sdb_menu_item *list, size_t size)
 {
     int ret;
     int i;
@@ -19,20 +19,20 @@ static int menu_list(sdb_cout_context *cout,
 }
 
 static int menu_form(sdb_cout_context *cout,
-        const sdb_menu_list *list, size_t size)
+        const sdb_menu_item *list, size_t size)
 {
     return 0;
 }
 
 static int menu_pile(sdb_cout_context *cout,
-        const sdb_menu_list *list, size_t size)
+        const sdb_menu_item *list, size_t size)
 {
     return 0;
 }
 
 struct menu_type {
     size_t type;
-    int (*menu)(sdb_cout_context *, const sdb_menu_list *, size_t);
+    int (*menu)(sdb_cout_context *, const sdb_menu_item *, size_t);
 };
 static const struct menu_type menus[SDB_MENU_MAX >> SDB_MENU_OFS] = {
     { SDB_MENU_LIST, menu_list, },
@@ -41,7 +41,7 @@ static const struct menu_type menus[SDB_MENU_MAX >> SDB_MENU_OFS] = {
 };
 
 int __sdb_menu(const sdb_context *ctx, unsigned int mode,
-        const sdb_menu_list *list, size_t size, const char *file, size_t line)
+        const sdb_menu_item *list, size_t size, const char *file, size_t line)
 {
     unsigned int menu_type = (mode & SDB_MENU_MASK) >> SDB_MENU_OFS;
     if (menu_type >= SDB_MENU_MAX >> SDB_MENU_OFS) {
