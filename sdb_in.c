@@ -23,7 +23,8 @@ int __sdb_vmcin(const sdb_context *ctx, unsigned int mode,
                     __FILE__, __LINE__, "No input."));
         return SDB_ERR_NO_INPUT;
     }
-    sdb_assert(__sdb_mcout(ctx, SDB_MSG_INPUT_ECHO, file, line, buf));
+    sdb_assert(__sdb_mcout(ctx, SDB_MSG_INPUT_ECHO, file, line,
+                "'%s'(%d byte)", buf, *len));
     count += ret;
     return count;
 }
@@ -44,13 +45,14 @@ int __sdb_vnmcin(const sdb_context *ctx, unsigned int mode, int *num,
 {
     int ret;
     char in[SDB_CONFIG_INPUT_BUFFER_SIZE];
-    sdb_assert(__sdb_vmcin(ctx, SDB_MSG_INPUT_NUM, in, sizeof(in), 0,
+    size_t len;
+    sdb_assert(__sdb_vmcin(ctx, SDB_MSG_INPUT_NUM, in, sizeof(in), &len,
                 file, line, fmt, va));
     if (num) {
         *num = strtol(in, 0, 0);
-        if (*num == 0 || in[0] != '0') {
-            sdb_assert(__sdb_mcout(ctx, SDB_MSG_WARNING,
-                        __FILE__, __LINE__, "Unrecognizable input."));
+        if (*num == 0 && in[0] != '0') {
+            sdb_assert(__sdb_mcout(ctx, SDB_MSG_WARNING, __FILE__, __LINE__,
+                        "Unrecognizable input: '%s'(%d byte)", in, len));
             return SDB_ERR_UNKNOWN_INPUT;
         }
     }

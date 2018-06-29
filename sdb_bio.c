@@ -35,9 +35,10 @@ static int std_in(void *p, char *buf, size_t size, size_t *len)
         if ((c = getchar()) == EOF) {
             break;
         }
-        if ((buf[i++] = c) == '\n') {
+        if ((buf[i] = c) == '\n') {
             break;
         }
+        i++;
     }
     buf[i] = 0;
     if (len) {

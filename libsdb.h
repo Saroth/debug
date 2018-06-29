@@ -29,6 +29,24 @@ typedef int (*func_sdb_bio_out)(void *p, const char *file, size_t line,
         const char *str);
 typedef int (*func_sdb_bio_in)(void *p, char *buf, size_t size, size_t *len);
 typedef struct {
+    const char *recovery;
+    const char *warning;
+    const char *error;
+    const char *input;
+    const char *title;
+} sdb_color_codes;
+typedef struct {
+    const char *none;
+    const char *info;
+    const char *warning;
+    const char *error;
+    const char *input_number;
+    const char *input_string;
+    const char *input_echo;
+    const char *dump;
+    const char *menu;
+} sdb_mark_codes;
+typedef struct {
     size_t *stack_mark;
     size_t stack_top;
     size_t stack_max_usage;
@@ -39,10 +57,12 @@ typedef struct {
 
     size_t out_column_limit;
     size_t dump_bytes_perline;
-    unsigned char out_has_color;
     unsigned char dump_has_addr;
     unsigned char dump_has_hex;
     unsigned char dump_has_ascii;
+
+    const sdb_color_codes *colors;
+    const sdb_mark_codes *marks;
 } sdb_context;
 
 inline int sdb_nop(void) { return 0; }
@@ -57,7 +77,8 @@ size_t sdb_stack_max_usage(const sdb_context *ctx);
 void sdb_config_init(sdb_context *ctx);
 void sdb_config_bio(sdb_context *ctx,
         func_sdb_bio_out out, func_sdb_bio_in in, void *p);
-void sdb_config_out_color(sdb_context *ctx, unsigned int has_color);
+void sdb_config_color(sdb_context *ctx, const sdb_color_codes *colors);
+void sdb_config_mark(sdb_context *ctx, const sdb_mark_codes *marks);
 void sdb_config_out_column_limit(sdb_context *ctx, size_t limit);
 void sdb_config_dump_bytes_perline(sdb_context *ctx, size_t size);
 void sdb_config_dump_format(sdb_context *ctx, unsigned int has_addr,
@@ -276,7 +297,7 @@ int sdb_snprintf(char *buf, size_t size, const char *fmt, ...);
     __sdb_cin(SDB_CTX_GLOBAL, __buf, __size, __plen)
 #define sdb_in() \
     __sdb_rnmcin(SDB_CTX_GLOBAL, SDB_MSG_INPUT_NUM,\
-            __FILE__, __LINE__, 0)
+            __FILE__, __LINE__)
 #define sdb_in_num(__pnum) \
     __sdb_nmcin(SDB_CTX_GLOBAL, SDB_MSG_INPUT_NUM, __pnum,\
             __FILE__, __LINE__, 0)
@@ -305,12 +326,12 @@ int sdb_snprintf(char *buf, size_t size, const char *fmt, ...);
     __sdb_mdump(SDB_CTX_GLOBAL, __data, __size, __addr,\
             __FILE__, __LINE__, __VA_ARGS__)
 
-#define sdb_menu(__type, ...) do {\
-    sdb_menu_item __list[] = { __VA_ARGS__ };\
-    __sdb_menu(SDB_CTX_GLOBAL, __type, __list,\
-            sizeof(__list) / sizeof(sdb_menu_item),\
-            __FILE__, __LINE__)\
-} while (0)
+#define sdb_menu(__type, ...) ({\
+        const sdb_menu_item __list[] = { __VA_ARGS__ };\
+        __sdb_menu(SDB_CTX_GLOBAL, __type, __list,\
+                sizeof(__list) / sizeof(sdb_menu_item),\
+                __FILE__, __LINE__);\
+                })
 #define sdb_menu_list(__list, __num) \
     __sdb_menu(SDB_CTX_GLOBAL, SDB_MSG_MENU_LIST, __list, __num,\
             __FILE__, __LINE__)

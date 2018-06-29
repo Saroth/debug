@@ -110,9 +110,7 @@ static int test_check_format_output(void *p)
     return 0;
 }
 
-#if 0
-
-static int sdb_color_demo(void *p)
+static int test_ansi_color_sequences(void *p)
 {
     const char *fg[] = {
         "2",
@@ -158,6 +156,14 @@ static int sdb_color_demo(void *p)
 
     return 0;
 }
+
+static int test_return_failed(void *p)
+{
+    size_t ret = (size_t)p;
+    return (int)ret;
+}
+
+#if 0
 
 static int sdb_selftest_put(void *p)
 {
@@ -437,24 +443,27 @@ static int sdb_selftest_dump(void *p)
 
 static int sdb_selftest(void *p)
 {
-    test_check_format_output(NULL);
-    /* sdb_color_demo(NULL); */
+    // test_check_format_output(NULL);
+    // test_ansi_color_sequences(NULL);
     // sdb_selftest_put(NULL);
     // sdb_selftest_put_stderr(NULL);
     // sdb_selftest_get(NULL);
     // sdb_selftest_dump(NULL);
 
-    // SDB_MENU(
-    //         { "color demo", 0, sdb_color_demo, },
-    //         { "put", 0, sdb_selftest_put, },
-    //         { "put err", 0, sdb_selftest_put_stderr, },
-    //         { "get", 0, sdb_selftest_get, },
-    //         { "dump", 0, sdb_selftest_dump, },
-    //         { NULL, 0, sdb_selftest_put, },
-    //         { "NULL", 0, NULL, },
-    //         );
-
-    return 0;
+    return sdb_menu(SDB_MENU_LIST,
+            { "---- standard check", 0, 0, },
+            { "check format output", test_check_format_output, 0, },
+            // { "put", sdb_selftest_put, 0, },
+            // { "put err", 0, sdb_selftest_put_stderr, 0, },
+            // { "get", sdb_selftest_get, 0, },
+            // { "dump", sdb_selftest_dump, 0, },
+            { "---- other", 0, 0, },
+            { "ansi color sequences", test_ansi_color_sequences, 0, },
+            { "failed return (-0x5a)", test_return_failed, (void *)-0x5a, },
+            { "failed return (0xa5)", test_return_failed, (void *)0xa5, },
+            // { NULL, sdb_selftest_put, 0, },
+            // { "NULL", NULL, 0, },
+            );
 }
 #endif /* defined(SDB_SELFTEST) */
 

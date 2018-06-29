@@ -5,6 +5,7 @@ static int menu_list(sdb_cout_context *cout,
 {
     int ret;
     int i;
+    sdb_assert(__sdb_mcout_append_endline(cout));
     sdb_assert(__sdb_mcout_append(cout, "#### (%d)", size));
     sdb_assert(__sdb_mcout_append_endline(cout));
     for (i = 0; i < size; i++) {
@@ -50,6 +51,7 @@ int __sdb_menu(const sdb_context *ctx, unsigned int mode,
     }
 
     int ret;
+    int num = 0;
     while (1) {
         char buf[ctx->out_column_limit + SDB_CONFIG_OUTPUT_BUFFER_RESERVE];
         sdb_cout_context cout;
@@ -57,16 +59,24 @@ int __sdb_menu(const sdb_context *ctx, unsigned int mode,
         sdb_assert(menus[menu_type].menu(&cout, list, size));
         sdb_assert(__sdb_mcout_final(&cout));
 
-        int num;
-        sdb_assert(__sdb_nmcin(ctx, SDB_MSG_INPUT_NUM, &num,
-                    __FILE__, __LINE__, 0));
+        if (__sdb_nmcin(ctx, SDB_MSG_INPUT_NUM, &num, file, line, ">") < 0) {
+            continue;
+        }
         if (num == 0) {
             break;
         }
         else if (num > 0 && num <= size) {
             if (list[num - 1].func) {
-                list[num - 1].func(list[num - 1].param);
+                if ((ret = list[num - 1].func(list[num - 1].param)) != 0) {
+                    sdb_assert(__sdb_mcout(ctx, SDB_MSG_WARNING, file, line,
+                                "above return: %d(%s%#x)", ret,
+                                ret > 0 ? "" : "-", ret > 0 ? ret : -ret));
+                }
             }
+        }
+        else {
+            sdb_assert(__sdb_mcout(ctx, SDB_MSG_WARNING, __FILE__, __LINE__,
+                        "input out of range: %d (0~%d)", num, size));
         }
     }
     return 0;

@@ -2,6 +2,26 @@
 
 #include <string.h>
 
+const sdb_color_codes sdb_color_terminal = {
+    .recovery           = "\33[0m",     /* 恢复: normal */
+    .warning            = "\33[1;36m",  /* 警告高亮: blue, bold */
+    .error              = "\33[1;31m",  /* 错误高亮: red, bold */
+    .input              = "\33[1;32m",  /* 输入和反馈标记高亮: green, bold */
+    .title              = "\33[7m",     /* 标题高亮: inverse */
+};
+
+const sdb_mark_codes sdb_mark_default = {
+    .none               = "  ",
+    .info               = ". ",
+    .warning            = "! ",
+    .error              = "X ",
+    .input_number       = "N>",
+    .input_string       = "=>",
+    .input_echo         = "E>",
+    .dump               = " |",
+    .menu               = " #",
+};
+
 const sdb_context sdb_ctx_default = {
     .stack_mark         = 0,
     .stack_top          = 0,
@@ -13,10 +33,12 @@ const sdb_context sdb_ctx_default = {
 
     .out_column_limit   = SDB_CONFIG_COLUMN_LIMIT_DEF,
     .dump_bytes_perline = SDB_CONFIG_DUMP_BYTE_PERLINE_DEF,
-    .out_has_color      = 1,
     .dump_has_addr      = 1,
     .dump_has_hex       = 1,
     .dump_has_ascii     = 1,
+
+    .colors             = 0,
+    .marks              = 0,
 };
 
 void sdb_config_init(sdb_context *ctx)
@@ -26,10 +48,11 @@ void sdb_config_init(sdb_context *ctx)
     sdb_stack_mark(ctx);
     ctx->out_column_limit       = SDB_CONFIG_COLUMN_LIMIT_DEF;
     ctx->dump_bytes_perline     = SDB_CONFIG_DUMP_BYTE_PERLINE_DEF;
-    ctx->out_has_color          = 1;
     ctx->dump_has_addr          = 1;
     ctx->dump_has_hex           = 1;
     ctx->dump_has_ascii         = 1;
+    ctx->colors                 = &sdb_color_terminal;
+    ctx->marks                  = &sdb_mark_default;
 }
 
 void sdb_config_bio(sdb_context *ctx,
@@ -40,9 +63,14 @@ void sdb_config_bio(sdb_context *ctx,
     ctx->bio_param = p;
 }
 
-void sdb_config_out_color(sdb_context *ctx, unsigned int has_color)
+void sdb_config_color(sdb_context *ctx, const sdb_color_codes *colors)
 {
-    ctx->out_has_color = has_color ? 1 : 0;
+    ctx->colors = colors;
+}
+
+void sdb_config_mark(sdb_context *ctx, const sdb_mark_codes *marks)
+{
+    ctx->marks = marks;
 }
 
 void sdb_config_out_column_limit(sdb_context *ctx, size_t limit)
