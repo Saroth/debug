@@ -9,7 +9,7 @@ static int std_out(void *p, const char *file, size_t line, const char *str)
     // sdb_stack_touch((sdb_context *)p);
     int ret;
     if (file) {
-        ret = printf("%16s:%04d  %s\n", strrchr(file, '/')
+        ret = printf("%16s:%04ld %s\n", strrchr(file, '/')
                 ? (strrchr(file, '/') + 1) : strrchr(file, '\\')
                 ? (strrchr(file, '\\') + 1) : file, line, str);
     }

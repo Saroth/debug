@@ -38,7 +38,7 @@ int __sdb_vmdump(const sdb_context *ctx,
     size_t offset = 0;
     size_t blank = ((size_t)addr & 0xFFFF) % ctx->dump_bytes_perline;
     char addr_str[20];
-    size_t addr_len = sdb_vsnprintf(addr_str, sizeof(addr_str), "%04x:", addr);
+    sdb_vsnprintf(addr_str, sizeof(addr_str), "%04x:", addr);
     while (size) {
         size_t bytes = ctx->dump_bytes_perline > size
             ? size : ctx->dump_bytes_perline;
