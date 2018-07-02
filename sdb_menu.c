@@ -44,10 +44,10 @@ static const struct menu_type menus[SDB_MENU_MAX >> SDB_MENU_OFS] = {
 int __sdb_menu(const sdb_context *ctx, unsigned int mode,
         const sdb_menu_item *list, size_t size, const char *file, size_t line)
 {
-    unsigned int menu_type = (mode & SDB_MENU_MASK) >> SDB_MENU_OFS;
-    if (menu_type >= SDB_MENU_MAX >> SDB_MENU_OFS) {
+    unsigned int type = (mode & SDB_MENU_MASK) >> SDB_MENU_OFS;
+    if (type >= SDB_MENU_MAX >> SDB_MENU_OFS) {
         return __sdb_mcout(ctx, SDB_MSG_WARNING, __FILE__, __LINE__,
-                "Unknown menu type:%#x(%#x)", menu_type, mode);
+                "Unknown menu type:%#x(%#x)", type, mode);
     }
 
     int ret;
@@ -56,7 +56,7 @@ int __sdb_menu(const sdb_context *ctx, unsigned int mode,
         char buf[ctx->out_column_limit + SDB_CONFIG_OUTPUT_BUFFER_RESERVE];
         sdb_cout_context cout;
         __sdb_mcout_init(&cout, ctx, mode, buf, sizeof(buf), file, line);
-        sdb_assert(menus[menu_type].menu(&cout, list, size));
+        sdb_assert(menus[type].menu(&cout, list, size));
         sdb_assert(__sdb_mcout_final(&cout));
 
         if (__sdb_nmcin(ctx, SDB_MSG_INPUT_NUM, &num, file, line, ">") < 0) {
@@ -70,7 +70,7 @@ int __sdb_menu(const sdb_context *ctx, unsigned int mode,
                 if ((ret = list[num - 1].func(list[num - 1].param)) != 0) {
                     sdb_assert(__sdb_mcout(ctx, SDB_MSG_WARNING, file, line,
                                 "above return: %d(%s%#x)", ret,
-                                ret > 0 ? "" : "-", ret > 0 ? ret : -ret));
+                                ret < 0 ? "-" : "", ret < 0 ? -ret : ret));
                 }
             }
         }

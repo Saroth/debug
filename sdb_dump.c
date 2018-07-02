@@ -30,38 +30,34 @@ int __sdb_vmdump(const sdb_context *ctx,
     __sdb_mcout_init(&cout, ctx, SDB_MSG_DUMP, buf, sizeof(buf), file, line);
     if (fmt) {
         sdb_assert(__sdb_mcout_append_va(&cout, fmt, va));
-        sdb_assert(__sdb_mcout_append(&cout, " [data:%p, size:%d]",
-                    data, size));
+        sdb_assert(__sdb_mcout_append(&cout, " [data:%p, size:%d, addr:%p]",
+                    data, size, addr));
         sdb_assert(__sdb_mcout_append_endline(&cout));
     }
 
     size_t offset = 0;
     size_t blank = ((size_t)addr & 0xFFFF) % ctx->dump_bytes_perline;
+    unsigned char *ptr = (unsigned char *)data - blank;
     char addr_str[20];
-    sdb_vsnprintf(addr_str, sizeof(addr_str), "%04x:", addr);
+    sdb_snprintf(addr_str, sizeof(addr_str), "%04lx:", addr);
+    size += blank;
     while (size) {
         size_t bytes = ctx->dump_bytes_perline > size
             ? size : ctx->dump_bytes_perline;
-        if (blank) {
-            bytes = (bytes + blank) > ctx->dump_bytes_perline
-                ? ctx->dump_bytes_perline - blank : bytes;
-        }
-
         if (ctx->dump_has_addr) {
             sdb_assert(__sdb_mcout_append_string(&cout, addr_str));
         }
         if (ctx->dump_has_hex) {
+            size_t i = 0;
             if (blank) {
-                size_t j;
-                for (j = 0; j < blank; j++) {
+                for (; i < blank; i++) {
                     sdb_assert(__sdb_mcout_append_string(&cout, " --"));
                 }
             }
-            size_t i;
-            for (i = 0; i < ctx->dump_bytes_perline; i++) {
-                if (offset + i < size) {
+            for (; i < ctx->dump_bytes_perline; i++) {
+                if (i < bytes) {
                     sdb_assert(__sdb_mcout_append(&cout, " %02x",
-                                ((unsigned char *)data)[offset + i] & 0xff));
+                                ptr[offset + i] & 0xff));
                 }
                 else {
                     sdb_assert(__sdb_mcout_append_string(&cout, "   "));
@@ -70,16 +66,15 @@ int __sdb_vmdump(const sdb_context *ctx,
         }
         if (ctx->dump_has_ascii) {
             sdb_assert(__sdb_mcout_append_string(&cout, "  "));
+            size_t i = 0;
             if (blank) {
-                size_t j;
-                for (j = 0; j < blank; j++) {
+                for (; i < blank; i++) {
                     sdb_assert(__sdb_mcout_append_string(&cout, " "));
                 }
             }
-            size_t i;
-            for (i = 0; i < bytes; i++) {
-                if (offset + i < size) {
-                    char c = ((char *)data)[offset + i];
+            for (; i < ctx->dump_bytes_perline; i++) {
+                if (i < bytes) {
+                    char c = (char)ptr[offset + i];
                     if (c >= 0x20 && c < 0x80) {
                         sdb_assert(__sdb_mcout_append(&cout, "%c", c));
                     }

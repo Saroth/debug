@@ -55,8 +55,8 @@ typedef struct {
     func_sdb_bio_in bio_in;
     void *bio_param;
 
-    size_t out_column_limit;
-    size_t dump_bytes_perline;
+    size_t out_column_limit;            /* range:[36, ~) */
+    size_t dump_bytes_perline;          /* range:[4, 0xffff] */
     unsigned char dump_has_addr;
     unsigned char dump_has_hex;
     unsigned char dump_has_ascii;
@@ -68,6 +68,8 @@ typedef struct {
 inline int sdb_nop(void) { return 0; }
 #define sdb_assert(_f) do { if ((ret = _f) < 0) { return ret; } } while (0)
 
+extern const sdb_color_codes sdb_color_terminal;
+extern const sdb_mark_codes sdb_mark_default;
 extern const sdb_context sdb_ctx_default;
 
 size_t sdb_stack_mark(sdb_context *ctx);
@@ -140,7 +142,7 @@ int __sdb_vmcout(const sdb_context *ctx, unsigned int mode,
 #define __sdb_vcout(_c, _f, _v) __sdb_vmcout(_c, 0, 0, 0, _f, _v)
 int __sdb_mcout(const sdb_context *ctx, unsigned int mode,
         const char *file, size_t line, const char *fmt, ...);
-#define __sdb_cout(_c, _f, ...) __sdb_mcout(_c, 0, 0, 0, _f, __VA_ARGS__)
+#define __sdb_cout(_c, ...) __sdb_mcout(_c, 0, 0, 0, __VA_ARGS__)
 
 typedef struct {
     const sdb_context *ctx;
@@ -196,7 +198,7 @@ int __sdb_menu(const sdb_context *ctx, unsigned int mode,
 int sdb_vsnprintf(char *buf, size_t size, const char *fmt, va_list va);
 #define sdb_vsprintf(_b, _f, _v) sdb_vsnprintf(_b, 0xFFFFFFFF, _f, _v);
 int sdb_snprintf(char *buf, size_t size, const char *fmt, ...);
-#define sdb_sprintf(_b, _f, ...) sdb_snprintf(_b, 0xFFFFFFFF, _f, __VA_ARGS__)
+#define sdb_sprintf(_b, ...) sdb_snprintf(_b, 0xFFFFFFFF, __VA_ARGS__)
 
 #ifdef __cplusplus
 }
@@ -316,7 +318,7 @@ int sdb_snprintf(char *buf, size_t size, const char *fmt, ...);
 #define sdb_dump(__data, __size) \
     __sdb_mdump(SDB_CTX_GLOBAL, __data, __size, 0,\
             __FILE__, __LINE__, 0)
-#define sdb_dump_info(__data, __size, __fmt, ...) \
+#define sdb_dump_info(__data, __size, ...) \
     __sdb_mdump(SDB_CTX_GLOBAL, __data, __size, 0,\
             __FILE__, __LINE__, __VA_ARGS__)
 #define sdb_dump_addr(__data, __size, __addr) \
@@ -359,7 +361,7 @@ int sdb_snprintf(char *buf, size_t size, const char *fmt, ...);
 
 #define sdb_dump_bare(__data, __size)                       sdb_nop()
 #define sdb_dump(__data, __size)                            sdb_nop()
-#define sdb_dump_info(__data, __size, __fmt, ...)           sdb_nop()
+#define sdb_dump_info(__data, __size, ...)                  sdb_nop()
 #define sdb_dump_addr(__data, __size, __addr)               sdb_nop()
 #define sdb_dump_addr_info(__data, __size, __addr, ...)     sdb_nop()
 

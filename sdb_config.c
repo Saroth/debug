@@ -9,7 +9,6 @@ const sdb_color_codes sdb_color_terminal = {
     .input              = "\33[1;32m",  /* 输入和反馈标记高亮: green, bold */
     .title              = "\33[7m",     /* 标题高亮: inverse */
 };
-
 const sdb_mark_codes sdb_mark_default = {
     .none               = "  ",
     .info               = ". ",
@@ -51,8 +50,8 @@ void sdb_config_init(sdb_context *ctx)
     ctx->dump_has_addr          = 1;
     ctx->dump_has_hex           = 1;
     ctx->dump_has_ascii         = 1;
-    ctx->colors                 = &sdb_color_terminal;
-    ctx->marks                  = &sdb_mark_default;
+    ctx->colors                 = 0;
+    ctx->marks                  = 0;
 }
 
 void sdb_config_bio(sdb_context *ctx,

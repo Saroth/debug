@@ -46,7 +46,9 @@ int sdb_vsnprintf(char *buf, size_t size, const char *fmt, va_list va)
         .fmt            = fmt,
     };
     va_copy(xctx.va, va);
-    return sdb_vxprintf(&xctx);
+    int ret = sdb_vxprintf(&xctx);
+    va_end(xctx.va);
+    return ret;
 }
 
 int sdb_snprintf(char *buf, size_t size, const char *fmt, ...)
@@ -80,27 +82,12 @@ static int output_line(void *p_out, const char *str, size_t len,
         }
 #if defined(SDB_SYSTEM_HAS_STDERR)
         if (!len && p->err) {
-            if (state == SDB_OUT_FINAL) {
-                // #warning "TODO: + color"
-                str = " [stderr: ";
-                len = 10;
-                state = SDB_OUT_STDERR_HEAD;
-            }
-            else if (state == SDB_OUT_STDERR_HEAD) {
-                str = strerror(p->err);
-                len = strlen(str);
-                state = SDB_OUT_STDERR_INFO;
-            }
-            else if (state == SDB_OUT_STDERR_INFO) {
-                str = "]";
-                len = 1;
-                state = SDB_OUT_STDERR_TAIL;
-            }
-            else if (state == SDB_OUT_STDERR_TAIL) {
-                // #warning "TODO: + res"
-                p->err = 0;
-                state = SDB_OUT_FINAL;
-            }
+            int err_num = p->err;
+            p->err = 0;
+            // #warning "TODO: + color"
+            sdb_assert(__sdb_mcout_append(p, " [stderr: %s(%d)]",
+                        strerror(err_num), err_num));
+            // #warning "TODO: + color"
         }
 #endif
         if ((!len && (state == SDB_OUT_FINAL || state == SDB_OUT_END_LINE))
@@ -165,10 +152,15 @@ int __sdb_mcout_append_va(sdb_cout_context *ctx, const char *fmt, va_list va)
         .fmt            = fmt,
     };
     va_copy(xctx.va, va);
-    return sdb_vxprintf(&xctx);
+    int ret = sdb_vxprintf(&xctx);
+    va_end(xctx.va);
+    return ret;
 }
 int __sdb_mcout_append_endline(sdb_cout_context *ctx)
 {
+    if (ctx->file == 0) {
+        return output_line(ctx, "\r\n", 2, SDB_OUT_END_LINE);
+    }
     return output_line(ctx, "", 0, SDB_OUT_END_LINE);
 }
 int __sdb_mcout_final(sdb_cout_context *ctx)
@@ -203,7 +195,9 @@ int __sdb_vmcout(const sdb_context *ctx, unsigned int mode,
     errno               = 0;
 #endif
     va_copy(xctx.va, va);
-    return sdb_vxprintf(&xctx);
+    int ret = sdb_vxprintf(&xctx);
+    va_end(xctx.va);
+    return ret;
 }
 
 int __sdb_mcout(const sdb_context *ctx, unsigned int mode,
