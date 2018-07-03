@@ -29,11 +29,13 @@ typedef int (*func_sdb_bio_out)(void *p, const char *file, size_t line,
         const char *str);
 typedef int (*func_sdb_bio_in)(void *p, char *buf, size_t size, size_t *len);
 typedef struct {
-    const char *recovery;
-    const char *warning;
-    const char *error;
-    const char *input;
-    const char *title;
+    const char *normal;     /* 默认: normal */
+    const char *info;       /* 提示高亮: bold */
+    const char *warning;    /* 警告高亮: blue, bold */
+    const char *error;      /* 错误高亮: red, bold */
+    const char *input;      /* 输入和反馈标记高亮: green, bold */
+    const char *title;      /* 标题高亮: inverse */
+    const char *tail;       /* 末尾/恢复默认 */
 } sdb_color_codes;
 typedef struct {
     const char *none;
@@ -86,56 +88,61 @@ void sdb_config_dump_bytes_perline(sdb_context *ctx, size_t size);
 void sdb_config_dump_format(sdb_context *ctx, unsigned int has_addr,
         unsigned int has_hex, unsigned int has_ascii);
 
-typedef enum {          /* 输出模式定义 */
-    SDB_LEVEL_OFS       = 0,
-    SDB_LEVEL_16        = (0    << SDB_LEVEL_OFS),
-    SDB_LEVEL_15        = (1    << SDB_LEVEL_OFS),
-    SDB_LEVEL_14        = (2    << SDB_LEVEL_OFS),
-    SDB_LEVEL_13        = (3    << SDB_LEVEL_OFS),
-    SDB_LEVEL_12        = (4    << SDB_LEVEL_OFS),
-    SDB_LEVEL_11        = (5    << SDB_LEVEL_OFS),
-    SDB_LEVEL_10        = (6    << SDB_LEVEL_OFS),
-    SDB_LEVEL_9         = (7    << SDB_LEVEL_OFS),
-    SDB_LEVEL_8         = (8    << SDB_LEVEL_OFS),
-    SDB_LEVEL_7         = (9    << SDB_LEVEL_OFS),
-    SDB_LEVEL_6         = (10   << SDB_LEVEL_OFS),
-    SDB_LEVEL_5         = (11   << SDB_LEVEL_OFS),
-    SDB_LEVEL_4         = (12   << SDB_LEVEL_OFS),
-    SDB_LEVEL_3         = (13   << SDB_LEVEL_OFS),
-    SDB_LEVEL_2         = (14   << SDB_LEVEL_OFS),
-    SDB_LEVEL_1         = (15   << SDB_LEVEL_OFS),
-    SDB_LEVEL_MASK      = (0xF  << SDB_LEVEL_OFS),
+typedef enum {              /* 输出模式定义 */
+    SDB_LEVEL_OFS           = 0,
+    SDB_LEVEL_16            = (0    << SDB_LEVEL_OFS),
+    SDB_LEVEL_15            = (1    << SDB_LEVEL_OFS),
+    SDB_LEVEL_14            = (2    << SDB_LEVEL_OFS),
+    SDB_LEVEL_13            = (3    << SDB_LEVEL_OFS),
+    SDB_LEVEL_12            = (4    << SDB_LEVEL_OFS),
+    SDB_LEVEL_11            = (5    << SDB_LEVEL_OFS),
+    SDB_LEVEL_10            = (6    << SDB_LEVEL_OFS),
+    SDB_LEVEL_9             = (7    << SDB_LEVEL_OFS),
+    SDB_LEVEL_8             = (8    << SDB_LEVEL_OFS),
+    SDB_LEVEL_7             = (9    << SDB_LEVEL_OFS),
+    SDB_LEVEL_6             = (10   << SDB_LEVEL_OFS),
+    SDB_LEVEL_5             = (11   << SDB_LEVEL_OFS),
+    SDB_LEVEL_4             = (12   << SDB_LEVEL_OFS),
+    SDB_LEVEL_3             = (13   << SDB_LEVEL_OFS),
+    SDB_LEVEL_2             = (14   << SDB_LEVEL_OFS),
+    SDB_LEVEL_1             = (15   << SDB_LEVEL_OFS),
+    SDB_LEVEL_MASK          = (0xF  << SDB_LEVEL_OFS),
 
-    SDB_TYPE_OFS        = 4,
-    SDB_TYPE_INFO       = (0    << SDB_TYPE_OFS),
-    SDB_TYPE_WARNING    = (1    << SDB_TYPE_OFS),
-    SDB_TYPE_ERROR      = (2    << SDB_TYPE_OFS),
-    SDB_TYPE_DUMP       = (3    << SDB_TYPE_OFS),
-    SDB_TYPE_INPUT_STR  = (4    << SDB_TYPE_OFS),
-    SDB_TYPE_INPUT_NUM  = (5    << SDB_TYPE_OFS),
-    SDB_TYPE_INPUT_ECHO = (6    << SDB_TYPE_OFS),
-    SDB_TYPE_MENU       = (7    << SDB_TYPE_OFS),
-    SDB_TYPE_MASK       = (0xF  << SDB_TYPE_OFS),
+    SDB_TYPE_OFS            = 4,
+    SDB_TYPE_NONE           = (0    << SDB_TYPE_OFS),
+    SDB_TYPE_INFO           = (1    << SDB_TYPE_OFS),
+    SDB_TYPE_WARNING        = (2    << SDB_TYPE_OFS),
+    SDB_TYPE_ERROR          = (3    << SDB_TYPE_OFS),
+    SDB_TYPE_DUMP           = (4    << SDB_TYPE_OFS),
+    SDB_TYPE_INPUT_STR      = (5    << SDB_TYPE_OFS),
+    SDB_TYPE_INPUT_NUM      = (6    << SDB_TYPE_OFS),
+    SDB_TYPE_INPUT_ECHO     = (7    << SDB_TYPE_OFS),
+    SDB_TYPE_MENU           = (8    << SDB_TYPE_OFS),
+    SDB_TYPE_MASK           = (0xF  << SDB_TYPE_OFS),
 
-    SDB_MENU_OFS        = 8,
-    SDB_MENU_LIST       = (0    << SDB_MENU_OFS),
-    SDB_MENU_FORM       = (1    << SDB_MENU_OFS),
-    SDB_MENU_PILE       = (2    << SDB_MENU_OFS),
-    SDB_MENU_MAX        = (3    << SDB_MENU_OFS),
-    SDB_MENU_MASK       = (0xF  << SDB_MENU_OFS),
+    SDB_MENU_OFS            = 8,
+    SDB_MENU_LIST           = (0    << SDB_MENU_OFS),
+    SDB_MENU_FORM           = (1    << SDB_MENU_OFS),
+    SDB_MENU_PILE           = (2    << SDB_MENU_OFS),
+    SDB_MENU_MAX            = (3    << SDB_MENU_OFS),
+    SDB_MENU_MASK           = (0xF  << SDB_MENU_OFS),
+
+    SDB_FLAG_OFS            = 12,
+    SDB_FLAG_NO_DECORATE    = (1    << SDB_FLAG_OFS),
+    SDB_FLAG_MASK           = (0xF  << SDB_FLAG_OFS),
 
 
-    SDB_MSG_NONE        = (SDB_LEVEL_12 | SDB_TYPE_INFO),
-    SDB_MSG_INFO        = (SDB_LEVEL_8  | SDB_TYPE_INFO),
-    SDB_MSG_WARNING     = (SDB_LEVEL_6  | SDB_TYPE_WARNING),
-    SDB_MSG_ERROR       = (SDB_LEVEL_2  | SDB_TYPE_ERROR),
-    SDB_MSG_INPUT_STR   = (SDB_LEVEL_4  | SDB_TYPE_INPUT_STR),
-    SDB_MSG_INPUT_NUM   = (SDB_LEVEL_4  | SDB_TYPE_INPUT_NUM),
-    SDB_MSG_INPUT_ECHO  = (SDB_LEVEL_4  | SDB_TYPE_INPUT_ECHO),
-    SDB_MSG_MENU_LIST   = (SDB_LEVEL_2  | SDB_TYPE_MENU | SDB_MENU_LIST),
-    SDB_MSG_MENU_FORM   = (SDB_LEVEL_2  | SDB_TYPE_MENU | SDB_MENU_FORM),
-    SDB_MSG_MENU_PILE   = (SDB_LEVEL_2  | SDB_TYPE_MENU | SDB_MENU_PILE),
-    SDB_MSG_DUMP        = (SDB_LEVEL_10 | SDB_TYPE_DUMP),
+    SDB_MSG_NONE            = (SDB_LEVEL_12 | SDB_TYPE_NONE),
+    SDB_MSG_INFO            = (SDB_LEVEL_8  | SDB_TYPE_INFO),
+    SDB_MSG_WARNING         = (SDB_LEVEL_6  | SDB_TYPE_WARNING),
+    SDB_MSG_ERROR           = (SDB_LEVEL_2  | SDB_TYPE_ERROR),
+    SDB_MSG_INPUT_STR       = (SDB_LEVEL_4  | SDB_TYPE_INPUT_STR),
+    SDB_MSG_INPUT_NUM       = (SDB_LEVEL_4  | SDB_TYPE_INPUT_NUM),
+    SDB_MSG_INPUT_ECHO      = (SDB_LEVEL_4  | SDB_TYPE_INPUT_ECHO),
+    SDB_MSG_MENU_LIST       = (SDB_LEVEL_2  | SDB_TYPE_MENU | SDB_MENU_LIST),
+    SDB_MSG_MENU_FORM       = (SDB_LEVEL_2  | SDB_TYPE_MENU | SDB_MENU_FORM),
+    SDB_MSG_MENU_PILE       = (SDB_LEVEL_2  | SDB_TYPE_MENU | SDB_MENU_PILE),
+    SDB_MSG_DUMP            = (SDB_LEVEL_10 | SDB_TYPE_DUMP),
 } sdb_mode_type;
 int __sdb_vmcout(const sdb_context *ctx, unsigned int mode,
         const char *file, size_t line, const char *fmt, va_list va);
@@ -153,6 +160,7 @@ typedef struct {
     char *line_buf;
     size_t line_buf_size;
     size_t line_buf_len;
+    size_t line_buf_offset;
     size_t counter;
 } sdb_cout_context;
 void __sdb_mcout_init(sdb_cout_context *ctx, const sdb_context *sdb_ctx,

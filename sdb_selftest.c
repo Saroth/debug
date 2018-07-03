@@ -168,6 +168,11 @@ static int test_output(void *p)
     sdb_out("Return: %d", ret);
 
     sdb_stack_mark(SDB_CTX_GLOBAL);
+    ret = sdb_out("format put test:%s, %d, %#x, <\\n>\n", "123", 123, 123);
+    sdb_out("Max stack: %d", sdb_stack_max_usage(SDB_CTX_GLOBAL));
+    sdb_out("Return: %d", ret);
+
+    sdb_stack_mark(SDB_CTX_GLOBAL);
     ret = sdb_out_info("information");
     sdb_out("Max stack: %d", sdb_stack_max_usage(SDB_CTX_GLOBAL));
     sdb_out("Return: %d", ret);
@@ -407,6 +412,30 @@ static int test_dump(void *p)
     return 0;
 }
 
+static int test_config_color(void *p)
+{
+    sdb_out("0: disable, 1: enable");
+    int ret = sdb_in();
+    if (ret < 0) {
+        sdb_out("quit");
+        return 0;
+    }
+    sdb_config_color(SDB_CTX_GLOBAL, ret == 0 ? 0 : &sdb_color_terminal);
+    return 0;
+}
+
+static int test_config_mark(void *p)
+{
+    sdb_out("0: disable, 1: enable");
+    int ret = sdb_in();
+    if (ret < 0) {
+        sdb_out("quit");
+        return 0;
+    }
+    sdb_config_mark(SDB_CTX_GLOBAL, ret == 0 ? 0 : &sdb_mark_default);
+    return 0;
+}
+
 static int test_ansi_color_sequences(void *p)
 {
     const char *fg[] = {
@@ -464,25 +493,30 @@ static int sdb_selftest(void *p)
 {
     sdb_config_init(SDB_CTX_GLOBAL);
     sdb_config_bio(SDB_CTX_GLOBAL, cb_out, cb_in, SDB_CTX_GLOBAL);
+    sdb_config_color(SDB_CTX_GLOBAL, &sdb_color_terminal);
+    sdb_config_mark(SDB_CTX_GLOBAL, &sdb_mark_default);
 
     // test_check_format_output(NULL);
     // test_output(NULL);
     // test_output_stderr(NULL);
     // test_input(NULL);
 
-    return sdb_menu(SDB_MENU_LIST,
-            { "---- standard check", 0, 0, },
+    return sdb_menu(SDB_MSG_MENU_LIST,
+            { "---- test", 0, 0, },
             { "check format output", test_check_format_output, 0, },
             { "output", test_output, 0, },
             { "output with system error info", test_output_stderr, 0, },
             { "input", test_input, 0, },
             { "dump", test_dump, 0, },
+            { "---- config", 0, 0, },
+            { "color", test_config_color, 0, },
+            { "mark", test_config_mark, 0, },
             { "---- other", 0, 0, },
             { "ansi color sequences", test_ansi_color_sequences, 0, },
             { "failed return (-0x5a)", test_return_failed, (void *)-0x5a, },
             { "failed return (0xa5)", test_return_failed, (void *)0xa5, },
-            { NULL, test_input, 0, },
             { "NULL", NULL, 0, },
+            { NULL, test_input, 0, },
             );
 }
 #endif /* defined(SDB_SELFTEST) */

@@ -35,17 +35,16 @@ int __sdb_vmdump(const sdb_context *ctx,
         sdb_assert(__sdb_mcout_append_endline(&cout));
     }
 
-    size_t offset = 0;
+    size_t bytes;
     size_t blank = ((size_t)addr & 0xFFFF) % ctx->dump_bytes_perline;
     unsigned char *ptr = (unsigned char *)data - blank;
-    char addr_str[20];
-    sdb_snprintf(addr_str, sizeof(addr_str), "%04lx:", addr);
     size += blank;
-    while (size) {
-        size_t bytes = ctx->dump_bytes_perline > size
+    addr -= blank;
+    while (1) {
+        bytes = ctx->dump_bytes_perline > size
             ? size : ctx->dump_bytes_perline;
         if (ctx->dump_has_addr) {
-            sdb_assert(__sdb_mcout_append_string(&cout, addr_str));
+            sdb_assert(__sdb_mcout_append(&cout, "%04lx:", addr));
         }
         if (ctx->dump_has_hex) {
             size_t i = 0;
@@ -57,7 +56,7 @@ int __sdb_vmdump(const sdb_context *ctx,
             for (; i < ctx->dump_bytes_perline; i++) {
                 if (i < bytes) {
                     sdb_assert(__sdb_mcout_append(&cout, " %02x",
-                                ptr[offset + i] & 0xff));
+                                ptr[i] & 0xff));
                 }
                 else {
                     sdb_assert(__sdb_mcout_append_string(&cout, "   "));
@@ -74,7 +73,7 @@ int __sdb_vmdump(const sdb_context *ctx,
             }
             for (; i < ctx->dump_bytes_perline; i++) {
                 if (i < bytes) {
-                    char c = (char)ptr[offset + i];
+                    char c = (char)ptr[i];
                     if (c >= 0x20 && c < 0x80) {
                         sdb_assert(__sdb_mcout_append(&cout, "%c", c));
                     }
@@ -87,10 +86,14 @@ int __sdb_vmdump(const sdb_context *ctx,
                 }
             }
         }
-        sdb_assert(__sdb_mcout_append_endline(&cout));
-        size -= bytes;
-        offset += bytes;
+
+        if ((size -= bytes) == 0) {
+            break;
+        }
+        ptr += bytes;
+        addr += bytes;
         blank = 0;
+        sdb_assert(__sdb_mcout_append_endline(&cout));
     }
     sdb_assert(__sdb_mcout_final(&cout));
     counter += ret;

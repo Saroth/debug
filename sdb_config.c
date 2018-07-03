@@ -3,11 +3,13 @@
 #include <string.h>
 
 const sdb_color_codes sdb_color_terminal = {
-    .recovery           = "\33[0m",     /* 恢复: normal */
-    .warning            = "\33[1;36m",  /* 警告高亮: blue, bold */
-    .error              = "\33[1;31m",  /* 错误高亮: red, bold */
-    .input              = "\33[1;32m",  /* 输入和反馈标记高亮: green, bold */
-    .title              = "\33[7m",     /* 标题高亮: inverse */
+    .normal             = "\x1B[0m",
+    .info               = "\x1B[1m",
+    .warning            = "\x1B[1;36m",
+    .error              = "\x1B[1;31m",
+    .input              = "\x1B[1;32m",
+    .title              = "\x1B[7m",
+    .tail               = "\x1B[0m",
 };
 const sdb_mark_codes sdb_mark_default = {
     .none               = "  ",
@@ -36,7 +38,7 @@ const sdb_context sdb_ctx_default = {
     .dump_has_hex       = 1,
     .dump_has_ascii     = 1,
 
-    .colors             = 0,
+    .colors             = &sdb_color_terminal,
     .marks              = 0,
 };
 
@@ -50,7 +52,7 @@ void sdb_config_init(sdb_context *ctx)
     ctx->dump_has_addr          = 1;
     ctx->dump_has_hex           = 1;
     ctx->dump_has_ascii         = 1;
-    ctx->colors                 = 0;
+    ctx->colors                 = &sdb_color_terminal;
     ctx->marks                  = 0;
 }
 
@@ -82,9 +84,9 @@ void sdb_config_out_column_limit(sdb_context *ctx, size_t limit)
     }
 
     size_t min = 0;
-    min += 16 + 2;  /* address + space, e.g.: "0123456789abcdef: " */
+    min += 2 + 17 + 1; /* mark + addr + '\0', e.g.: ". 0123456789abcdef: " */
     min += ctx->dump_bytes_perline * 3; /* hex + space, e.g.: "31 32 33 ..." */
-    min += 1 + ctx->dump_bytes_perline; /* space + ascii, e.g.: " 123..." */
+    min += 2 + ctx->dump_bytes_perline; /* space + ascii, e.g.: " 123..." */
     if (limit < min) {
         __sdb_mcout(ctx, SDB_MSG_WARNING, __FILE__, __LINE__,
                 "column limit less than dump minimum(%d < %d)", limit, min);
@@ -103,8 +105,8 @@ void sdb_config_dump_bytes_perline(sdb_context *ctx, size_t size)
     }
 
     size_t limit = ctx->out_column_limit;
-    limit -= 16 + 2;
-    limit -= 1;
+    limit -= 2 + 17 + 1;
+    limit -= 2;
     limit /= 4;
     if (size > limit) {
         __sdb_mcout(ctx, SDB_MSG_WARNING, __FILE__, __LINE__,
