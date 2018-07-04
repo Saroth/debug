@@ -4,7 +4,6 @@
 #include <errno.h>
 #include <string.h>
 #endif
-#include <stdio.h>
 
 typedef struct {
     char *buf;
@@ -62,7 +61,7 @@ int sdb_snprintf(char *buf, size_t size, const char *fmt, ...)
 }
 
 
-static inline const char *mode_to_mark_index(sdb_cout_context *p,
+static inline const char *mode_to_mark(sdb_cout_context *p,
         unsigned int mode) {
     switch (mode & SDB_TYPE_MASK) {
         case SDB_TYPE_NONE:         return p->ctx->marks->none;         break;
@@ -77,7 +76,7 @@ static inline const char *mode_to_mark_index(sdb_cout_context *p,
         default:                    return "";                          break;
     }
 };
-static inline const char *mode_to_color_index(sdb_cout_context *p,
+static inline const char *mode_to_color(sdb_cout_context *p,
         unsigned int mode) {
     switch (mode & SDB_TYPE_MASK) {
         case SDB_TYPE_DUMP:
@@ -92,7 +91,21 @@ static inline const char *mode_to_color_index(sdb_cout_context *p,
         default:                    return "";                      break;
     }
 };
-static const int output_decorate(sdb_cout_context *p, unsigned int mode,
+static int output_decorate_append(sdb_cout_context *p, const char *str)
+{
+    int ret;
+    size_t len = strlen(str);
+    if (p->line_buf_offset + len >= p->line_buf_size) {
+        sdb_assert(__sdb_mcout(p->ctx, SDB_MSG_ERROR, __FILE__, __LINE__,
+                    "buffer reserve size not enouth.(%d < %d)",
+                    p->line_buf_size, p->line_buf_offset + len));
+        return SDB_ERR_RESERVE_NOT_ENOUGH;
+    }
+    strcpy(&p->line_buf[p->line_buf_offset], str);
+    p->line_buf_offset += len;
+    return 0;
+}
+static int output_decorate(sdb_cout_context *p, unsigned int mode,
         sdb_out_state state)
 {
     if (p->mode & SDB_FLAG_NO_DECORATE) {
@@ -103,19 +116,19 @@ static const int output_decorate(sdb_cout_context *p, unsigned int mode,
     int ret;
     if (p->ctx->colors) {
         if (state == SDB_OUT_LINE_HEAD || state == SDB_OUT_STRING_HEAD) {
-            sdb_assert(__sdb_mcout_append_string(p,
-                        mode_to_color_index(p, mode)));
+            sdb_assert(output_decorate_append(p, mode_to_color(p, mode)));
         }
         else if (state == SDB_OUT_LINE_TAIL || state == SDB_OUT_STRING_TAIL) {
-            sdb_assert(__sdb_mcout_append_string(p, p->ctx->colors->tail));
+            sdb_assert(output_decorate_append(p, p->ctx->colors->tail));
         }
     }
     if (p->ctx->marks && state == SDB_OUT_LINE_HEAD) {
-        sdb_assert(__sdb_mcout_append_string(p, mode_to_mark_index(p, mode)));
+        const char *str = mode_to_mark(p, mode);
+        sdb_assert(output_decorate_append(p, str));
+        p->line_buf_len += strlen(str);
     }
 
     p->mode &= ~SDB_FLAG_NO_DECORATE;
-    return ret;
 }
 static int output_line(void *p_out, const char *str, size_t len,
         sdb_out_state state)
@@ -129,34 +142,19 @@ static int output_line(void *p_out, const char *str, size_t len,
         str = SDB_NULL_MARK;
         len = strlen(str);
     }
+    int ret;
     do {
-        int ret;
         if (p->line_buf_offset == 0) {
             sdb_assert(output_decorate(p, p->mode, SDB_OUT_LINE_HEAD));
         }
-        while (len && p->line_buf_offset < p->ctx->out_column_limit) {
+        while (len && p->line_buf_len < p->ctx->out_column_limit) {
             p->line_buf[p->line_buf_offset++] = *str++;
-#warning "TODO@ fix bug"
-            // if (!(p->mode & SDB_FLAG_NO_DECORATE)) {
-                p->line_buf_len++;
-            // }
+            p->line_buf_len++;
             len--;
         }
         if ((!len && (state == SDB_OUT_FINAL || state == SDB_OUT_END_LINE))
                 || p->line_buf_len >= p->ctx->out_column_limit) {
             sdb_assert(output_decorate(p, p->mode, SDB_OUT_STRING_TAIL));
-#if defined(SDB_SYSTEM_HAS_STDERR)
-            if (p->err) {
-                int err_num = p->err;
-                p->err = 0;
-                sdb_assert(output_decorate(p, SDB_MSG_ERROR,
-                            SDB_OUT_STRING_HEAD));
-                sdb_assert(__sdb_mcout_append(p, " [stderr: %s(%d)]",
-                            strerror(err_num), err_num));
-                sdb_assert(output_decorate(p, SDB_MSG_ERROR,
-                            SDB_OUT_STRING_TAIL));
-            }
-#endif
             p->line_buf[p->line_buf_offset] = 0;
             sdb_assert(sdb_bio_out(p->ctx, p->file, p->line, p->line_buf));
             p->counter += ret;
@@ -165,6 +163,16 @@ static int output_line(void *p_out, const char *str, size_t len,
         }
     } while (len);
     if (state == SDB_OUT_FINAL) {
+#if defined(SDB_SYSTEM_HAS_STDERR)
+        if (p->err) {
+            int err_num = p->err;
+            p->err = 0;
+            p->mode = (p->mode & ~SDB_TYPE_MASK) | SDB_TYPE_ERROR;
+            sdb_assert(__sdb_mcout_append(p, "  [stderr: %s(%d)]",
+                        strerror(err_num), err_num));
+            sdb_assert(__sdb_mcout_final(p));
+        }
+#endif
         return p->counter;
     }
     return 0;

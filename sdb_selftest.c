@@ -217,6 +217,17 @@ static int test_output_stderr(void *p)
     sdb_out("Max stack: %d", sdb_stack_max_usage(SDB_CTX_GLOBAL));
     sdb_out("Return: %d", ret);
 
+    sdb_stack_mark(SDB_CTX_GLOBAL);
+    errno = 6;
+    ret = sdb_out("wrap test: %s, %s, %s, %s, %s",
+            "0123456789abcdef",
+            "0123456789abcdef",
+            "0123456789abcdef",
+            "0123456789abcdef",
+            "0123456789abcdef");
+    sdb_out("Max stack: %d", sdb_stack_max_usage(SDB_CTX_GLOBAL));
+    sdb_out("Return: %d", ret);
+
     return 0;
 }
 

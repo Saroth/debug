@@ -18,11 +18,12 @@ extern "C" {
 #include <stdarg.h>
 
 typedef enum {
-    SDB_ERR_BAD_PARAM       = -0x100,
-    SDB_ERR_NO_INPUT        = -0x101,
-    SDB_ERR_UNKNOWN_INPUT   = -0x102,
+    SDB_ERR_BAD_PARAM               = -0x100,
+    SDB_ERR_NO_INPUT                = -0x101,
+    SDB_ERR_UNKNOWN_INPUT           = -0x102,
+    SDB_ERR_RESERVE_NOT_ENOUGH      = -0x103,
 
-    SDB_ERR_MAX             = -0x103
+    SDB_ERR_MAX                     = -0x104
 } sdb_err_type;
 
 typedef int (*func_sdb_bio_out)(void *p, const char *file, size_t line,
