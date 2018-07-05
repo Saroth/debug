@@ -129,7 +129,7 @@ typedef enum {              /* 输出模式定义 */
     SDB_MENU_MASK           = (0xF  << SDB_MENU_OFS),
 
     SDB_FLAG_OFS            = 12,
-    SDB_FLAG_NO_DECORATE    = (1    << SDB_FLAG_OFS),
+    SDB_FLAG_NO_DECORATE    = ((1 << 0) << SDB_FLAG_OFS),
     SDB_FLAG_MASK           = (0xF  << SDB_FLAG_OFS),
 
 
@@ -162,6 +162,7 @@ typedef struct {
     size_t line_buf_size;
     size_t line_buf_len;
     size_t line_buf_offset;
+    unsigned int flags;
     size_t counter;
 } sdb_cout_context;
 void __sdb_mcout_init(sdb_cout_context *ctx, const sdb_context *sdb_ctx,

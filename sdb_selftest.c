@@ -319,7 +319,7 @@ static int test_dump(void *p)
     };
     sdb_stack_mark(SDB_CTX_GLOBAL);
     sdb_out("Dump buf4:");
-    ret = sdb_dump_addr(buf4, sizeof(buf4), (void *)0x0200f0a3);
+    ret = sdb_dump_addr(buf4, sizeof(buf4), (void *)0x3700f0630200f0a3);
     sdb_out("Max stack: %d", sdb_stack_max_usage(SDB_CTX_GLOBAL));
     sdb_out("Return: %d", ret);
 

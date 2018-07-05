@@ -144,8 +144,12 @@ static int output_line(void *p_out, const char *str, size_t len,
         str = SDB_NULL_MARK;
         len = strlen(str);
     }
+    if (len) {
+        p->flags &= ~SDB_OUT_LINE_IS_WRAPPED;
+    }
     int ret;
     do {
+        p->flags &= ~SDB_OUT_LINE_IS_OUTPUTED;
         if (p->line_buf_offset == 0) {
             sdb_assert(output_decorate(p, SDB_OUT_LINE_HEAD));
         }
@@ -154,14 +158,22 @@ static int output_line(void *p_out, const char *str, size_t len,
             p->line_buf_len++;
             len--;
         }
-        if ((!len && (state == SDB_OUT_FINAL || state == SDB_OUT_END_LINE))
-                || p->line_buf_len >= p->ctx->out_column_limit) {
-            sdb_assert(output_decorate(p, SDB_OUT_STRING_TAIL));
-            if (p->line_buf_len > strlen(get_mark(p))) {
-                p->line_buf[p->line_buf_offset] = 0;
-                sdb_assert(sdb_bio_out(p->ctx, p->file, p->line, p->line_buf));
-                p->counter += ret;
+        if (p->line_buf_len >= p->ctx->out_column_limit) {
+            p->flags |= SDB_OUT_LINE_IS_WRAPPED | SDB_OUT_LINE_IS_OUTPUTED;
+        }
+        else if ((state == SDB_OUT_FINAL || state == SDB_OUT_END_LINE)
+                && len == 0) {
+            p->flags |= SDB_OUT_LINE_IS_OUTPUTED;
+            if (p->line_buf_len <= strlen(get_mark(p))
+                    && p->flags & SDB_OUT_LINE_IS_WRAPPED) {
+                p->flags &= ~SDB_OUT_LINE_IS_OUTPUTED;
             }
+        }
+        if (p->flags & SDB_OUT_LINE_IS_OUTPUTED) {
+            sdb_assert(output_decorate(p, SDB_OUT_STRING_TAIL));
+            p->line_buf[p->line_buf_offset] = 0;
+            sdb_assert(sdb_bio_out(p->ctx, p->file, p->line, p->line_buf));
+            p->counter += ret;
             p->line_buf_len = 0;
             p->line_buf_offset = 0;
         }

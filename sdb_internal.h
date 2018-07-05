@@ -22,6 +22,10 @@ typedef enum {
     SDB_OUT_STRING_HEAD,
     SDB_OUT_STRING_TAIL,
 } sdb_out_state;
+typedef enum {
+    SDB_OUT_LINE_IS_WRAPPED     = (1 << 0),
+    SDB_OUT_LINE_IS_OUTPUTED    = (1 << 1),
+} sdb_out_flags;
 typedef int (*func_sdb_vxprintf)(void *, const char *, size_t, sdb_out_state);
 typedef struct {
     func_sdb_vxprintf f_out;
