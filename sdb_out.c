@@ -126,7 +126,8 @@ static int output_decorate(sdb_cout_context *p, sdb_out_state state)
         }
     }
     else if (state == SDB_OUT_LINE_TAIL || state == SDB_OUT_STRING_TAIL) {
-        sdb_assert(output_decorate_append(p, p->ctx->colors->tail));
+        sdb_assert(output_decorate_append(p,
+                    p->ctx->colors ? p->ctx->colors->tail : ""));
     }
 
     p->mode &= ~SDB_FLAG_NO_DECORATE;
