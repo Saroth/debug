@@ -1,13 +1,15 @@
+#include <string.h>
+
 #include "sdb_internal.h"
 
 static int menu_list(sdb_cout_context *cout,
         const sdb_menu_item *list, size_t size)
 {
     int ret;
+    sdb_assert(__sdb_mcout_append(cout, "#### [%d]", size));
+    sdb_assert(__sdb_mcout_append_endline(cout));
+
     int i;
-    sdb_assert(__sdb_mcout_append_endline(cout));
-    sdb_assert(__sdb_mcout_append(cout, "#### (%d)", size));
-    sdb_assert(__sdb_mcout_append_endline(cout));
     for (i = 0; i < size; i++) {
         if (list[i].info == 0) {
             break;
@@ -28,14 +30,30 @@ static int menu_form(sdb_cout_context *cout,
 static int menu_pile(sdb_cout_context *cout,
         const sdb_menu_item *list, size_t size)
 {
+    int ret;
+    sdb_assert(__sdb_mcout_append(cout, "#### (%d)", size));
+    sdb_assert(__sdb_mcout_append_endline(cout));
+
+    int i;
+    for (i = 0; i < size; i++) {
+        if (list[i].info == 0) {
+            break;
+        }
+        if (cout->line_buf_len + strlen(list[i].info) + 8 >
+                cout->ctx->out_column_limit) {
+            sdb_assert(__sdb_mcout_append_endline(cout));
+        }
+        sdb_assert(__sdb_mcout_append(cout, "  %d.%s", i + 1, list[i].info));
+    }
+    sdb_assert(__sdb_mcout_append_string(cout, "  0.return"));
     return 0;
 }
 
-struct menu_type {
+struct sdb_menu_type {
     size_t type;
     int (*menu)(sdb_cout_context *, const sdb_menu_item *, size_t);
 };
-static const struct menu_type menus[SDB_MENU_MAX >> SDB_MENU_OFS] = {
+static const struct sdb_menu_type menus[SDB_MENU_MAX >> SDB_MENU_OFS] = {
     { SDB_MENU_LIST, menu_list, },
     { SDB_MENU_FORM, menu_form, },
     { SDB_MENU_PILE, menu_pile, },
@@ -53,6 +71,7 @@ int __sdb_menu(const sdb_context *ctx, unsigned int mode,
     int ret;
     int num = 0;
     while (1) {
+        sdb_assert(__sdb_mcout(ctx, SDB_MSG_NONE, file, line, ""));
         char buf[ctx->out_column_limit + SDB_CONFIG_OUTPUT_BUFFER_RESERVE];
         sdb_cout_context cout;
         __sdb_mcout_init(&cout, ctx, mode, buf, sizeof(buf), file, line);

@@ -61,9 +61,11 @@ int sdb_snprintf(char *buf, size_t size, const char *fmt, ...)
 }
 
 
-static inline const char *mode_to_mark(sdb_cout_context *p,
-        unsigned int mode) {
-    switch (mode & SDB_TYPE_MASK) {
+static inline const char *get_mark(sdb_cout_context *p) {
+    if (p->ctx->marks == 0) {
+        return "";
+    }
+    switch (p->mode & SDB_TYPE_MASK) {
         case SDB_TYPE_NONE:         return p->ctx->marks->none;         break;
         case SDB_TYPE_INFO:         return p->ctx->marks->info;         break;
         case SDB_TYPE_WARNING:      return p->ctx->marks->warning;      break;
@@ -76,9 +78,11 @@ static inline const char *mode_to_mark(sdb_cout_context *p,
         default:                    return "";                          break;
     }
 };
-static inline const char *mode_to_color(sdb_cout_context *p,
-        unsigned int mode) {
-    switch (mode & SDB_TYPE_MASK) {
+static inline const char *get_color(sdb_cout_context *p) {
+    if (p->ctx->colors == 0) {
+        return "";
+    }
+    switch (p->mode & SDB_TYPE_MASK) {
         case SDB_TYPE_DUMP:
         case SDB_TYPE_NONE:         return p->ctx->colors->normal;  break;
         case SDB_TYPE_MENU:
@@ -105,8 +109,7 @@ static int output_decorate_append(sdb_cout_context *p, const char *str)
     p->line_buf_offset += len;
     return 0;
 }
-static int output_decorate(sdb_cout_context *p, unsigned int mode,
-        sdb_out_state state)
+static int output_decorate(sdb_cout_context *p, sdb_out_state state)
 {
     if (p->mode & SDB_FLAG_NO_DECORATE) {
         return 0;
@@ -114,21 +117,20 @@ static int output_decorate(sdb_cout_context *p, unsigned int mode,
     p->mode |= SDB_FLAG_NO_DECORATE;
 
     int ret;
-    if (p->ctx->colors) {
-        if (state == SDB_OUT_LINE_HEAD || state == SDB_OUT_STRING_HEAD) {
-            sdb_assert(output_decorate_append(p, mode_to_color(p, mode)));
-        }
-        else if (state == SDB_OUT_LINE_TAIL || state == SDB_OUT_STRING_TAIL) {
-            sdb_assert(output_decorate_append(p, p->ctx->colors->tail));
+    if (state == SDB_OUT_LINE_HEAD || state == SDB_OUT_STRING_HEAD) {
+        sdb_assert(output_decorate_append(p, get_color(p)));
+        if (state == SDB_OUT_LINE_HEAD) {
+            const char *str = get_mark(p);
+            sdb_assert(output_decorate_append(p, str));
+            p->line_buf_len += strlen(str);
         }
     }
-    if (p->ctx->marks && state == SDB_OUT_LINE_HEAD) {
-        const char *str = mode_to_mark(p, mode);
-        sdb_assert(output_decorate_append(p, str));
-        p->line_buf_len += strlen(str);
+    else if (state == SDB_OUT_LINE_TAIL || state == SDB_OUT_STRING_TAIL) {
+        sdb_assert(output_decorate_append(p, p->ctx->colors->tail));
     }
 
     p->mode &= ~SDB_FLAG_NO_DECORATE;
+    return 0;
 }
 static int output_line(void *p_out, const char *str, size_t len,
         sdb_out_state state)
@@ -145,7 +147,7 @@ static int output_line(void *p_out, const char *str, size_t len,
     int ret;
     do {
         if (p->line_buf_offset == 0) {
-            sdb_assert(output_decorate(p, p->mode, SDB_OUT_LINE_HEAD));
+            sdb_assert(output_decorate(p, SDB_OUT_LINE_HEAD));
         }
         while (len && p->line_buf_len < p->ctx->out_column_limit) {
             p->line_buf[p->line_buf_offset++] = *str++;
@@ -154,10 +156,12 @@ static int output_line(void *p_out, const char *str, size_t len,
         }
         if ((!len && (state == SDB_OUT_FINAL || state == SDB_OUT_END_LINE))
                 || p->line_buf_len >= p->ctx->out_column_limit) {
-            sdb_assert(output_decorate(p, p->mode, SDB_OUT_STRING_TAIL));
-            p->line_buf[p->line_buf_offset] = 0;
-            sdb_assert(sdb_bio_out(p->ctx, p->file, p->line, p->line_buf));
-            p->counter += ret;
+            sdb_assert(output_decorate(p, SDB_OUT_STRING_TAIL));
+            if (p->line_buf_len > strlen(get_mark(p))) {
+                p->line_buf[p->line_buf_offset] = 0;
+                sdb_assert(sdb_bio_out(p->ctx, p->file, p->line, p->line_buf));
+                p->counter += ret;
+            }
             p->line_buf_len = 0;
             p->line_buf_offset = 0;
         }
@@ -197,7 +201,7 @@ void __sdb_mcout_init(sdb_cout_context *ctx, const sdb_context *sdb_ctx,
 #if defined(SDB_SYSTEM_HAS_STDERR)
     errno                   = 0;
 #endif
-    output_line(ctx, 0, 0, SDB_OUT_INIT);
+    output_line(ctx, "", 0, SDB_OUT_INIT);
 }
 int __sdb_mcout_append_string(sdb_cout_context *ctx, const char *str)
 {

@@ -279,6 +279,7 @@ static int test_dump(void *p)
     sdb_stack_mark(SDB_CTX_GLOBAL);
     sdb_out("Dump buf1 bare:");
     ret = sdb_dump_bare(buf1, sizeof(buf1));
+    sdb_out_bare("\n");
     sdb_out("Max stack: %d", sdb_stack_max_usage(SDB_CTX_GLOBAL));
     sdb_out("Return: %d", ret);
 
@@ -423,6 +424,47 @@ static int test_dump(void *p)
     return 0;
 }
 
+static int test_menu_disp(void *p)
+{
+    const sdb_menu_item test_list[] = {
+        { "libsdb.h", 0, 0, },
+        { "LICENSE", 0, 0, },
+        { "Makefile", 0, 0, },
+        { "sdb.vimproject", 0, 0 },
+        { "sdb_bio.c ", 0, 0 },
+        { "sdb_config.c", 0, 0 },
+        { "sdb_config.h", 0, 0 },
+        { "sdb_dump.c", 0, 0 },
+        { "sdb_in.c", 0, 0 },
+        { "sdb_internal.h", 0, 0 },
+        { "sdb_menu.c", 0, 0 },
+        { "sdb_out.c", 0, 0 },
+        { "sdb_selftest", 0, 0 },
+        { "sdb_selftest.c", 0, 0 },
+        { "sdb_stack_watch.c", 0, 0 },
+        { "sdb_string.c", 0, 0 },
+        { "sdb_utility.c", 0, 0 },
+        { "sdb_vxprintf.c", 0, 0 },
+        { 0, 0, 0 },
+    };
+    size_t num = sizeof(test_list) / sizeof(sdb_menu_item);
+    switch ((size_t)p) {
+        case SDB_MSG_MENU_LIST: sdb_menu_list(test_list, num); break;
+        case SDB_MSG_MENU_FORM: sdb_menu_form(test_list, num); break;
+        case SDB_MSG_MENU_PILE: sdb_menu_pile(test_list, num); break;
+    }
+    return 0;
+}
+
+static int test_menu(void *p)
+{
+    return sdb_menu(SDB_MSG_MENU_LIST,
+            { "list", test_menu_disp, (void *)SDB_MSG_MENU_LIST, },
+            { "form", test_menu_disp, (void *)SDB_MSG_MENU_FORM, },
+            { "pile", test_menu_disp, (void *)SDB_MSG_MENU_PILE, },
+            );
+}
+
 static int test_config_color(void *p)
 {
     sdb_out("0: disable, 1: enable");
@@ -519,6 +561,7 @@ static int sdb_selftest(void *p)
             { "output with system error info", test_output_stderr, 0, },
             { "input", test_input, 0, },
             { "dump", test_dump, 0, },
+            { "menu", test_menu, 0, },
             { "---- config", 0, 0, },
             { "color", test_config_color, 0, },
             { "mark", test_config_mark, 0, },
