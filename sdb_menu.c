@@ -22,14 +22,14 @@ static int menu_list(sdb_cout_context *cout,
 }
 
 static inline size_t sdb_column_width_max(const sdb_menu_item *list,
-        size_t size, size_t div, size_t idx, size_t append_size, size_t *rows)
+        size_t size, size_t div, size_t idx, size_t reserve_size, size_t *rows)
 {
     size_t max = 0;
     size_t width;
     size_t i;
     for (i = (size + div - 1) / div * idx;
             i < size && i < (size + div - 1) / div * (idx + 1); i++) {
-        width = strlen((list + i)->info) + append_size;
+        width = strlen((list + i)->info) + reserve_size;
         if (max < width) {
             max = width;
         }
@@ -41,7 +41,7 @@ static inline size_t sdb_column_width_max(const sdb_menu_item *list,
 }
 
 static size_t sdb_divide_columnar(sdb_cout_context *cout,
-        const sdb_menu_item *list, size_t size, size_t append_size,
+        const sdb_menu_item *list, size_t size, size_t reserve_size,
         size_t *columns, size_t *rows)
 {
     size_t i = 0;
@@ -55,7 +55,7 @@ static size_t sdb_divide_columnar(sdb_cout_context *cout,
     for (col = size; col > 1; col--) {
         len = strlen(sdb_get_mark(cout));
         for (i = 0; i < col && len <= cout->ctx->out_column_limit; i++) {
-            len += sdb_column_width_max(list, size, col, i, append_size,
+            len += sdb_column_width_max(list, size, col, i, reserve_size,
                     i == 0 ? rows : 0);
         }
         if (len <= cout->ctx->out_column_limit) {
@@ -71,19 +71,22 @@ static size_t sdb_divide_columnar(sdb_cout_context *cout,
 static int menu_columnar(sdb_cout_context *cout,
         const sdb_menu_item *list, size_t size)
 {
+#define COLUMNAR_ITEM_WIDTH_RESERVE 8
     size_t rows;
     size_t columns;
-    size = sdb_divide_columnar(cout, list, size, 8, &columns, &rows);
+    size = sdb_divide_columnar(cout, list, size, COLUMNAR_ITEM_WIDTH_RESERVE,
+            &columns, &rows);
 
     size_t i;
     size_t column_width[columns];
     for (i = 0; i < columns; i++) {
-        column_width[i] = sdb_column_width_max(list, size, columns, i, 8, 0);
+        column_width[i] = sdb_column_width_max(list, size, columns, i,
+                COLUMNAR_ITEM_WIDTH_RESERVE, 0);
     }
 
     int ret;
     size_t row = 0;
-    size_t col;
+    size_t col = 0;
     sdb_assert(__sdb_mcout_append(cout, "#### [%d]", size));
     sdb_assert(__sdb_mcout_append_endline(cout));
     while (1) {
@@ -93,13 +96,19 @@ static int menu_columnar(sdb_cout_context *cout,
                 break;
             }
             sdb_assert(__sdb_mcout_append(cout, " %3d.%-*s",
-                        i + 1, column_width[col] - 8, list[i].info));
+                        i + 1, column_width[col] - COLUMNAR_ITEM_WIDTH_RESERVE,
+                        list[i].info));
         }
         if (++row >= rows) {
             break;
         }
         sdb_assert(__sdb_mcout_append_endline(cout));
     }
+    if (cout->line_buf_len + 5 + strlen(sdb_last_item)
+            > cout->ctx->out_column_limit) {
+        sdb_assert(__sdb_mcout_append_endline(cout));
+    }
+    sdb_assert(__sdb_mcout_append(cout, "   0.%s", sdb_last_item));
     return 0;
 }
 
