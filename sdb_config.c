@@ -2,6 +2,7 @@
 
 #include <string.h>
 
+const char *sdb_last_item = "return";
 const sdb_color_codes sdb_color_terminal = {
     .normal             = "\x1B[0m",
     .info               = "\x1B[1m",

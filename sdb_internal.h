@@ -12,6 +12,10 @@ int sdb_bio_out(const sdb_context *ctx,
         const char *file, size_t line, const char *str);
 int sdb_bio_in(const sdb_context *ctx, char *buf, size_t size, size_t *len);
 
+const char *sdb_get_mark(sdb_cout_context *p);
+const char *sdb_get_color(sdb_cout_context *p);
+extern const char *sdb_last_item;
+
 typedef enum {
     SDB_OUT_NONE = 0,
     SDB_OUT_INIT,

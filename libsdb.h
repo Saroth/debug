@@ -17,14 +17,14 @@ extern "C" {
 /* For va_list */
 #include <stdarg.h>
 
-typedef enum {
+enum sdb_err {
     SDB_ERR_BAD_PARAM               = -0x100,
     SDB_ERR_NO_INPUT                = -0x101,
     SDB_ERR_UNKNOWN_INPUT           = -0x102,
     SDB_ERR_RESERVE_NOT_ENOUGH      = -0x103,
 
     SDB_ERR_MAX                     = -0x104
-} sdb_err_type;
+};
 
 typedef int (*func_sdb_bio_out)(void *p, const char *file, size_t line,
         const char *str);
@@ -123,7 +123,7 @@ typedef enum {              /* 输出模式定义 */
 
     SDB_MENU_OFS            = 8,
     SDB_MENU_LIST           = (0    << SDB_MENU_OFS),
-    SDB_MENU_FORM           = (1    << SDB_MENU_OFS),
+    SDB_MENU_COLUMNAR       = (1    << SDB_MENU_OFS),
     SDB_MENU_PILE           = (2    << SDB_MENU_OFS),
     SDB_MENU_MAX            = (3    << SDB_MENU_OFS),
     SDB_MENU_MASK           = (0xF  << SDB_MENU_OFS),
@@ -141,7 +141,7 @@ typedef enum {              /* 输出模式定义 */
     SDB_MSG_INPUT_NUM       = (SDB_LEVEL_4  | SDB_TYPE_INPUT_NUM),
     SDB_MSG_INPUT_ECHO      = (SDB_LEVEL_4  | SDB_TYPE_INPUT_ECHO),
     SDB_MSG_MENU_LIST       = (SDB_LEVEL_2  | SDB_TYPE_MENU | SDB_MENU_LIST),
-    SDB_MSG_MENU_FORM       = (SDB_LEVEL_2  | SDB_TYPE_MENU | SDB_MENU_FORM),
+    SDB_MSG_MENU_COLUMNAR   = (SDB_LEVEL_2  | SDB_TYPE_MENU | SDB_MENU_COLUMNAR),
     SDB_MSG_MENU_PILE       = (SDB_LEVEL_2  | SDB_TYPE_MENU | SDB_MENU_PILE),
     SDB_MSG_DUMP            = (SDB_LEVEL_10 | SDB_TYPE_DUMP),
 } sdb_mode_type;
@@ -278,8 +278,8 @@ int sdb_snprintf(char *buf, size_t size, const char *fmt, ...);
 #ifdef sdb_menu_list
 #undef sdb_menu_list
 #endif
-#ifdef sdb_menu_form
-#undef sdb_menu_form
+#ifdef sdb_menu_columnar
+#undef sdb_menu_columnar
 #endif
 #ifdef sdb_menu_pile
 #undef sdb_menu_pile
@@ -347,8 +347,8 @@ int sdb_snprintf(char *buf, size_t size, const char *fmt, ...);
 #define sdb_menu_list(__list, __num) \
     __sdb_menu(SDB_CTX_GLOBAL, SDB_MSG_MENU_LIST, __list, __num,\
             __FILE__, __LINE__)
-#define sdb_menu_form(__list, __num) \
-    __sdb_menu(SDB_CTX_GLOBAL, SDB_MSG_MENU_FORM, __list, __num,\
+#define sdb_menu_columnar(__list, __num) \
+    __sdb_menu(SDB_CTX_GLOBAL, SDB_MSG_MENU_COLUMNAR, __list, __num,\
             __FILE__, __LINE__)
 #define sdb_menu_pile(__list, __num) \
     __sdb_menu(SDB_CTX_GLOBAL, SDB_MSG_MENU_PILE, __list, __num,\
@@ -377,7 +377,7 @@ int sdb_snprintf(char *buf, size_t size, const char *fmt, ...);
 
 #define sdb_menu(__type, ...)                               sdb_nop()
 #define sdb_menu_list(__list, __num)                        sdb_nop()
-#define sdb_menu_form(__list, __num)                        sdb_nop()
+#define sdb_menu_columnar(__list, __num)                    sdb_nop()
 #define sdb_menu_pile(__list, __num)                        sdb_nop()
 
 #endif /* defined(SDB_ENABLE) */

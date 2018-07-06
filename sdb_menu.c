@@ -17,13 +17,89 @@ static int menu_list(sdb_cout_context *cout,
         sdb_assert(__sdb_mcout_append(cout, " %3d. %s", i + 1, list[i].info));
         sdb_assert(__sdb_mcout_append_endline(cout));
     }
-    sdb_assert(__sdb_mcout_append_string(cout, "   0. return"));
+    sdb_assert(__sdb_mcout_append(cout, "   0. %s", sdb_last_item));
     return 0;
 }
 
-static int menu_form(sdb_cout_context *cout,
+static inline size_t sdb_column_width_max(const sdb_menu_item *list,
+        size_t size, size_t div, size_t idx, size_t append_size, size_t *rows)
+{
+    size_t max = 0;
+    size_t width;
+    size_t i;
+    for (i = (size + div - 1) / div * idx;
+            i < size && i < (size + div - 1) / div * (idx + 1); i++) {
+        width = strlen((list + i)->info) + append_size;
+        if (max < width) {
+            max = width;
+        }
+    }
+    if (rows) {
+        *rows = i;
+    }
+    return max;
+}
+
+static size_t sdb_divide_columnar(sdb_cout_context *cout,
+        const sdb_menu_item *list, size_t size, size_t append_size,
+        size_t *columns, size_t *rows)
+{
+    size_t i = 0;
+    while (i < size && (list + i)->info) {
+        i++;
+    }
+    size = i;
+
+    size_t col;
+    size_t len;
+    for (col = size; col > 1; col--) {
+        len = strlen(sdb_get_mark(cout));
+        for (i = 0; i < col && len <= cout->ctx->out_column_limit; i++) {
+            len += sdb_column_width_max(list, size, col, i, append_size,
+                    i == 0 ? rows : 0);
+        }
+        if (len <= cout->ctx->out_column_limit) {
+            break;
+        }
+    }
+    if (columns) {
+        *columns = col;
+    }
+    return size;
+}
+
+static int menu_columnar(sdb_cout_context *cout,
         const sdb_menu_item *list, size_t size)
 {
+    size_t rows;
+    size_t columns;
+    size = sdb_divide_columnar(cout, list, size, 8, &columns, &rows);
+
+    size_t i;
+    size_t column_width[columns];
+    for (i = 0; i < columns; i++) {
+        column_width[i] = sdb_column_width_max(list, size, columns, i, 8, 0);
+    }
+
+    int ret;
+    size_t row = 0;
+    size_t col;
+    sdb_assert(__sdb_mcout_append(cout, "#### [%d]", size));
+    sdb_assert(__sdb_mcout_append_endline(cout));
+    while (1) {
+        for (col = 0; col < columns; col++) {
+            i = rows * col + row;
+            if (i >= size) {
+                break;
+            }
+            sdb_assert(__sdb_mcout_append(cout, " %3d.%-*s",
+                        i + 1, column_width[col] - 8, list[i].info));
+        }
+        if (++row >= rows) {
+            break;
+        }
+        sdb_assert(__sdb_mcout_append_endline(cout));
+    }
     return 0;
 }
 
@@ -31,7 +107,7 @@ static int menu_pile(sdb_cout_context *cout,
         const sdb_menu_item *list, size_t size)
 {
     int ret;
-    sdb_assert(__sdb_mcout_append(cout, "#### (%d)", size));
+    sdb_assert(__sdb_mcout_append(cout, "#### [%d]", size));
     sdb_assert(__sdb_mcout_append_endline(cout));
 
     int i;
@@ -45,7 +121,11 @@ static int menu_pile(sdb_cout_context *cout,
         }
         sdb_assert(__sdb_mcout_append(cout, "  %d.%s", i + 1, list[i].info));
     }
-    sdb_assert(__sdb_mcout_append_string(cout, "  0.return"));
+    if (cout->line_buf_len + 4 + strlen(sdb_last_item)
+            > cout->ctx->out_column_limit) {
+        sdb_assert(__sdb_mcout_append_endline(cout));
+    }
+    sdb_assert(__sdb_mcout_append(cout, "  0.%s", sdb_last_item));
     return 0;
 }
 
@@ -55,7 +135,7 @@ struct sdb_menu_type {
 };
 static const struct sdb_menu_type menus[SDB_MENU_MAX >> SDB_MENU_OFS] = {
     { SDB_MENU_LIST, menu_list, },
-    { SDB_MENU_FORM, menu_form, },
+    { SDB_MENU_COLUMNAR, menu_columnar, },
     { SDB_MENU_PILE, menu_pile, },
 };
 

@@ -61,7 +61,8 @@ int sdb_snprintf(char *buf, size_t size, const char *fmt, ...)
 }
 
 
-static inline const char *get_mark(sdb_cout_context *p) {
+const char *sdb_get_mark(sdb_cout_context *p)
+{
     if (p->ctx->marks == 0) {
         return "";
     }
@@ -78,7 +79,8 @@ static inline const char *get_mark(sdb_cout_context *p) {
         default:                    return "";                          break;
     }
 };
-static inline const char *get_color(sdb_cout_context *p) {
+const char *sdb_get_color(sdb_cout_context *p)
+{
     if (p->ctx->colors == 0) {
         return "";
     }
@@ -118,9 +120,9 @@ static int output_decorate(sdb_cout_context *p, sdb_out_state state)
 
     int ret;
     if (state == SDB_OUT_LINE_HEAD || state == SDB_OUT_STRING_HEAD) {
-        sdb_assert(output_decorate_append(p, get_color(p)));
+        sdb_assert(output_decorate_append(p, sdb_get_color(p)));
         if (state == SDB_OUT_LINE_HEAD) {
-            const char *str = get_mark(p);
+            const char *str = sdb_get_mark(p);
             sdb_assert(output_decorate_append(p, str));
             p->line_buf_len += strlen(str);
         }
@@ -165,7 +167,7 @@ static int output_line(void *p_out, const char *str, size_t len,
         else if ((state == SDB_OUT_FINAL || state == SDB_OUT_END_LINE)
                 && len == 0) {
             p->flags |= SDB_OUT_LINE_IS_OUTPUTED;
-            if (p->line_buf_len <= strlen(get_mark(p))
+            if (p->line_buf_len <= strlen(sdb_get_mark(p))
                     && p->flags & SDB_OUT_LINE_IS_WRAPPED) {
                 p->flags &= ~SDB_OUT_LINE_IS_OUTPUTED;
             }

@@ -430,8 +430,8 @@ static int test_menu_disp(void *p)
         { "libsdb.h", 0, 0, },
         { "LICENSE", 0, 0, },
         { "Makefile", 0, 0, },
-        { "sdb.vimproject", 0, 0 },
-        { "sdb_bio.c ", 0, 0 },
+        { "sdb.vimproject", 0, 0, },
+        { "sdb_bio.c", 0, 0 },
         { "sdb_config.c", 0, 0 },
         { "sdb_config.h", 0, 0 },
         { "sdb_dump.c", 0, 0 },
@@ -450,7 +450,7 @@ static int test_menu_disp(void *p)
     size_t num = sizeof(test_list) / sizeof(sdb_menu_item);
     switch ((size_t)p) {
         case SDB_MSG_MENU_LIST: sdb_menu_list(test_list, num); break;
-        case SDB_MSG_MENU_FORM: sdb_menu_form(test_list, num); break;
+        case SDB_MSG_MENU_COLUMNAR: sdb_menu_columnar(test_list, num); break;
         case SDB_MSG_MENU_PILE: sdb_menu_pile(test_list, num); break;
     }
     return 0;
@@ -460,7 +460,7 @@ static int test_menu(void *p)
 {
     return sdb_menu(SDB_MSG_MENU_LIST,
             { "list", test_menu_disp, (void *)SDB_MSG_MENU_LIST, },
-            { "form", test_menu_disp, (void *)SDB_MSG_MENU_FORM, },
+            { "columnar", test_menu_disp, (void *)SDB_MSG_MENU_COLUMNAR, },
             { "pile", test_menu_disp, (void *)SDB_MSG_MENU_PILE, },
             );
 }
