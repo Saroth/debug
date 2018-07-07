@@ -102,6 +102,7 @@ static int output_decorate_append(sdb_cout_context *p, const char *str)
     int ret;
     size_t len = strlen(str);
     if (p->line_buf_offset + len >= p->line_buf_size) {
+        const sdb_context *ctx = p->ctx;
         sdb_assert(__sdb_mcout(p->ctx, SDB_MSG_ERROR, __FILE__, __LINE__,
                     "buffer reserve size not enouth.(%d < %d)",
                     p->line_buf_size, p->line_buf_offset + len));
@@ -119,6 +120,7 @@ static int output_decorate(sdb_cout_context *p, sdb_out_state state)
     p->mode |= SDB_FLAG_NO_DECORATE;
 
     int ret;
+    const sdb_context *ctx = p->ctx;
     if (state == SDB_OUT_LINE_HEAD || state == SDB_OUT_STRING_HEAD) {
         sdb_assert(output_decorate_append(p, sdb_get_color(p)));
         if (state == SDB_OUT_LINE_HEAD) {
@@ -150,7 +152,9 @@ static int output_line(void *p_out, const char *str, size_t len,
     if (len) {
         p->flags &= ~SDB_OUT_LINE_IS_WRAPPED;
     }
+
     int ret;
+    const sdb_context *ctx = p->ctx;
     do {
         p->flags &= ~SDB_OUT_LINE_IS_OUTPUTED;
         if (p->line_buf_offset == 0) {

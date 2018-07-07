@@ -66,7 +66,7 @@ int sdb_bio_out(const sdb_context *ctx,
 int sdb_bio_in(const sdb_context *ctx, char *buf, size_t size, size_t *len)
 {
     if (buf == 0) {
-        return SDB_ERR_BAD_PARAM;
+        return SDB_ERR_NULL_BUFFER;
     }
     if (ctx->bio_in) {
         return ctx->bio_in(ctx->bio_param, buf, size, len);

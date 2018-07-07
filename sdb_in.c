@@ -46,8 +46,10 @@ int __sdb_vnmcin(const sdb_context *ctx, unsigned int mode, int *num,
     int ret;
     char in[SDB_CONFIG_INPUT_BUFFER_SIZE];
     size_t len;
-    sdb_assert(__sdb_vmcin(ctx, SDB_MSG_INPUT_NUM, in, sizeof(in), &len,
-                file, line, fmt, va));
+    if ((ret = __sdb_vmcin(ctx, SDB_MSG_INPUT_NUM, in, sizeof(in), &len,
+                    file, line, fmt, va)) < 0) {
+        return ret;
+    }
     if (num) {
         *num = strtol(in, 0, 0);
         if (*num == 0 && in[0] != '0') {
@@ -74,7 +76,7 @@ int __sdb_rnmcin(const sdb_context *ctx, unsigned int mode,
 {
     int num = 0;
     int ret = __sdb_nmcin(ctx, mode, &num, file, line, 0);
-    if (ret < SDB_ERR_BAD_PARAM && ret > SDB_ERR_MAX) {
+    if (ret < SDB_ERR_NULL_BUFFER && ret > SDB_ERR_MAX) {
         return ret;
     }
     return num;

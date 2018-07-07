@@ -6,6 +6,7 @@ static int menu_list(sdb_cout_context *cout,
         const sdb_menu_item *list, size_t size)
 {
     int ret;
+    const sdb_context *ctx = cout->ctx;
     sdb_assert(__sdb_mcout_append(cout, "#### [%d]", size));
     sdb_assert(__sdb_mcout_append_endline(cout));
 
@@ -85,6 +86,7 @@ static int menu_columnar(sdb_cout_context *cout,
     }
 
     int ret;
+    const sdb_context *ctx = cout->ctx;
     size_t row = 0;
     size_t col = 0;
     sdb_assert(__sdb_mcout_append(cout, "#### [%d]", size));
@@ -116,6 +118,7 @@ static int menu_pile(sdb_cout_context *cout,
         const sdb_menu_item *list, size_t size)
 {
     int ret;
+    const sdb_context *ctx = cout->ctx;
     sdb_assert(__sdb_mcout_append(cout, "#### [%d]", size));
     sdb_assert(__sdb_mcout_append_endline(cout));
 
@@ -151,13 +154,14 @@ static const struct sdb_menu_type menus[SDB_MENU_MAX >> SDB_MENU_OFS] = {
 int __sdb_menu(const sdb_context *ctx, unsigned int mode,
         const sdb_menu_item *list, size_t size, const char *file, size_t line)
 {
+    int ret;
     unsigned int type = (mode & SDB_MENU_MASK) >> SDB_MENU_OFS;
     if (type >= SDB_MENU_MAX >> SDB_MENU_OFS) {
-        return __sdb_mcout(ctx, SDB_MSG_WARNING, __FILE__, __LINE__,
-                "Unknown menu type:%#x(%#x)", type, mode);
+        sdb_assert(__sdb_mcout(ctx, SDB_MSG_WARNING, __FILE__, __LINE__,
+                    "Unknown menu type:%#x(%#x)", type, mode));
+        return SDB_ERR_UNKNOWN_MENU_TYPE;
     }
 
-    int ret;
     int num = 0;
     while (1) {
         sdb_assert(__sdb_mcout(ctx, SDB_MSG_NONE, file, line, ""));

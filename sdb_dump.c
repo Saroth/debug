@@ -17,8 +17,10 @@ int __sdb_vmdump(const sdb_context *ctx,
                 "data size too large! length:%d(%#x)", size, size));
         counter += ret;
         char in[8];
-        sdb_assert(__sdb_mcin(ctx, SDB_MSG_INPUT_STR, in, sizeof(in), 0,
-                __FILE__, __LINE__, "continue to dump? (y/N)"));
+        if ((ret = __sdb_mcin(ctx, SDB_MSG_INPUT_STR, in, sizeof(in), 0,
+                        __FILE__, __LINE__, "continue to dump? (y/N)")) < 0) {
+            return ret;
+        }
         counter += ret;
         if (in[0] != 'y') {
             return counter;

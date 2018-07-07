@@ -18,12 +18,13 @@ extern "C" {
 #include <stdarg.h>
 
 enum sdb_err {
-    SDB_ERR_BAD_PARAM               = -0x100,
+    SDB_ERR_NULL_BUFFER             = -0x100,
     SDB_ERR_NO_INPUT                = -0x101,
     SDB_ERR_UNKNOWN_INPUT           = -0x102,
     SDB_ERR_RESERVE_NOT_ENOUGH      = -0x103,
+    SDB_ERR_UNKNOWN_MENU_TYPE       = -0x104,
 
-    SDB_ERR_MAX                     = -0x104
+    SDB_ERR_MAX                     = -0x105
 };
 
 typedef int (*func_sdb_bio_out)(void *p, const char *file, size_t line,
@@ -69,7 +70,6 @@ typedef struct {
 } sdb_context;
 
 inline int sdb_nop(void) { return 0; }
-#define sdb_assert(_f) do { if ((ret = _f) < 0) { return ret; } } while (0)
 
 extern const sdb_color_codes sdb_color_terminal;
 extern const sdb_mark_codes sdb_mark_default;
