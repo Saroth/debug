@@ -17,8 +17,9 @@ sdb_context sdb_ctx;
 
 static int cb_out(void *p, const char *file, size_t line, const char *str)
 {
-    sdb_stack_touch((sdb_context *)p);
     int ret;
+
+    sdb_stack_touch((sdb_context *)p);
     if (file) {
         ret = printf("%16s:%04ld  %s\n", strrchr(file, '/')
                 ? (strrchr(file, '/') + 1) : strrchr(file, '\\')
@@ -33,14 +34,14 @@ static int cb_out(void *p, const char *file, size_t line, const char *str)
 }
 static int cb_in(void *p, char *buf, size_t size, size_t *len)
 {
+    int c;
+    size_t i = 0;
+
     sdb_stack_touch((sdb_context *)p);
     if (size == 0) {
         return 0;
     }
     size--;
-
-    int c;
-    size_t i = 0;
     while (buf && i < size) {
         if ((c = getchar()) == EOF) {
             break;
@@ -62,9 +63,11 @@ static int cb_in(void *p, char *buf, size_t size, size_t *len)
 static int test_format_output_compare(const char *fmt, ...)
 {
     va_list va;
-    char buf_std[2048];
+    char buf_std[2048], buf_vx[2048];
+    int len_vx, len_std;
+
     va_start(va, fmt);
-    int len_std = vsnprintf(buf_std, sizeof(buf_std), fmt, va);
+    len_std = vsnprintf(buf_std, sizeof(buf_std), fmt, va);
     va_end(va);
     if (len_std < 0) {
         int err = errno;
@@ -74,9 +77,8 @@ static int test_format_output_compare(const char *fmt, ...)
     }
     printf("std:[%s]\n", buf_std);
 
-    char buf_vx[2048];
     va_start(va, fmt);
-    int len_vx = sdb_vsnprintf(buf_vx, sizeof(buf_vx), fmt, va);
+    len_vx = sdb_vsnprintf(buf_vx, sizeof(buf_vx), fmt, va);
     va_end(va);
     if (len_vx < 0) {
         int err = errno;
@@ -117,6 +119,7 @@ static int test_format_output_compare(const char *fmt, ...)
 
 static int test_check_format_output(void *p)
 {
+    ((void)p);
     test_format_output_compare("0 d:\t%%,%d,%d,%d,%d,%d,%d,%d,%d",
             0, 8, 32, 128, 80000, 0x7fffffff, -1, -0x123);
     test_format_output_compare("1 i:\t%i,%i,%i,%i,%i,%i,%i,%i",
@@ -156,6 +159,8 @@ static int test_check_format_output(void *p)
 static int test_output(void *p)
 {
     int ret = 0;
+    ((void)p);
+
     sdb_stack_mark(SDB_CTX_GLOBAL);
     ret = sdb_out_bare("bare<\\n>\n");
     sdb_out("Max stack: %d", sdb_stack_max_usage(SDB_CTX_GLOBAL));
@@ -193,6 +198,8 @@ static int test_output(void *p)
 static int test_output_stderr(void *p)
 {
     int ret = 0;
+    ((void)p);
+
     sdb_stack_mark(SDB_CTX_GLOBAL);
     errno = 2;
     ret = sdb_out_bare("bare<\\n>\n");
@@ -233,22 +240,23 @@ static int test_output_stderr(void *p)
 
 static int test_input(void *p)
 {
-    int ret = 0;
+    int ret = 0, num = 0;
+    char buf[32];
+    size_t len;
+    ((void)p);
+
     sdb_stack_mark(SDB_CTX_GLOBAL);
     sdb_out("input number(simple)");
     ret = sdb_in();
     sdb_out("Max stack: %d", sdb_stack_max_usage(SDB_CTX_GLOBAL));
     sdb_out("return:%d", ret);
 
-    int num = 0;
     sdb_stack_mark(SDB_CTX_GLOBAL);
     sdb_out("input a number");
     ret = sdb_in_num(&num);
     sdb_out("Max stack: %d", sdb_stack_max_usage(SDB_CTX_GLOBAL));
     sdb_out("return:%d, Get number:%d", ret, num);
 
-    char buf[32];
-    size_t len;
     sdb_stack_mark(SDB_CTX_GLOBAL);
     sdb_out("input string");
     ret = sdb_in_str(buf, 32, &len);
@@ -276,22 +284,9 @@ static int test_dump(void *p)
         0x6d, 0x4b, 0x8b, 0xd5, 0x65, 0x70, 0x63, 0x6e,
         0x4c, 0x30,
     };
-    sdb_stack_mark(SDB_CTX_GLOBAL);
-    sdb_out("Dump buf1 bare:");
-    ret = sdb_dump_bare(buf1, sizeof(buf1));
-    sdb_out_bare("\n");
-    sdb_out("Max stack: %d", sdb_stack_max_usage(SDB_CTX_GLOBAL));
-    sdb_out("Return: %d", ret);
-
     unsigned char buf2[38] = {
         "# 测试数据 123\n> 测试文本 abc",
     };
-    sdb_stack_mark(SDB_CTX_GLOBAL);
-    sdb_out("Dump buf2:");
-    ret = sdb_dump(buf2, sizeof(buf2));
-    sdb_out("Max stack: %d", sdb_stack_max_usage(SDB_CTX_GLOBAL));
-    sdb_out("Return: %d", ret);
-
     unsigned char buf3[44] = {
         0xD4, 0xED, 0x12, 0xDB, 0x90, 0x5D, 0x0C, 0x58,
         0x01, 0xAC, 0xC3, 0x80, 0x5C, 0xCC, 0x9E, 0x9D,
@@ -300,12 +295,6 @@ static int test_dump(void *p)
         0x8A, 0x2F, 0x52, 0x2C, 0x46, 0x60, 0x2E, 0x6E,
         0xE3, 0x1E, 0xCA, 0xD5,
     };
-    sdb_stack_mark(SDB_CTX_GLOBAL);
-    sdb_out("Dump buf3(%p):", &buf3);
-    ret = sdb_dump_addr(buf3, sizeof(buf3), &buf3);
-    sdb_out("Max stack: %d", sdb_stack_max_usage(SDB_CTX_GLOBAL));
-    sdb_out("Return: %d", ret);
-
     unsigned char buf4[64] = {
         0xAC, 0x8B, 0x40, 0x2C, 0x9C, 0xC6, 0x56, 0xC2,
         0x49, 0x02, 0x94, 0xF7, 0x4C, 0x0C, 0x19, 0x63,
@@ -317,29 +306,6 @@ static int test_dump(void *p)
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     };
-    sdb_stack_mark(SDB_CTX_GLOBAL);
-    sdb_out("Dump buf4:");
-    ret = sdb_dump_addr(buf4, sizeof(buf4), (void *)0x3700f0630200f0a3);
-    sdb_out("Max stack: %d", sdb_stack_max_usage(SDB_CTX_GLOBAL));
-    sdb_out("Return: %d", ret);
-
-    struct test_a {
-        char a;
-        char b;
-        int c;
-        char d;
-        long e;
-        char f;
-        char g;
-    };
-    struct test_a a = {
-        1, 2, 3, 4, 5, 6, 7,
-    };
-    sdb_stack_mark(SDB_CTX_GLOBAL);
-    ret = sdb_dump_info(&a, sizeof(a), "Dump structure");
-    sdb_out("Max stack: %d", sdb_stack_max_usage(SDB_CTX_GLOBAL));
-    sdb_out("Return: %d", ret);
-
     unsigned char buf5[368] = {
         0x42, 0x79, 0xA3, 0xDB, 0xD1, 0x03, 0xCD, 0x4B,
         0x32, 0xE4, 0x90, 0x06, 0x0C, 0xFC, 0xE4, 0xCD,
@@ -396,14 +362,58 @@ static int test_dump(void *p)
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     };
+    struct test_a {
+        char a;
+        char b;
+        int c;
+        char d;
+        long e;
+        char f;
+        char g;
+    };
+    struct test_a a = {
+        1, 2, 3, 4, 5, 6, 7,
+    };
+    unsigned char buf6[3] = {
+        'A', 'B', 'C',
+    };
+    ((void)p);
+
+    sdb_stack_mark(SDB_CTX_GLOBAL);
+    sdb_out("Dump buf1 bare:");
+    ret = sdb_dump_bare(buf1, sizeof(buf1));
+    sdb_out_bare("\n");
+    sdb_out("Max stack: %d", sdb_stack_max_usage(SDB_CTX_GLOBAL));
+    sdb_out("Return: %d", ret);
+
+    sdb_stack_mark(SDB_CTX_GLOBAL);
+    sdb_out("Dump buf2:");
+    ret = sdb_dump(buf2, sizeof(buf2));
+    sdb_out("Max stack: %d", sdb_stack_max_usage(SDB_CTX_GLOBAL));
+    sdb_out("Return: %d", ret);
+
+    sdb_stack_mark(SDB_CTX_GLOBAL);
+    sdb_out("Dump buf3(%p):", &buf3);
+    ret = sdb_dump_addr(buf3, sizeof(buf3), &buf3);
+    sdb_out("Max stack: %d", sdb_stack_max_usage(SDB_CTX_GLOBAL));
+    sdb_out("Return: %d", ret);
+
+    sdb_stack_mark(SDB_CTX_GLOBAL);
+    sdb_out("Dump buf4:");
+    ret = sdb_dump_addr(buf4, sizeof(buf4), (void *)0x3700f0630200f0a3);
+    sdb_out("Max stack: %d", sdb_stack_max_usage(SDB_CTX_GLOBAL));
+    sdb_out("Return: %d", ret);
+
+    sdb_stack_mark(SDB_CTX_GLOBAL);
+    ret = sdb_dump_info(&a, sizeof(a), "Dump structure");
+    sdb_out("Max stack: %d", sdb_stack_max_usage(SDB_CTX_GLOBAL));
+    sdb_out("Return: %d", ret);
+
     sdb_stack_mark(SDB_CTX_GLOBAL);
     ret = sdb_dump_info(buf5, sizeof(buf5), "Dump buf5");
     sdb_out("Max stack: %d", sdb_stack_max_usage(SDB_CTX_GLOBAL));
     sdb_out("Return: %d", ret);
 
-    unsigned char buf6[3] = {
-        'A', 'B', 'C',
-    };
     sdb_stack_mark(SDB_CTX_GLOBAL);
     ret = sdb_dump_addr_info(buf6, sizeof(buf6), (void *)0xe,
             "Dump buf6-1, addr:0xe");
@@ -448,6 +458,8 @@ static int test_menu_disp(void *p)
         { 0, 0, 0 },
     };
     size_t num = sizeof(test_list) / sizeof(sdb_menu_item);
+    ((void)p);
+
     switch ((size_t)p) {
         case SDB_MSG_MENU_LIST: sdb_menu_list(test_list, num); break;
         case SDB_MSG_MENU_COLUMNAR: sdb_menu_columnar(test_list, num); break;
@@ -458,6 +470,7 @@ static int test_menu_disp(void *p)
 
 static int test_menu(void *p)
 {
+    ((void)p);
     return sdb_menu(SDB_MSG_MENU_LIST,
             { "list", test_menu_disp, (void *)SDB_MSG_MENU_LIST, },
             { "columnar", test_menu_disp, (void *)SDB_MSG_MENU_COLUMNAR, },
@@ -467,9 +480,11 @@ static int test_menu(void *p)
 
 static int test_config_color(void *p)
 {
+    int ret;
+    ((void)p);
+
     sdb_out("0: disable, 1: enable");
-    int ret = sdb_in();
-    if (ret < 0) {
+    if ((ret = sdb_in()) < 0) {
         sdb_out("quit");
         return 0;
     }
@@ -479,9 +494,11 @@ static int test_config_color(void *p)
 
 static int test_config_mark(void *p)
 {
+    int ret;
+    ((void)p);
+
     sdb_out("0: disable, 1: enable");
-    int ret = sdb_in();
-    if (ret < 0) {
+    if ((ret = sdb_in()) < 0) {
         sdb_out("quit");
         return 0;
     }
@@ -501,8 +518,8 @@ static int test_ansi_color_sequences(void *p)
         "40", "41", "42", "43", "44", "45", "46", "47",
         "100", "101", "102", "103", "104", "105", "106", "107",
     };
-    int i;
-    int j;
+    int i, j;
+    ((void)p);
 
     printf("Terminal color table:\n");
     for (i = -1; i < 17; i++) {
@@ -544,6 +561,7 @@ static int test_return_failed(void *p)
 
 static int sdb_selftest(void *p)
 {
+    ((void)p);
     sdb_config_init(SDB_CTX_GLOBAL);
     sdb_config_bio(SDB_CTX_GLOBAL, cb_out, cb_in, SDB_CTX_GLOBAL);
     sdb_config_color(SDB_CTX_GLOBAL, &sdb_color_terminal);
@@ -578,6 +596,8 @@ static int sdb_selftest(void *p)
 #if defined(MAIN_ENTRY)
 int main(int argc, char *argv[])
 {
+    ((void)argc);
+    ((void)argv);
 #if defined(SDB_SELFTEST)
     return sdb_selftest(NULL);
 #endif

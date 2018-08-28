@@ -137,9 +137,7 @@ typedef enum {              /* 输出模式定义 */
     SDB_MSG_INFO            = (SDB_LEVEL_8  | SDB_TYPE_INFO),
     SDB_MSG_WARNING         = (SDB_LEVEL_6  | SDB_TYPE_WARNING),
     SDB_MSG_ERROR           = (SDB_LEVEL_2  | SDB_TYPE_ERROR),
-    SDB_MSG_INPUT_STR       = (SDB_LEVEL_4  | SDB_TYPE_INPUT_STR),
-    SDB_MSG_INPUT_NUM       = (SDB_LEVEL_4  | SDB_TYPE_INPUT_NUM),
-    SDB_MSG_INPUT_ECHO      = (SDB_LEVEL_4  | SDB_TYPE_INPUT_ECHO),
+    SDB_MSG_INPUT           = (SDB_LEVEL_4),
     SDB_MSG_MENU_LIST       = (SDB_LEVEL_2  | SDB_TYPE_MENU | SDB_MENU_LIST),
     SDB_MSG_MENU_COLUMNAR   = (SDB_LEVEL_2  | SDB_TYPE_MENU | SDB_MENU_COLUMNAR),
     SDB_MSG_MENU_PILE       = (SDB_LEVEL_2  | SDB_TYPE_MENU | SDB_MENU_PILE),
@@ -308,19 +306,19 @@ int sdb_snprintf(char *buf, size_t size, const char *fmt, ...);
 #define sdb_in_bare(__buf, __size, __plen) \
     __sdb_cin(SDB_CTX_GLOBAL, __buf, __size, __plen)
 #define sdb_in() \
-    __sdb_rnmcin(SDB_CTX_GLOBAL, SDB_MSG_INPUT_NUM,\
+    __sdb_rnmcin(SDB_CTX_GLOBAL, SDB_MSG_INPUT,\
             __FILE__, __LINE__)
 #define sdb_in_num(__pnum) \
-    __sdb_nmcin(SDB_CTX_GLOBAL, SDB_MSG_INPUT_NUM, __pnum,\
+    __sdb_nmcin(SDB_CTX_GLOBAL, SDB_MSG_INPUT, __pnum,\
             __FILE__, __LINE__, 0)
 #define sdb_in_str(__buf, __size, __plen) \
-    __sdb_mcin(SDB_CTX_GLOBAL, SDB_MSG_INPUT_STR, __buf, __size, __plen,\
+    __sdb_mcin(SDB_CTX_GLOBAL, SDB_MSG_INPUT, __buf, __size, __plen,\
             __FILE__, __LINE__, 0)
 #define sdb_in_num_info(__pnum, ...) \
-    __sdb_nmcin(SDB_CTX_GLOBAL, SDB_MSG_INPUT_NUM, __pnum,\
+    __sdb_nmcin(SDB_CTX_GLOBAL, SDB_MSG_INPUT, __pnum,\
             __FILE__, __LINE__, __VA_ARGS__)
 #define sdb_in_str_info(__buf, __size, __plen, ...) \
-    __sdb_mcin(SDB_CTX_GLOBAL, SDB_MSG_INPUT_STR, __buf, __size, __plen,\
+    __sdb_mcin(SDB_CTX_GLOBAL, SDB_MSG_INPUT, __buf, __size, __plen,\
             __FILE__, __LINE__, __VA_ARGS__)
 
 #define sdb_dump_bare(__data, __size) \

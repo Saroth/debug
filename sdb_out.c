@@ -24,9 +24,9 @@ static int output_to_buffer(void *p_out, const char *str, size_t len,
         p->buf[p->len++] = *str++;
     }
     if (p->len == p->size || state == SDB_OUT_FINAL) {
-        p->buf[(p->len == p->size) ? (p->len - 1) : p->len] = 0;
         size_t l = p->len;
         p->len = 0;
+        p->buf[(l == p->size) ? (l - 1) : l] = 0;
         return l;
     }
     return 0;
@@ -34,6 +34,7 @@ static int output_to_buffer(void *p_out, const char *str, size_t len,
 
 int sdb_vsnprintf(char *buf, size_t size, const char *fmt, va_list va)
 {
+    int ret;
     output_to_buffer_param param = {
         .buf                = buf,
         .size               = size,
@@ -46,16 +47,17 @@ int sdb_vsnprintf(char *buf, size_t size, const char *fmt, va_list va)
         .fmt                = fmt,
     };
     va_copy(xctx.va, va);
-    int ret = sdb_vxprintf(&xctx);
+    ret = sdb_vxprintf(&xctx);
     va_end(xctx.va);
     return ret;
 }
 
 int sdb_snprintf(char *buf, size_t size, const char *fmt, ...)
 {
+    int ret;
     va_list va;
     va_start(va, fmt);
-    int ret = sdb_vsnprintf(buf, size, fmt, va);
+    ret = sdb_vsnprintf(buf, size, fmt, va);
     va_end(va);
     return ret;
 }
@@ -114,13 +116,14 @@ static int output_decorate_append(sdb_cout_context *p, const char *str)
 }
 static int output_decorate(sdb_cout_context *p, sdb_out_state state)
 {
+    int ret;
+    const sdb_context *ctx = p->ctx;
+
     if (p->mode & SDB_FLAG_NO_DECORATE) {
         return 0;
     }
     p->mode |= SDB_FLAG_NO_DECORATE;
 
-    int ret;
-    const sdb_context *ctx = p->ctx;
     if (state == SDB_OUT_LINE_HEAD || state == SDB_OUT_STRING_HEAD) {
         sdb_assert(output_decorate_append(p, sdb_get_color(p)));
         if (state == SDB_OUT_LINE_HEAD) {
@@ -140,7 +143,10 @@ static int output_decorate(sdb_cout_context *p, sdb_out_state state)
 static int output_line(void *p_out, const char *str, size_t len,
         sdb_out_state state)
 {
+    int ret;
     sdb_cout_context *p = (sdb_cout_context *)p_out;
+    const sdb_context *ctx = p->ctx;
+
     if (state == SDB_OUT_INIT) {
         p->line_buf_len = 0;
         p->line_buf_offset = 0;
@@ -153,8 +159,6 @@ static int output_line(void *p_out, const char *str, size_t len,
         p->flags &= ~SDB_OUT_LINE_IS_WRAPPED;
     }
 
-    int ret;
-    const sdb_context *ctx = p->ctx;
     do {
         p->flags &= ~SDB_OUT_LINE_IS_OUTPUTED;
         if (p->line_buf_offset == 0) {
@@ -228,6 +232,7 @@ int __sdb_mcout_append_string(sdb_cout_context *ctx, const char *str)
 }
 int __sdb_mcout_append(sdb_cout_context *ctx, const char *fmt, ...)
 {
+    int ret;
     sdb_xprintf_context xctx = {
         .f_out              = output_line,
         .p_out              = (void *)ctx,
@@ -236,12 +241,13 @@ int __sdb_mcout_append(sdb_cout_context *ctx, const char *fmt, ...)
     };
     va_list va;
     va_start(xctx.va, fmt);
-    int ret = sdb_vxprintf(&xctx);
+    ret = sdb_vxprintf(&xctx);
     va_end(va);
     return ret;
 }
 int __sdb_mcout_append_va(sdb_cout_context *ctx, const char *fmt, va_list va)
 {
+    int ret;
     sdb_xprintf_context xctx = {
         .f_out              = output_line,
         .p_out              = (void *)ctx,
@@ -249,7 +255,7 @@ int __sdb_mcout_append_va(sdb_cout_context *ctx, const char *fmt, va_list va)
         .fmt                = fmt,
     };
     va_copy(xctx.va, va);
-    int ret = sdb_vxprintf(&xctx);
+    ret = sdb_vxprintf(&xctx);
     va_end(xctx.va);
     return ret;
 }
@@ -268,6 +274,7 @@ int __sdb_mcout_final(sdb_cout_context *ctx)
 int __sdb_vmcout(const sdb_context *ctx, unsigned int mode,
         const char *file, size_t line, const char *fmt, va_list va)
 {
+    int ret;
     char b[ctx->out_column_limit + SDB_CONFIG_OUTPUT_BUFFER_RESERVE];
     sdb_cout_context param = {
         .ctx                = ctx,
@@ -289,11 +296,12 @@ int __sdb_vmcout(const sdb_context *ctx, unsigned int mode,
         .state              = SDB_OUT_FINAL,
         .fmt                = fmt,
     };
+
 #if defined(SDB_SYSTEM_HAS_STDERR)
     errno                   = 0;
 #endif
     va_copy(xctx.va, va);
-    int ret = sdb_vxprintf(&xctx);
+    ret = sdb_vxprintf(&xctx);
     va_end(xctx.va);
     return ret;
 }
@@ -301,9 +309,10 @@ int __sdb_vmcout(const sdb_context *ctx, unsigned int mode,
 int __sdb_mcout(const sdb_context *ctx, unsigned int mode,
         const char *file, size_t line, const char *fmt, ...)
 {
+    int ret;
     va_list va;
     va_start(va, fmt);
-    int ret = __sdb_vmcout(ctx, mode, file, line, fmt, va);
+    ret = __sdb_vmcout(ctx, mode, file, line, fmt, va);
     va_end(va);
     return ret;
 }
