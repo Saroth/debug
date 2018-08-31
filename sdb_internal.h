@@ -19,7 +19,11 @@ extern "C" {
     }\
 } while (0)
 
-#define sdb_assert_level(_l)
+#define sdb_assert_level(_l) {\
+    if ((mode & SDB_LEVEL_MASK) > ctx->out_level_limit) {\
+        return 0;\
+    }\
+} while (0)
 
 int sdb_bio_out(const sdb_context *ctx,
         const char *file, size_t line, const char *str);

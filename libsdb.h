@@ -59,6 +59,7 @@ typedef struct {
     func_sdb_bio_in bio_in;
     void *bio_param;
 
+    unsigned int out_level_limit;       /* range:[0,15] */
     size_t out_column_limit;            /* range:[36, ~) */
     size_t dump_bytes_perline;          /* range:[4, 0xffff] */
     unsigned char dump_has_addr;
@@ -90,24 +91,24 @@ void sdb_config_dump_format(sdb_context *ctx, unsigned int has_addr,
         unsigned int has_hex, unsigned int has_ascii);
 
 typedef enum {              /* 输出模式定义 */
-    SDB_LEVEL_OFS           = 0,
-    SDB_LEVEL_16            = (0    << SDB_LEVEL_OFS),
-    SDB_LEVEL_15            = (1    << SDB_LEVEL_OFS),
-    SDB_LEVEL_14            = (2    << SDB_LEVEL_OFS),
-    SDB_LEVEL_13            = (3    << SDB_LEVEL_OFS),
-    SDB_LEVEL_12            = (4    << SDB_LEVEL_OFS),
-    SDB_LEVEL_11            = (5    << SDB_LEVEL_OFS),
-    SDB_LEVEL_10            = (6    << SDB_LEVEL_OFS),
-    SDB_LEVEL_9             = (7    << SDB_LEVEL_OFS),
-    SDB_LEVEL_8             = (8    << SDB_LEVEL_OFS),
-    SDB_LEVEL_7             = (9    << SDB_LEVEL_OFS),
-    SDB_LEVEL_6             = (10   << SDB_LEVEL_OFS),
-    SDB_LEVEL_5             = (11   << SDB_LEVEL_OFS),
-    SDB_LEVEL_4             = (12   << SDB_LEVEL_OFS),
-    SDB_LEVEL_3             = (13   << SDB_LEVEL_OFS),
-    SDB_LEVEL_2             = (14   << SDB_LEVEL_OFS),
-    SDB_LEVEL_1             = (15   << SDB_LEVEL_OFS),
-    SDB_LEVEL_MASK          = (0xF  << SDB_LEVEL_OFS),
+    SDB_LEVEL_TOP           = 0,    /* highest level, always output */
+    SDB_LEVEL_1             = 1,
+    SDB_LEVEL_2             = 2,
+    SDB_LEVEL_3             = 3,
+    SDB_LEVEL_4             = 4,
+    SDB_LEVEL_5             = 5,
+    SDB_LEVEL_6             = 6,
+    SDB_LEVEL_7             = 7,
+    SDB_LEVEL_8             = 8,
+    SDB_LEVEL_9             = 9,
+    SDB_LEVEL_10            = 10,
+    SDB_LEVEL_11            = 11,
+    SDB_LEVEL_12            = 12,
+    SDB_LEVEL_13            = 13,
+    SDB_LEVEL_14            = 14,
+    SDB_LEVEL_15            = 15,
+    SDB_LEVEL_MAX           = SDB_LEVEL_15,
+    SDB_LEVEL_MASK          = 0x0F,
 
     SDB_TYPE_OFS            = 4,
     SDB_TYPE_NONE           = (0    << SDB_TYPE_OFS),
