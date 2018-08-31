@@ -154,22 +154,24 @@ int __sdb_menu(const sdb_context *ctx, unsigned int mode,
     int ret, num = 0;
     unsigned int type = (mode & SDB_MENU_MASK) >> SDB_MENU_OFS;
 
-    if (type >= SDB_MENU_MAX >> SDB_MENU_OFS) {
-        sdb_assert(__sdb_mcout(ctx, SDB_MSG_WARNING, __FILE__, __LINE__,
+    if (type >= (SDB_MENU_MAX >> SDB_MENU_OFS)) {
+        sdb_assert(__sdb_mcout(ctx, SDB_INTERNAL_ERROR, __FILE__, __LINE__,
                     "Unknown menu type:%#x(%#x)", type, mode));
         return SDB_ERR_UNKNOWN_MENU_TYPE;
     }
+    mode &= ~SDB_TYPE_MASK;
 
     while (1) {
         char buf[ctx->out_column_limit + SDB_CONFIG_OUTPUT_BUFFER_RESERVE];
         sdb_cout_context cout;
 
-        sdb_assert(__sdb_mcout(ctx, SDB_MSG_NONE, file, line, ""));
-        __sdb_mcout_init(&cout, ctx, mode, buf, sizeof(buf), file, line);
+        sdb_assert(__sdb_mcout(ctx, mode | SDB_TYPE_NONE, file, line, ""));
+        __sdb_mcout_init(&cout, ctx, mode | SDB_TYPE_MENU, buf, sizeof(buf),
+                file, line);
         sdb_assert(menus[type].menu(&cout, list, size));
         sdb_assert(__sdb_mcout_final(&cout));
 
-        if (__sdb_nmcin(ctx, SDB_MSG_INPUT, &num, file, line, ">") < 0) {
+        if (__sdb_nmcin(ctx, mode, &num, file, line, ">") < 0) {
             continue;
         }
         if (num == 0) {
@@ -178,14 +180,15 @@ int __sdb_menu(const sdb_context *ctx, unsigned int mode,
         else if (num > 0 && num <= (int)size) {
             if (list[num - 1].func) {
                 if ((ret = list[num - 1].func(list[num - 1].param)) != 0) {
-                    sdb_assert(__sdb_mcout(ctx, SDB_MSG_WARNING, file, line,
-                                "above return: %d(%s%#x)", ret,
+                    sdb_assert(__sdb_mcout(ctx, SDB_INTERNAL_WARNING,
+                                file, line, "above return: %d(%s%#x)", ret,
                                 ret < 0 ? "-" : "", ret < 0 ? -ret : ret));
                 }
             }
         }
         else {
-            sdb_assert(__sdb_mcout(ctx, SDB_MSG_WARNING, __FILE__, __LINE__,
+            sdb_assert(__sdb_mcout(ctx, SDB_INTERNAL_WARNING,
+                        __FILE__, __LINE__,
                         "input out of range: %d (0~%d)", num, size));
         }
     }

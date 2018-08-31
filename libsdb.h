@@ -138,10 +138,10 @@ typedef enum {              /* 输出模式定义 */
     SDB_MSG_WARNING         = (SDB_LEVEL_6  | SDB_TYPE_WARNING),
     SDB_MSG_ERROR           = (SDB_LEVEL_2  | SDB_TYPE_ERROR),
     SDB_MSG_INPUT           = (SDB_LEVEL_4),
-    SDB_MSG_MENU_LIST       = (SDB_LEVEL_2  | SDB_TYPE_MENU | SDB_MENU_LIST),
-    SDB_MSG_MENU_COLUMNAR   = (SDB_LEVEL_2  | SDB_TYPE_MENU | SDB_MENU_COLUMNAR),
-    SDB_MSG_MENU_PILE       = (SDB_LEVEL_2  | SDB_TYPE_MENU | SDB_MENU_PILE),
-    SDB_MSG_DUMP            = (SDB_LEVEL_10 | SDB_TYPE_DUMP),
+    SDB_MSG_MENU_LIST       = (SDB_LEVEL_2  | SDB_MENU_LIST),
+    SDB_MSG_MENU_COLUMNAR   = (SDB_LEVEL_2  | SDB_MENU_COLUMNAR),
+    SDB_MSG_MENU_PILE       = (SDB_LEVEL_2  | SDB_MENU_PILE),
+    SDB_MSG_DUMP            = (SDB_LEVEL_10),
 } sdb_mode_type;
 int __sdb_vmcout(const sdb_context *ctx, unsigned int mode,
         const char *file, size_t line, const char *fmt, va_list va);
@@ -186,13 +186,13 @@ int __sdb_rnmcin(const sdb_context *ctx, unsigned int mode,
         const char *file, size_t line);
 int __sdb_cin(const sdb_context *ctx, char *buf, size_t size, size_t *len);
 
-int __sdb_vmdump(const sdb_context *ctx,
+int __sdb_vmdump(const sdb_context *ctx, unsigned int mode,
         const void *data, size_t size, void *addr,
         const char *file, size_t line, const char *fmt, va_list va);
-int __sdb_mdump(const sdb_context *ctx,
+int __sdb_mdump(const sdb_context *ctx, unsigned int mode,
         const void *data, size_t size, void *addr,
         const char *file, size_t line, const char *fmt, ...);
-#define __sdb_dump(_c, _b, _s) __sdb_mdump(_c, _b, _s, 0, 0, 0, 0)
+#define __sdb_dump(_c, _m, _b, _s) __sdb_mdump(_c, _m, _b, _s, 0, 0, 0, 0)
 
 typedef struct {
     const char *info;
@@ -322,18 +322,18 @@ int sdb_snprintf(char *buf, size_t size, const char *fmt, ...);
             __FILE__, __LINE__, __VA_ARGS__)
 
 #define sdb_dump_bare(__data, __size) \
-    __sdb_dump(SDB_CTX_GLOBAL, __data, __size)
+    __sdb_dump(SDB_CTX_GLOBAL, SDB_MSG_DUMP, __data, __size)
 #define sdb_dump(__data, __size) \
-    __sdb_mdump(SDB_CTX_GLOBAL, __data, __size, 0,\
+    __sdb_mdump(SDB_CTX_GLOBAL, SDB_MSG_DUMP, __data, __size, 0,\
             __FILE__, __LINE__, 0)
 #define sdb_dump_info(__data, __size, ...) \
-    __sdb_mdump(SDB_CTX_GLOBAL, __data, __size, 0,\
+    __sdb_mdump(SDB_CTX_GLOBAL, SDB_MSG_DUMP, __data, __size, 0,\
             __FILE__, __LINE__, __VA_ARGS__)
 #define sdb_dump_addr(__data, __size, __addr) \
-    __sdb_mdump(SDB_CTX_GLOBAL, __data, __size, __addr,\
+    __sdb_mdump(SDB_CTX_GLOBAL, SDB_MSG_DUMP, __data, __size, __addr,\
             __FILE__, __LINE__, 0)
 #define sdb_dump_addr_info(__data, __size, __addr, ...) \
-    __sdb_mdump(SDB_CTX_GLOBAL, __data, __size, __addr,\
+    __sdb_mdump(SDB_CTX_GLOBAL, SDB_MSG_DUMP, __data, __size, __addr,\
             __FILE__, __LINE__, __VA_ARGS__)
 
 #define sdb_menu(__type, ...) ({\

@@ -8,14 +8,18 @@ extern "C" {
 #define SDB_ENABLE
 #include "libsdb.h"
 
+#define SDB_INTERNAL_WARNING    (SDB_LEVEL_1 | SDB_TYPE_WARNING)
+#define SDB_INTERNAL_ERROR      (SDB_LEVEL_1 | SDB_TYPE_ERROR)
 #define sdb_assert(_f) do {\
     if ((ret = (_f)) < 0) {\
-        __sdb_mcout(ctx, SDB_MSG_WARNING, __FILE__, __LINE__,\
+        __sdb_mcout(ctx, SDB_INTERNAL_ERROR, __FILE__, __LINE__,\
                 "  [assert: \"%s\" (%s%#x)]", #_f,\
                 ret < 0 ? "-" : "", ret < 0 ? -ret : ret);\
         return ret;\
     }\
 } while (0)
+
+#define sdb_assert_level(_l)
 
 int sdb_bio_out(const sdb_context *ctx,
         const char *file, size_t line, const char *str);

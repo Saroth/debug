@@ -3,26 +3,27 @@
 #warning "@TODO: strcasecmp achieve"
 #include <string.h>
 
-int __sdb_vmdump(const sdb_context *ctx,
+int __sdb_vmdump(const sdb_context *ctx, unsigned int mode,
         const void *data, size_t size, void *addr,
         const char *file, size_t line, const char *fmt, va_list va)
 {
     int ret;
     size_t i, counter = 0, bytes, blank;
     char buf[ctx->out_column_limit + SDB_CONFIG_OUTPUT_BUFFER_RESERVE];
-    unsigned char c;
-    unsigned char *ptr;
+    unsigned char c, *ptr;
     sdb_cout_context cout;
 
+    mode &= ~SDB_TYPE_MASK;
     if (data == 0) {
-        return __sdb_mcout(ctx, SDB_MSG_DUMP, __FILE__, __LINE__, data);
+        return __sdb_mcout(ctx, mode | SDB_TYPE_DUMP,
+                __FILE__, __LINE__, data);
     }
-    if (size > 0xFFFF) {
+    if (size > SDB_CONFIG_DUMP_LINE_LIMIT) {
         char in[8];
-        sdb_assert(__sdb_mcout(ctx, SDB_MSG_WARNING, __FILE__, __LINE__,
+        sdb_assert(__sdb_mcout(ctx, SDB_INTERNAL_WARNING, __FILE__, __LINE__,
                 "data size too large! length:%d(%#x)", size, size));
         counter += ret;
-        if ((ret = __sdb_mcin(ctx, SDB_MSG_INPUT, in, sizeof(in), 0,
+        if ((ret = __sdb_mcin(ctx, mode, in, sizeof(in), 0,
                         __FILE__, __LINE__, "continue to dump? (y/N)")) < 0) {
             return ret;
         }
@@ -32,7 +33,8 @@ int __sdb_vmdump(const sdb_context *ctx,
         }
     }
 
-    __sdb_mcout_init(&cout, ctx, SDB_MSG_DUMP, buf, sizeof(buf), file, line);
+    __sdb_mcout_init(&cout, ctx, mode | SDB_TYPE_DUMP, buf, sizeof(buf),
+            file, line);
     if (fmt) {
         sdb_assert(__sdb_mcout_append_va(&cout, fmt, va));
         sdb_assert(__sdb_mcout_append(&cout, " [data:%p, size:%d, addr:%p]",
@@ -105,14 +107,14 @@ int __sdb_vmdump(const sdb_context *ctx,
     return counter;
 }
 
-int __sdb_mdump(const sdb_context *ctx,
+int __sdb_mdump(const sdb_context *ctx, unsigned int mode,
         const void *data, size_t size, void *addr,
         const char *file, size_t line, const char *fmt, ...)
 {
     int ret;
     va_list va;
     va_start(va, fmt);
-    ret = __sdb_vmdump(ctx, data, size, addr, file, line, fmt, va);
+    ret = __sdb_vmdump(ctx, mode, data, size, addr, file, line, fmt, va);
     va_end(va);
     return ret;
 }

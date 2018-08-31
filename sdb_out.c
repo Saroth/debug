@@ -105,7 +105,7 @@ static int output_decorate_append(sdb_cout_context *p, const char *str)
     size_t len = strlen(str);
     if (p->line_buf_offset + len >= p->line_buf_size) {
         const sdb_context *ctx = p->ctx;
-        sdb_assert(__sdb_mcout(p->ctx, SDB_MSG_ERROR, __FILE__, __LINE__,
+        sdb_assert(__sdb_mcout(p->ctx, SDB_INTERNAL_ERROR, __FILE__, __LINE__,
                     "buffer reserve size not enouth.(%d < %d)",
                     p->line_buf_size, p->line_buf_offset + len));
         return SDB_ERR_RESERVE_NOT_ENOUGH;

@@ -83,13 +83,13 @@ void sdb_config_out_column_limit(sdb_context *ctx, size_t limit)
     min += ctx->dump_bytes_perline * 3; /* hex + space, e.g.: "31 32 33 ..." */
     min += 2 + ctx->dump_bytes_perline; /* space + ascii, e.g.: " 123..." */
     if (limit < SDB_CONFIG_COLUMN_LIMIT_MINIMUM) {
-        __sdb_mcout(ctx, SDB_MSG_WARNING, __FILE__, __LINE__,
+        __sdb_mcout(ctx, SDB_INTERNAL_WARNING, __FILE__, __LINE__,
                 "column limit less than minimum(%d < %d), reset to minimum.",
                 limit, SDB_CONFIG_COLUMN_LIMIT_MINIMUM);
         limit = SDB_CONFIG_COLUMN_LIMIT_MINIMUM;
     }
     if (limit < min) {
-        __sdb_mcout(ctx, SDB_MSG_WARNING, __FILE__, __LINE__,
+        __sdb_mcout(ctx, SDB_INTERNAL_WARNING, __FILE__, __LINE__,
                 "column limit less than dump minimum(%d < %d)", limit, min);
     }
     ctx->out_column_limit = limit;
@@ -103,13 +103,13 @@ void sdb_config_dump_bytes_perline(sdb_context *ctx, size_t size)
     limit -= 2;
     limit /= 4;
     if (size < SDB_CONFIG_DUMP_BYTE_PERLINE_MINIMUM) {
-        __sdb_mcout(ctx, SDB_MSG_WARNING, __FILE__, __LINE__,
+        __sdb_mcout(ctx, SDB_INTERNAL_WARNING, __FILE__, __LINE__,
                 "dump bytes per-line less than minimum(%d < %d), reset to"
                 " minimum.", size, SDB_CONFIG_DUMP_BYTE_PERLINE_MINIMUM);
         size = SDB_CONFIG_COLUMN_LIMIT_MINIMUM;
     }
     if (size > limit) {
-        __sdb_mcout(ctx, SDB_MSG_WARNING, __FILE__, __LINE__,
+        __sdb_mcout(ctx, SDB_INTERNAL_WARNING, __FILE__, __LINE__,
                 "set dump bytes per-line large than limit(%d > %d(%d)).",
                 size, limit, ctx->out_column_limit);
     }
